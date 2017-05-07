@@ -1,0 +1,1 @@
+function assertExhaustive(thing: never): never { throw "Unreachable" }
