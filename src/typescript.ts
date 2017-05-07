@@ -1,1 +1,1 @@
-function assertExhaustive(thing: never): never { throw "Unreachable" }
+export function assertExhaustive(thing: never): never { throw "Unreachable" }

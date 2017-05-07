@@ -1,18 +1,20 @@
 import Registers from './Registers'
 import Instruction from './Instruction'
+import { assertExhaustive } from '../typescript'
+import { u16WrappingAdd } from '../u16'
 
 type Address = number
 type Cycles = number
 
-class CPU {
+export default class CPU {
     registers: Registers 
     pc: number
     bus: Bus
 
-    constructor(bus: Bus) {
+    constructor(rom: number[]) {
         this.registers = new Registers()
         this.pc = 0x100
-        this.bus = bus
+        this.bus = new Bus()
     }
 
     step(instruction: Instruction): [Address, Cycles] {
