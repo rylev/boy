@@ -6,7 +6,8 @@
     "strictNullChecks": true,
     "module": "commonjs",
     "target": "es2017",
-    "jsx": "react"
+    "jsx": "react",
+    "baseUrl": "./src"
   },
   "include": [
     "./src/**/*"

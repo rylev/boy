@@ -1,7 +1,9 @@
 import * as React from 'react'
 
-class RomInput extends React.Component<{}, {}> {
-    onChange (e: React.ChangeEvent<HTMLInputElement>) {
+type Props = {romUploaded: (rom: Uint8Array) => void }
+
+class RomInput extends React.Component<Props, {}> {
+    onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const input = e.currentTarget
         const file = input.files && input.files[0]
         if (file) {
@@ -10,7 +12,7 @@ class RomInput extends React.Component<{}, {}> {
             reader.readAsArrayBuffer(contents)
             reader.onload = () => {
                 const rom = new Uint8Array(reader.result)
-                console.log(rom)
+                this.props.romUploaded(rom)
             }
         }
     }

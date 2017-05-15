@@ -1,5 +1,6 @@
 import Registers from './Registers'
 import Instruction from './Instruction'
+import Bus from './Bus'
 import { assertExhaustive } from '../typescript'
 import { u16WrappingAdd } from '../u16'
 
@@ -13,7 +14,7 @@ export default class CPU {
     bus: Bus
     private _isRunning: boolean = false
 
-    constructor(bios: number[] | undefined, rom: number[]) {
+    constructor(bios: Uint8Array | undefined, rom: Uint8Array) {
         this.bus = new Bus(bios, rom)
         this.registers = new Registers()
         this.pc = 0
@@ -56,32 +57,5 @@ export default class CPU {
             default:
                 return assertExhaustive(instruction)
         }
-    }
-}
-
-class Bus {
-    private _biosMapped: boolean
-    private _bios: number[]
-    private _rom: number[]
-
-    constructor(bios: number[] | undefined, rom: number[]) {
-        if (bios) {
-            this._bios = bios
-            this._biosMapped = true
-        }
-        this._rom = rom
-    }
-
-    read(addr: number): number {
-        if (addr < 0x100 && this._biosMapped) {
-            return this._bios[addr]
-        } else if (addr < 0x8000) {
-            return this._rom[addr]
-        }
-        return 0
-    }
-
-    unmapBios() {
-        this._biosMapped = false
     }
 }
