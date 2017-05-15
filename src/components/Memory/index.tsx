@@ -1,6 +1,7 @@
 import * as React from 'react'
 
 import Bus from 'cpu/Bus'
+import './memory.css'
 
 type Props = {bus: Bus}
 class Memory extends React.Component<Props, {}> {
@@ -9,7 +10,8 @@ class Memory extends React.Component<Props, {}> {
         const divs = mapChunk(bus.rom, options, (chunk, i) => {
             return (
                 <div key={i}>
-                    {Array.from(chunk).map((b,i) => <span key={i}>{toHex(b)}</span>)}
+                    <span>{toHex(options.offset + (options.size * i), 3)}x: </span>
+                    {Array.from(chunk).map((b,i) => <span className="byte" key={i}>{toHex(b, 2)}</span>)}
                 </div>
             )
         })
@@ -35,13 +37,10 @@ class Memory extends React.Component<Props, {}> {
     }
 }
 
-function toHex(byte: number): string {
+function toHex(byte: number, places: number): string {
     const hex = byte.toString(16)
-    if (hex.length < 2) {
-        return `0${hex}`
-    } else {
-        return hex
-    }
+    const padding = places - hex.length 
+    return `${"0".repeat(padding > 0 ? padding : 0)}${hex}`
 }
 
 type ChunkOptions = {size: number, count: number, offset: number}

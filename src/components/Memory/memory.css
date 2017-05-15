@@ -1,0 +1,7 @@
+.byte {
+    display: inline-block;
+    padding: 2px;
+    width: 15px;
+    text-align: center;
+    margin: 4px;
+}
