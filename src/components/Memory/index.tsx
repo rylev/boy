@@ -3,15 +3,19 @@ import * as React from 'react'
 import Bus from 'cpu/Bus'
 import './memory.css'
 
-type Props = {bus: Bus}
+type Props = {bus: Bus, pc: number}
 class Memory extends React.Component<Props, {}> {
-    rom (bus: Bus): JSX.Element | null {
-        const options = { size: 8, count: 100, offset: 0}
+    rom (bus: Bus, pc: number): JSX.Element | null {
+        const options = { size: 8, count: 18, offset: (pc / 8)}
         const divs = mapChunk(bus.rom, options, (chunk, i) => {
+            const beginning = (options.offset * options.size) + (i * options.size)
             return (
                 <div key={i}>
-                    <span>{toHex(options.offset + (options.size * i), 3)}x: </span>
-                    {Array.from(chunk).map((b,i) => <span className="byte" key={i}>{toHex(b, 2)}</span>)}
+                    <span>0x{toHex(beginning, 3)}: </span>
+                    {Array.from(chunk).map((b,i) => {
+                        const isPC = (pc === (beginning + i)) ? 'isPC' : ''
+                        return <span className={`byte ${isPC}`} key={i}>{toHex(b, 2)}</span>
+                    })}
                 </div>
             )
         })
@@ -24,7 +28,7 @@ class Memory extends React.Component<Props, {}> {
     }
 
     render (): JSX.Element | null {
-        const { bus } = this.props
+        const { bus, pc } = this.props
         if (bus.biosMapped) {
             return (
                 <div>
@@ -32,7 +36,7 @@ class Memory extends React.Component<Props, {}> {
                 </div>
             )
         } else {
-            return this.rom(bus)
+            return this.rom(bus, pc)
         }
     }
 }
@@ -46,10 +50,9 @@ function toHex(byte: number, places: number): string {
 type ChunkOptions = {size: number, count: number, offset: number}
 function mapChunk<T>(array: Uint8Array, chunkOptions: ChunkOptions, callback: (slice: Uint8Array, index: number) => T): T[] {
     const result: T[] = []
-    const offset = chunkOptions.offset * chunkOptions.size
     let index = 0
     while (index < chunkOptions.count) {
-        const start = (offset * chunkOptions.size) + (index * chunkOptions.size) 
+        const start = (chunkOptions.offset * chunkOptions.size) + (index * chunkOptions.size) 
         const end = start + chunkOptions.size - 1
         result.push(callback(array.slice(start, end), index))
         index = index + 1

@@ -7,7 +7,7 @@ import { u16WrappingAdd } from '../u16'
 type Address = number
 type Cycles = number
 
-export default class CPU {
+export class CPU {
     registers: Registers 
     pc: number
     sp: number
@@ -17,8 +17,12 @@ export default class CPU {
     constructor(bios: Uint8Array | undefined, rom: Uint8Array) {
         this.bus = new Bus(bios, rom)
         this.registers = new Registers()
-        this.pc = 0
+        this.pc = bios ? 0 : 0x100
         this.sp = 0 
+    }
+
+    get isRunning(): boolean {
+        return this._isRunning
     }
 
     run () {
@@ -59,3 +63,5 @@ export default class CPU {
         }
     }
 }
+
+export default CPU

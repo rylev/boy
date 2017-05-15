@@ -5,3 +5,7 @@
     text-align: center;
     margin: 4px;
 }
+
+.isPC {
+    background: red;
+}
