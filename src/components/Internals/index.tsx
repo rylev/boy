@@ -25,6 +25,7 @@ class Internals extends React.Component<Props, State> {
             <div>
                 {this.error()}
                 {this.runButton()}
+                {this.stepButton()}
                 {this.resetButton()}
                 <div className="internals">
                     <CPU cpu={cpu}/>
@@ -41,13 +42,6 @@ class Internals extends React.Component<Props, State> {
         return <div className="error">{error.message}</div>
     }
 
-    resetButton(): JSX.Element {
-        const onClick = () => {
-            this.setState({ cpu: Internals.newCPU(this.props), error: undefined })
-        }
-        return <button onClick={onClick}>Reset</button>
-    }
-
     runButton(): JSX.Element | null {
         const { cpu, error } = this.state
         if (error) { return null }
@@ -60,6 +54,28 @@ class Internals extends React.Component<Props, State> {
             }
         }
         return <button onClick={onClick}>Run</button>
+    }
+
+    stepButton(): JSX.Element | null {
+        const { cpu, error } = this.state
+        if (error) { return null }
+
+        const onClick = () => {
+            try {
+                cpu.step()
+                this.setState({ cpu: cpu})
+            } catch (e) {
+                this.setState({ error: e })
+            }
+        }
+        return <button onClick={onClick}>Step</button>
+    }
+
+    resetButton(): JSX.Element {
+        const onClick = () => {
+            this.setState({ cpu: Internals.newCPU(this.props), error: undefined })
+        }
+        return <button onClick={onClick}>Reset</button>
     }
 
     static newCPU(props: Props): CPUModel {

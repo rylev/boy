@@ -1,25 +1,42 @@
 import { toHex } from 'lib/hex'
-type AddHLBC = { type: 'ADD HL,BC' }
+
 type JPa16 = { type: 'JP a16' }
-type Halt = { type: 'HALT' }
-type CPd8 = { type: 'CP d8' }
 type JRzr8 = { type: 'JR Z,R8' }
+type JRr8 = { type: 'JR R8' }
+
+type Halt = { type: 'HALT' }
+
+type AddHLBC = { type: 'ADD HL,BC' }
 type XORA = { type: 'XOR A' }
+type CPd8 = { type: 'CP d8' }
+
+type JumpInstruction = 
+    | JPa16
+    | JRzr8
+    | JRr8
+
+type ControlInstruction = 
+    | Halt
+    
+type ArithmeticInstruction = 
+    | AddHLBC 
+    | XORA
+    | CPd8
 
 export type Instruction =
-    | AddHLBC 
-    | JPa16
-    | Halt
-    | CPd8
-    | JRzr8
-    | XORA
+    | JumpInstruction
+    | ControlInstruction
+    | ArithmeticInstruction
 
 export namespace Instruction {
-    export const AddHLBC: AddHLBC = { type: 'ADD HL,BC'}
-    export const JPa16: JPa16 = { type: 'JP a16'}
-    export const Halt: Halt = { type: 'HALT'}
-    export const CPd8: CPd8 = { type: 'CP d8'}
     export const JRzr8: JRzr8 = { type: 'JR Z,R8'}
+    export const JRr8: JRr8 = { type: 'JR R8'}
+    export const JPa16: JPa16 = { type: 'JP a16'}
+
+    export const Halt: Halt = { type: 'HALT'}
+
+    export const AddHLBC: AddHLBC = { type: 'ADD HL,BC'}
+    export const CPd8: CPd8 = { type: 'CP d8'}
     export const XORA: XORA = { type: 'XOR A'}
 
     export function fromByte(byte: number): Instruction {
@@ -45,7 +62,9 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x76: Instruction.Halt,
     0xfe: Instruction.CPd8,
     0x28: Instruction.JRzr8,
-    0xaf: Instruction.XORA
+    0xaf: Instruction.XORA,
+    0x18: Instruction.JRr8
+
 }
 
 export default Instruction

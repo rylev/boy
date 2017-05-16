@@ -30,15 +30,19 @@ export class CPU {
     run () {
         this._isRunning = true
         while (this._isRunning) {
-            const instructionByte = this.bus.read(this.pc)
-            const instruction = Instruction.fromByte(instructionByte)
-            const [nextPC, _ ] = this.step(instruction)
-            // TODO: make sure the cpu runs at the right clock speed
-            this.pc = nextPC
+            this.step()
         }
     }
+            
+    step() {
+        const instructionByte = this.bus.read(this.pc)
+        const instruction = Instruction.fromByte(instructionByte)
+        const [nextPC, _] = this.execute(instruction)
+        // TODO: make sure the cpu runs at the right clock speed
+        this.pc = nextPC
+    }
 
-    step(instruction: Instruction): [Address, Cycles] {
+    execute(instruction: Instruction): [Address, Cycles] {
         // OPCodes Map: http://pastraiser.com/cpu/gameboy/gameboy_opcodes.html
         // OPCodes Explanation: http://www.chrisantonellis.com/files/gameboy/gb-instructions.txt
         switch (instruction.type) {
@@ -76,20 +80,26 @@ export class CPU {
                 let newPC, cycles
                 if (this.registers.f.zero) {
                     cycles = 12
-                    const relativeValue = this.pc + 1
+                    const relativeValue = this.bus.read(this.pc + 1)
                     newPC = this.pc + uint.asSigned(relativeValue)
                 } else {
                     cycles = 8
                     newPC = this.pc + 2
                 }
                 return [newPC, cycles]
+            case 'JR R8':
+                // 2  12
+                // - - - -
+                const relativeValue = this.bus.read(this.pc + 1)
+                const pc = this.pc + uint.asSigned(relativeValue)
 
+                return [pc, 12]
             case 'XOR A':
                 // 1  4
                 // Z 0 0 0
-                this.registers.a ^= this.bus.read(this.pc + 1)
+                this.registers.a ^= this.registers.a
                 this.registers.f.zero = this.registers.a === 0
-                return [1,4]
+                return [this.pc + 1, 4]
             default:
                 return assertExhaustive(instruction)
         }

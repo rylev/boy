@@ -68,7 +68,7 @@ function mapChunk<T>(bus: Bus, chunkOptions: ChunkOptions, callback: (slice: Uin
     let index = 0
     while (index < chunkOptions.count) {
         const start = (chunkOptions.offset * chunkOptions.size) + (index * chunkOptions.size) 
-        const end = start + chunkOptions.size - 1
+        const end = start + chunkOptions.size 
         result.push(callback(bus.slice(start, end), index))
         index = index + 1
     } 
