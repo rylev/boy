@@ -1,0 +1,17 @@
+.cpu {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.registers {
+    display: flex;
+    justify-content: space-between;
+    width: 125px;
+    border: solid black 1px;
+    padding: 5px;
+}
+
+.reg {
+    text-align: center;
+}

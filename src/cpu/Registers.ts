@@ -14,7 +14,7 @@ class Registers {
         this.c = 0
         this.d = 0
         this.e = 0
-        this.f = FlagRegister.init()
+        this.f = new FlagRegister()
         this.h = 0
         this.l = 0
     }
@@ -32,17 +32,28 @@ class Registers {
     }
 }
 
-type FlagRegister = {
-    zero: boolean,
-    subtract: boolean,
-    halfCarry: boolean,
+class FlagRegister {
+    zero: boolean
+    subtract: boolean
+    halfCarry: boolean
     carry: boolean
-}
 
-namespace FlagRegister {
-    export function init(): FlagRegister {
-        return { zero: false, subtract: false, halfCarry: false, carry: false }
+    constructor() {
+        this.zero = false
+        this.subtract = false
+        this.halfCarry = false 
+        this.carry = false
     }
+
+    toByte(): number {
+        return (
+            ((this.zero ? 1 : 0) << 8) &
+            ((this.subtract ? 1 : 0) << 7) &
+            ((this.halfCarry ? 1 : 0) << 6) &
+            ((this.carry ? 1 : 0) << 5) 
+        )
+    }
+
 }
 
 export default Registers
