@@ -35,11 +35,29 @@ class Memory extends React.Component<Props, State> {
         const { bus } = this.props
         const options = { size: 8, count: 18, offset: this.state.offset }
         const rows = mapChunk(bus, options, (chunk, i) => this.row(chunk, options.size, i))
+        const upButton = this.state.offset > 0 
+            ? <button className="memoryMove memoryDown" onClick={this.moveDown}>▲</button>
+            : null
+        const downButton = this.state.offset < (8192 - options.count)
+            ? <button className="memoryMove memoryUp" onClick={this.moveUp}>▼</button>
+            : null
         return (
-            <div id="memory">
-                {rows}
+            <div className="memoryViewer">
+               {upButton} 
+                <div id="memory">
+                    {rows}
+                </div>
+               {downButton} 
             </div>
         )
+    }
+
+    moveDown = () => {
+        this.setState({ offset: this.state.offset - 1 })
+    }
+
+    moveUp = () => {
+        this.setState({offset: this.state.offset + 1})
     }
 }
 
