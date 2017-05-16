@@ -9,3 +9,7 @@
 .isPC {
     background: red;
 }
+
+.isHeader {
+    background: green;
+}

@@ -9,8 +9,9 @@ class Memory extends React.Component<Props, {}> {
         const options = { size: 8, count: 18, offset: (pc / 8)}
         const divs = mapChunk(bus.rom, options, (chunk, i) => {
             const beginning = (options.offset * options.size) + (i * options.size)
+            const isHeader = beginning >= 0x0100 && beginning <= 0x014F ? 'isHeader' : ''
             return (
-                <div key={i}>
+                <div className={isHeader} key={i}>
                     <span>0x{toHex(beginning, 3)}: </span>
                     {Array.from(chunk).map((b,i) => {
                         const isPC = (pc === (beginning + i)) ? 'isPC' : ''
