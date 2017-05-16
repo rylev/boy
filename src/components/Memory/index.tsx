@@ -12,25 +12,6 @@ class Memory extends React.Component<Props, State> {
         this.state = {offset: (this.props.pc / BYTE_SIZE) }
     }
 
-    byte(address: number, value: number): JSX.Element {
-        const { pc } = this.props
-        const isPC = pc === address ? 'isPC' : ''
-        return <div className={`byte ${isPC}`} key={address}>{toHex(value, 2)}</div>
-    }
-
-    row(chunk: Uint8Array, numberOfBytes: number, index: number): JSX.Element {
-        const offset = this.state.offset
-        const firstByteAddress = (offset * numberOfBytes) + (index * numberOfBytes)
-        const isHeader = firstByteAddress >= 0x0100 && firstByteAddress < 0x014F ? 'isHeader' : ''
-        const bytes = Array.from(chunk).map((byte, i) => this.byte(firstByteAddress + i, byte))
-        return (
-            <div className={`memoryRow ${isHeader}`} key={index}>
-                <div className="rowAddress">0x{toHex(firstByteAddress, 3)}: </div>
-                <div className="bytes">{bytes}</div>
-            </div>
-        )
-    }
-
     render (): JSX.Element | null {
         const { bus } = this.props
         const options = { size: 8, count: 18, offset: this.state.offset }
@@ -48,6 +29,25 @@ class Memory extends React.Component<Props, State> {
                     {rows}
                 </div>
                {downButton} 
+            </div>
+        )
+    }
+
+    byte(address: number, value: number): JSX.Element {
+        const { pc } = this.props
+        const isPC = pc === address ? 'isPC' : ''
+        return <div className={`byte ${isPC}`} key={address}>{toHex(value, 2)}</div>
+    }
+
+    row(chunk: Uint8Array, numberOfBytes: number, index: number): JSX.Element {
+        const offset = this.state.offset
+        const firstByteAddress = (offset * numberOfBytes) + (index * numberOfBytes)
+        const isHeader = firstByteAddress >= 0x0100 && firstByteAddress < 0x014F ? 'isHeader' : ''
+        const bytes = Array.from(chunk).map((byte, i) => this.byte(firstByteAddress + i, byte))
+        return (
+            <div className={`memoryRow ${isHeader}`} key={index}>
+                <div className="rowAddress">0x{toHex(firstByteAddress, 3)}: </div>
+                <div className="bytes">{bytes}</div>
             </div>
         )
     }
