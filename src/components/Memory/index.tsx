@@ -3,42 +3,43 @@ import * as React from 'react'
 import Bus from 'cpu/Bus'
 import './memory.css'
 
+const BYTE_SIZE = 8
 type Props = {bus: Bus, pc: number}
-class Memory extends React.Component<Props, {}> {
-    rom (bus: Bus, pc: number): JSX.Element | null {
-        const options = { size: 8, count: 18, offset: (pc / 8)}
-        const divs = mapChunk(bus.rom, options, (chunk, i) => {
-            const beginning = (options.offset * options.size) + (i * options.size)
-            const isHeader = beginning >= 0x0100 && beginning <= 0x014F ? 'isHeader' : ''
-            return (
-                <div className={isHeader} key={i}>
-                    <span>0x{toHex(beginning, 3)}: </span>
-                    {Array.from(chunk).map((b,i) => {
-                        const isPC = (pc === (beginning + i)) ? 'isPC' : ''
-                        return <span className={`byte ${isPC}`} key={i}>{toHex(b, 2)}</span>
-                    })}
-                </div>
-            )
-        })
+type State = { offset: number }
+class Memory extends React.Component<Props, State> {
+    constructor (props: Props) {
+        super(props)
+        this.state = {offset: (this.props.pc / BYTE_SIZE) }
+    }
+
+    byte(address: number, value: number): JSX.Element {
+        const { pc } = this.props
+        const isPC = pc === address ? 'isPC' : ''
+        return <span className={`byte ${isPC}`} key={address}>{toHex(value, 2)}</span>
+    }
+
+    row(chunk: Uint8Array, numberOfBytes: number, index: number): JSX.Element {
+        const offset = this.state.offset
+        const firstByteAddress = (offset * numberOfBytes) + (index * numberOfBytes)
+        const isHeader = firstByteAddress >= 0x0100 && firstByteAddress < 0x014F ? 'isHeader' : ''
+        const bytes = Array.from(chunk).map((byte, i) => this.byte(firstByteAddress + i, byte))
         return (
-            <div>
-                <p>ROM</p>
-                {divs}
+            <div className={isHeader} key={index}>
+                <span>0x{toHex(firstByteAddress, 3)}: </span>
+                {bytes}
             </div>
         )
     }
 
     render (): JSX.Element | null {
-        const { bus, pc } = this.props
-        if (bus.biosMapped) {
-            return (
-                <div>
-                    <p>BIOS</p>
-                </div>
-            )
-        } else {
-            return this.rom(bus, pc)
-        }
+        const { bus } = this.props
+        const options = { size: 8, count: 18, offset: this.state.offset }
+        const rows = mapChunk(bus, options, (chunk, i) => this.row(chunk, options.size, i))
+        return (
+            <div>
+                {rows}
+            </div>
+        )
     }
 }
 
@@ -49,13 +50,13 @@ function toHex(byte: number, places: number): string {
 }
 
 type ChunkOptions = {size: number, count: number, offset: number}
-function mapChunk<T>(array: Uint8Array, chunkOptions: ChunkOptions, callback: (slice: Uint8Array, index: number) => T): T[] {
+function mapChunk<T>(bus: Bus, chunkOptions: ChunkOptions, callback: (slice: Uint8Array, index: number) => T): T[] {
     const result: T[] = []
     let index = 0
     while (index < chunkOptions.count) {
         const start = (chunkOptions.offset * chunkOptions.size) + (index * chunkOptions.size) 
         const end = start + chunkOptions.size - 1
-        result.push(callback(array.slice(start, end), index))
+        result.push(callback(bus.slice(start, end), index))
         index = index + 1
     } 
 

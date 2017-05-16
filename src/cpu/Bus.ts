@@ -23,6 +23,17 @@ class Bus {
         return this._rom
     }
 
+    slice(start: number, end: number): Uint8Array {
+        let array = new Uint8Array(end - start)
+        let index = 0
+        while (index <= end - start - 1) {
+            array[index] = this.read(start + index)
+            index = index + 1
+        }
+
+        return array
+    }
+
     read(addr: number): number {
         if (addr < 0x100 && this._biosMapped) {
             return this._bios[addr]
