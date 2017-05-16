@@ -1,6 +1,7 @@
 import * as React from 'react'
 
 import Bus from 'cpu/Bus'
+import { toHex } from 'lib/hex'
 import './memory.css'
 
 const BYTE_SIZE = 8
@@ -59,12 +60,6 @@ class Memory extends React.Component<Props, State> {
     moveUp = () => {
         this.setState({offset: this.state.offset + 1})
     }
-}
-
-function toHex(byte: number, places: number): string {
-    const hex = byte.toString(16)
-    const padding = places - hex.length 
-    return `${"0".repeat(padding > 0 ? padding : 0)}${hex}`
 }
 
 type ChunkOptions = {size: number, count: number, offset: number}

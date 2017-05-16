@@ -1,3 +1,4 @@
+import { toHex } from 'lib/hex'
 type AddHLBC = { type: 'ADD HL,BC' }
 type JPa16 = { type: 'JP a16' }
 type Halt = { type: 'HALT' }
@@ -14,7 +15,7 @@ export namespace Instruction {
 
     export function fromByte(byte: number): Instruction {
         const instruction = byteToInstructionMap[byte]
-        if (instruction == undefined) { throw new Error(`Unexpected OPCode: '${byte}'`) }
+        if (instruction == undefined) { throw new Error(`Unexpected OPCode: '${toHex(byte)}'`) }
         return instruction
     }
 

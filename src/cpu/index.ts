@@ -17,7 +17,7 @@ export class CPU {
     constructor(bios: Uint8Array | undefined, rom: Uint8Array) {
         this.bus = new Bus(bios, rom)
         this.registers = new Registers()
-        this.pc = bios ? 0 : 0x100
+        this.pc = bios ? 0 : 0x150
         this.sp = 0 
     }
 
