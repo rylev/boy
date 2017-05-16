@@ -10,6 +10,29 @@
     background: red;
 }
 
+.rowAddress {
+    display: inline-block;
+    font-weight: bold;
+    margin-left: 10px
+}
+
+.bytes {
+    display: inline-block;
+    margin-right: 20px;
+}
+
 .isHeader {
     background: green;
+}
+
+.memoryRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-left: 10px
+}
+
+#memory {
+    max-width: 300px;
+    min-width: 300px;
 }

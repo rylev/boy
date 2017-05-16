@@ -15,7 +15,7 @@ class Memory extends React.Component<Props, State> {
     byte(address: number, value: number): JSX.Element {
         const { pc } = this.props
         const isPC = pc === address ? 'isPC' : ''
-        return <span className={`byte ${isPC}`} key={address}>{toHex(value, 2)}</span>
+        return <div className={`byte ${isPC}`} key={address}>{toHex(value, 2)}</div>
     }
 
     row(chunk: Uint8Array, numberOfBytes: number, index: number): JSX.Element {
@@ -24,9 +24,9 @@ class Memory extends React.Component<Props, State> {
         const isHeader = firstByteAddress >= 0x0100 && firstByteAddress < 0x014F ? 'isHeader' : ''
         const bytes = Array.from(chunk).map((byte, i) => this.byte(firstByteAddress + i, byte))
         return (
-            <div className={isHeader} key={index}>
-                <span>0x{toHex(firstByteAddress, 3)}: </span>
-                {bytes}
+            <div className={`memoryRow ${isHeader}`} key={index}>
+                <div className="rowAddress">0x{toHex(firstByteAddress, 3)}: </div>
+                <div className="bytes">{bytes}</div>
             </div>
         )
     }
@@ -36,7 +36,7 @@ class Memory extends React.Component<Props, State> {
         const options = { size: 8, count: 18, offset: this.state.offset }
         const rows = mapChunk(bus, options, (chunk, i) => this.row(chunk, options.size, i))
         return (
-            <div>
+            <div id="memory">
                 {rows}
             </div>
         )
