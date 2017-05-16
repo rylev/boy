@@ -94,6 +94,12 @@ export class CPU {
                 const pc = this.pc + uint.asSigned(relativeValue)
 
                 return [pc, 12]
+            case 'LD A,d8':
+                // 2  8
+                // - - - -
+                const value = this.bus.read(this.pc + 1)
+                this.registers.a = value
+                return [this.pc + 2, 8]
             case 'XOR A':
                 // 1  4
                 // Z 0 0 0
