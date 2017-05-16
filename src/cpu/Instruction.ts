@@ -36,7 +36,7 @@ export namespace Instruction {
 const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x09: Instruction.AddHLBC,
     0xc3: Instruction.JPa16,
-    0x67: Instruction.Halt,
+    0x76: Instruction.Halt,
     0xfe: Instruction.CPd8
 }
 
