@@ -2,16 +2,19 @@ import { toHex } from 'lib/hex'
 type AddHLBC = { type: 'ADD HL,BC' }
 type JPa16 = { type: 'JP a16' }
 type Halt = { type: 'HALT' }
+type CPd8 = { type: 'CP d8' }
 
 export type Instruction =
     | AddHLBC 
     | JPa16
     | Halt
+    | CPd8
 
 export namespace Instruction {
     export const AddHLBC: AddHLBC = { type: 'ADD HL,BC'}
     export const JPa16: JPa16 = { type: 'JP a16'}
     export const Halt: Halt = { type: 'HALT'}
+    export const CPd8: CPd8 = { type: 'CP d8'}
 
     export function fromByte(byte: number): Instruction {
         const instruction = byteToInstructionMap[byte]
@@ -33,7 +36,8 @@ export namespace Instruction {
 const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x09: Instruction.AddHLBC,
     0xc3: Instruction.JPa16,
-    0x67: Instruction.Halt
+    0x67: Instruction.Halt,
+    0xfe: Instruction.CPd8
 }
 
 export default Instruction

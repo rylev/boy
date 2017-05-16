@@ -1,3 +1,5 @@
+import { toHex } from 'lib/hex'
+
 class Bus {
     private _biosMapped: boolean
     private _bios: Uint8Array
@@ -35,12 +37,16 @@ class Bus {
     }
 
     read(addr: number): number {
+        let value: number | undefined
         if (addr < 0x100 && this._biosMapped) {
-            return this._bios[addr]
+            value = this._bios[addr]
         } else if (addr < 0x8000) {
-            return this._rom[addr]
+            value = this._rom[addr]
+        } else {
+            value = 0
         }
-        return 0
+        if (value === undefined) { throw new Error(`No value at address 0x${toHex(addr)}`)}
+        return value
     }
 
     unmapBios() {

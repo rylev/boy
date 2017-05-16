@@ -13,7 +13,7 @@ class Internals extends React.Component<Props, State> {
         this.state = { cpu: Internals.newCPU(props) }
     }
 
-    componentWillRecieveProps(newProps: Props) {
+    componentWillReceiveProps(newProps: Props) {
         if (newProps !== this.props) {
             this.setState({ cpu: Internals.newCPU(newProps) })
         }

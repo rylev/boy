@@ -47,9 +47,9 @@ class FlagRegister {
 
     toByte(): number {
         return (
-            ((this.zero ? 1 : 0) << 8) &
-            ((this.subtract ? 1 : 0) << 7) &
-            ((this.halfCarry ? 1 : 0) << 6) &
+            ((this.zero ? 1 : 0) << 8) |
+            ((this.subtract ? 1 : 0) << 7) |
+            ((this.halfCarry ? 1 : 0) << 6) |
             ((this.carry ? 1 : 0) << 5) 
         )
     }
