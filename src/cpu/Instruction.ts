@@ -3,18 +3,24 @@ type AddHLBC = { type: 'ADD HL,BC' }
 type JPa16 = { type: 'JP a16' }
 type Halt = { type: 'HALT' }
 type CPd8 = { type: 'CP d8' }
+type JRzr8 = { type: 'JR Z,R8' }
+type XORA = { type: 'XOR A' }
 
 export type Instruction =
     | AddHLBC 
     | JPa16
     | Halt
     | CPd8
+    | JRzr8
+    | XORA
 
 export namespace Instruction {
     export const AddHLBC: AddHLBC = { type: 'ADD HL,BC'}
     export const JPa16: JPa16 = { type: 'JP a16'}
     export const Halt: Halt = { type: 'HALT'}
     export const CPd8: CPd8 = { type: 'CP d8'}
+    export const JRzr8: JRzr8 = { type: 'JR Z,R8'}
+    export const XORA: XORA = { type: 'XOR A'}
 
     export function fromByte(byte: number): Instruction {
         const instruction = byteToInstructionMap[byte]
@@ -37,7 +43,9 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x09: Instruction.AddHLBC,
     0xc3: Instruction.JPa16,
     0x76: Instruction.Halt,
-    0xfe: Instruction.CPd8
+    0xfe: Instruction.CPd8,
+    0x28: Instruction.JRzr8,
+    0xaf: Instruction.XORA
 }
 
 export default Instruction

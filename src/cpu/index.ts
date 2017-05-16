@@ -3,6 +3,7 @@ import Instruction from './Instruction'
 import Bus from './Bus'
 import { assertExhaustive } from 'typescript'
 import u16 from 'lib/u16'
+import uint from 'lib/uint'
 
 type Address = number
 type Cycles = number
@@ -69,6 +70,26 @@ export class CPU {
                 this.registers.f.halfCarry = false // TODO: Set halfCarry
                 this.registers.f.carry = this.registers.a < data
                 return [this.pc + 2, 8]
+            case 'JR Z,R8':
+                // 2  12/8
+                // - - - -
+                let newPC, cycles
+                if (this.registers.f.zero) {
+                    cycles = 12
+                    const relativeValue = this.pc + 1
+                    newPC = this.pc + uint.asSigned(relativeValue)
+                } else {
+                    cycles = 8
+                    newPC = this.pc + 2
+                }
+                return [newPC, cycles]
+
+            case 'XOR A':
+                // 1  4
+                // Z 0 0 0
+                this.registers.a ^= this.bus.read(this.pc + 1)
+                this.registers.f.zero = this.registers.a === 0
+                return [1,4]
             default:
                 return assertExhaustive(instruction)
         }
