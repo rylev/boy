@@ -4,23 +4,26 @@ import Bus from 'cpu/Bus'
 import { toHex } from 'lib/hex'
 import './memory.css'
 
-const BYTE_SIZE = 8
-type Props = {bus: Bus, pc: number}
-type State = { offset: number }
+type Props = { 
+    bus: Bus, 
+    pc: number, 
+    offset: number, 
+    changeOffset: (newOffset: number) => void 
+}
+type State = {}
 class Memory extends React.Component<Props, State> {
     constructor (props: Props) {
         super(props)
-        this.state = {offset: (this.props.pc / BYTE_SIZE) }
     }
 
     render (): JSX.Element | null {
         const { bus } = this.props
-        const options = { size: 8, count: 18, offset: this.state.offset }
+        const options = { size: 8, count: 18, offset: this.props.offset }
         const rows = mapChunk(bus, options, (chunk, i) => this.row(chunk, options.size, i))
-        const upButton = this.state.offset > 0 
+        const upButton = this.props.offset > 0 
             ? <button className="memoryMove memoryDown" onClick={this.moveDown}>▲</button>
             : null
-        const downButton = this.state.offset < (8192 - options.count)
+        const downButton = this.props.offset < (8192 - options.count)
             ? <button className="memoryMove memoryUp" onClick={this.moveUp}>▼</button>
             : null
         return (
@@ -41,7 +44,7 @@ class Memory extends React.Component<Props, State> {
     }
 
     row(chunk: Uint8Array, numberOfBytes: number, index: number): JSX.Element {
-        const offset = this.state.offset
+        const offset = this.props.offset
         const firstByteAddress = (offset * numberOfBytes) + (index * numberOfBytes)
         const isHeader = firstByteAddress >= 0x0100 && firstByteAddress < 0x014F ? 'isHeader' : ''
         const bytes = Array.from(chunk).map((byte, i) => this.byte(firstByteAddress + i, byte))
@@ -54,11 +57,11 @@ class Memory extends React.Component<Props, State> {
     }
 
     moveDown = () => {
-        this.setState({ offset: this.state.offset - 1 })
+        this.props.changeOffset(this.props.offset - 1)
     }
 
     moveUp = () => {
-        this.setState({offset: this.state.offset + 1})
+        this.props.changeOffset(this.props.offset + 1)
     }
 }
 
