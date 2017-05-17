@@ -12,7 +12,7 @@ class Internals extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props)
         const cpu = Internals.newCPU(props)
-        this.state = { cpu: cpu, memoryOffset: cpu.pc / BYTE_SIZE }
+        this.state = { cpu: cpu, memoryOffset: calculateMemoryOffset(cpu) }
     }
 
     componentWillReceiveProps(newProps: Props) {
@@ -26,9 +26,6 @@ class Internals extends React.Component<Props, State> {
         return (
             <div>
                 {this.error()}
-                {this.runButton()}
-                {this.stepButton()}
-                {this.resetButton()}
                 <div className="internals">
                     <CPU cpu={cpu} pcClicked={this.pcClicked}/>
                     <Memory 
@@ -37,6 +34,7 @@ class Internals extends React.Component<Props, State> {
                         offset={memoryOffset} 
                         changeOffset={newOffset => this.setState({memoryOffset: newOffset})} />
                 </div>
+                {this.controls()}
             </div>
         )
     }
@@ -46,6 +44,16 @@ class Internals extends React.Component<Props, State> {
         if (error === undefined) { return null }
 
         return <div className="error">{error.message}</div>
+    }
+
+    controls(): JSX.Element {
+        return (
+            <div className="controls">
+                {this.runButton()}
+                {this.stepButton()}
+                {this.resetButton()}
+            </div>
+        )
     }
 
     runButton(): JSX.Element | null {
@@ -59,7 +67,7 @@ class Internals extends React.Component<Props, State> {
                 this.setState({ error: e })
             }
         }
-        return <button onClick={onClick}>Run</button>
+        return <button className="run control" onClick={onClick}>Run</button>
     }
 
     stepButton(): JSX.Element | null {
@@ -69,30 +77,37 @@ class Internals extends React.Component<Props, State> {
         const onClick = () => {
             try {
                 cpu.step()
-                const memoryOffset = Math.trunc(this.state.cpu.pc / BYTE_SIZE) 
-                this.setState({ cpu: cpu, memoryOffset: memoryOffset})
+                this.setState({ cpu: cpu, memoryOffset: calculateMemoryOffset(this.state.cpu)})
             } catch (e) {
                 this.setState({ error: e })
             }
         }
-        return <button onClick={onClick}>Step</button>
+        return <button className="step control" onClick={onClick}>Step</button>
     }
 
     resetButton(): JSX.Element {
         const onClick = () => {
             const cpu = Internals.newCPU(this.props)
-            this.setState({ cpu: cpu, error: undefined, memoryOffset: cpu.pc / BYTE_SIZE})
+            this.setState({ 
+                cpu: cpu, 
+                error: undefined, 
+                memoryOffset: calculateMemoryOffset(cpu)
+            })
         }
-        return <button onClick={onClick}>Reset</button>
+        return <button className="reset control" onClick={onClick}>Reset</button>
     }
 
     pcClicked = () => {
-        this.setState({memoryOffset: Math.trunc(this.state.cpu.pc / BYTE_SIZE)})
+        this.setState({memoryOffset: calculateMemoryOffset(this.state.cpu) })
     }
 
     static newCPU(props: Props): CPUModel {
         return new CPUModel(props.bios, props.rom)
     }
+}
+
+function calculateMemoryOffset(cpu: CPUModel): number {
+    return Math.trunc(cpu.pc / BYTE_SIZE)
 }
 
 export default Internals
