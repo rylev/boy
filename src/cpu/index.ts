@@ -58,7 +58,7 @@ export class CPU {
             case 'JP a16': 
                 // 3  16
                 // - - - -
-                const address = (this.bus.read(this.pc + 1) << 8) + this.bus.read(this.pc + 2)
+                const address = this.bus.read(this.pc + 1) | (this.bus.read(this.pc + 2) << 8)
                 return [address, 16]
             case 'HALT':
                 // 1  4
@@ -100,6 +100,12 @@ export class CPU {
                 const value = this.bus.read(this.pc + 1)
                 this.registers.a = value
                 return [this.pc + 2, 8]
+            case 'LD (a16),A':
+                // 3  16
+                // - - - -
+                const ddress = (this.bus.read(this.pc + 1) << 8) + this.bus.read(this.pc + 2)
+                this.bus.write(ddress, this.registers.a)
+                return [this.pc + 3, 16]
             case 'XOR A':
                 // 1  4
                 // Z 0 0 0

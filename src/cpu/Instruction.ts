@@ -11,6 +11,7 @@ type XORA = { type: 'XOR A' }
 type CPd8 = { type: 'CP d8' }
 
 type LDAd8 = { type: 'LD A,d8' }
+type LDa16A = { type: 'LD (a16),A' }
 
 type JumpInstruction = 
     | JPa16
@@ -27,6 +28,7 @@ type ArithmeticInstruction =
 
 type LoadStoreInstruction = 
     | LDAd8
+    | LDa16A
 
 export type Instruction =
     | JumpInstruction
@@ -47,6 +49,7 @@ export namespace Instruction {
     export const XORA: XORA = { type: 'XOR A'}
 
     export const LDAd8: LDAd8 = { type: 'LD A,d8'}
+    export const LDa16A: LDa16A = { type: 'LD (a16),A'}
 
     export function fromByte(byte: number): Instruction {
         const instruction = byteToInstructionMap[byte]
@@ -73,7 +76,8 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x28: Instruction.JRzr8,
     0xaf: Instruction.XORA,
     0x18: Instruction.JRr8,
-    0x3e: Instruction.LDAd8
+    0x3e: Instruction.LDAd8,
+    0xea: Instruction.LDa16A
 }
 
 export default Instruction

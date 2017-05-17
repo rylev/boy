@@ -9,11 +9,11 @@ export namespace u16 {
         return [result, false]
     }
 
-    export function firstByte(n: number): number {
+    export function lsb(n: number): number {
         return n & 0xFF
     }
 
-    export function secondByte(n: number): number {
+    export function msb(n: number): number {
         return (n & 0xFF00) >> 8
     }
 }

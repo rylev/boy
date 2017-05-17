@@ -42,11 +42,19 @@ class Bus {
             value = this._bios[addr]
         } else if (addr < 0x8000) {
             value = this._rom[addr]
-        } else {
-            value = 0
-        }
+        } 
         if (value === undefined) { throw new Error(`No value at address 0x${toHex(addr)}`)}
         return value
+    }
+
+    write(addr: number, value: number) {
+        if (addr < 0x100 && this._biosMapped) {
+            throw new Error("Cannot write to bios")
+        } else if (addr < 0x8000) {
+            this._rom[addr] = value
+        } else {
+            throw new Error(`Unrecognized address 0x${toHex(addr)}`)
+        }
     }
 
     unmapBios() {
