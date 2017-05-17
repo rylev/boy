@@ -65,6 +65,11 @@ export class CPU {
                 // - - - -
                 this._isRunning = false
                 return [this.pc + 1, 4]
+            case 'DI':
+                // 1  4
+                // - - - -
+                // TODO: actually disable interrupts
+                return [this.pc + 1, 4]
             case 'CP d8':
                 // 2  8
                 // Z 1 H C
@@ -106,6 +111,12 @@ export class CPU {
                 const ddress = (this.bus.read(this.pc + 1) << 8) + this.bus.read(this.pc + 2)
                 this.bus.write(ddress, this.registers.a)
                 return [this.pc + 3, 16]
+            case 'LDH (a8),A':
+                // 2  12
+                // - - - -
+                const add = 0xff00 + this.bus.read(this.pc + 1)
+                this.bus.write(add, this.registers.a)
+                return [this.pc + 2, 12]
             case 'XOR A':
                 // 1  4
                 // Z 0 0 0

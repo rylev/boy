@@ -52,6 +52,10 @@ class Bus {
             throw new Error("Cannot write to bios")
         } else if (addr < 0x8000) {
             this._rom[addr] = value
+        } else if (addr >= 0xff00 && addr <= 0xff7f) {
+            console.warn(`Writting '0x${toHex(value)}' to memory mapped IO which is not implemented`)
+        } else if (addr >= 0xff80 && addr <= 0xffff) {
+            console.warn(`Writting '0x${toHex(value)}' to zero paged ram which is not implemented`)
         } else {
             throw new Error(`Unrecognized address 0x${toHex(addr)}`)
         }
