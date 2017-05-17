@@ -36,3 +36,12 @@
     max-width: 320px;
     min-width: 320px;
 }
+
+.memoryMove {
+    margin: 10px;
+}
+
+.memoryViewer {
+    display: flex;
+    flex-direction: column;
+}

@@ -7,11 +7,27 @@
 .registers {
     display: flex;
     justify-content: space-between;
-    width: 125px;
+    width: 150px;
     border: solid black 1px;
     padding: 5px;
 }
 
 .reg {
+    margin: 5px;
     text-align: center;
+}
+
+.pc {
+    border: solid black 1px;
+    border-bottom: 0px;
+    padding: 2px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.sp {
+    padding: 2px;
+    text-align: center;
+    border: solid black 1px;
+    border-top: 0;
 }

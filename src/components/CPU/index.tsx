@@ -9,7 +9,23 @@ type Props = { cpu: CPUModel, pcClicked: () => void }
 type State = {}
 class CPU extends React.Component<Props, State> {
     register(label: string, register: number): JSX.Element {
-        return <div className="reg">{label}: 0x{toHex(register)}</div>
+        return (
+            <div className="reg">
+                <div className="regLabel">{label}</div>
+                <div className="regValue">0x{toHex(register, 4)}</div>
+            </div>
+        )
+    }
+
+    pc() {
+        const { cpu, pcClicked } = this.props
+
+        return (
+            <div className="pc" onClick={pcClicked}>
+                <div className="pcLabel">PC</div>
+                <div className="pcValue">0x{toHex(cpu.pc, 4)}</div>
+            </div>
+        )
     }
 
     registers(registers: Registers): JSX.Element {
@@ -31,13 +47,24 @@ class CPU extends React.Component<Props, State> {
         )
     }
 
+    sp() {
+        const { cpu } = this.props
+
+        return (
+            <div className="sp">
+                <div className="spLabel">SP</div>
+                <div className="spValue">0x{toHex(cpu.sp, 4)}</div>
+            </div>
+        )
+    }
+
     render(): JSX.Element | null {
         const { cpu } = this.props
         return (
             <div className="cpu">
-                <div className="pc" onClick={this.props.pcClicked}>PC: 0x{toHex(cpu.pc)}</div>
+                {this.pc()}
                 {this.registers(cpu.registers)}
-                <div className="sp">{toHex(cpu.sp)}</div>
+                {this.sp()}
             </div>
         )
     }
