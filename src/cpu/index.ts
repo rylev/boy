@@ -55,11 +55,6 @@ export class CPU {
                 this.registers.f.halfCarry = false // TODO: Set halfCarry
                 this.registers.f.carry = carry
                 return [this.pc + 1, 8]
-            case 'JP a16': 
-                // 3  16
-                // - - - -
-                const address = this.bus.read(this.pc + 1) | (this.bus.read(this.pc + 2) << 8)
-                return [address, 16]
             case 'HALT':
                 // 1  4
                 // - - - -
@@ -79,6 +74,11 @@ export class CPU {
                 this.registers.f.halfCarry = false // TODO: Set halfCarry
                 this.registers.f.carry = this.registers.a < data
                 return [this.pc + 2, 8]
+            case 'JP a16': 
+                // 3  16
+                // - - - -
+                const address = this.bus.read(this.pc + 1) | (this.bus.read(this.pc + 2) << 8)
+                return [address, 16]
             case 'JR Z,R8':
                 // 2  12/8
                 // - - - -
@@ -99,6 +99,13 @@ export class CPU {
                 const pc = this.pc + uint.asSigned(relativeValue)
 
                 return [pc, 12]
+
+            case 'CALL a16':
+                // 3  24
+                // - - - -
+                this.push(this.pc + 3)
+                const lol = this.bus.read(this.pc + 1) | (this.bus.read(this.pc + 2) << 8)
+                return [lol, 24]
             case 'LD A,d8':
                 // 2  8
                 // - - - -
@@ -126,6 +133,15 @@ export class CPU {
             default:
                 return assertExhaustive(instruction)
         }
+    }
+
+    push(value: number) {
+        const msb = u16.msb(value)  
+        this.bus.write(this.sp, msb)
+        this.sp -= 1
+        const lsb = u16.lsb(value)  
+        this.bus.write(this.sp, lsb)
+        this.sp -= 1
     }
 }
 

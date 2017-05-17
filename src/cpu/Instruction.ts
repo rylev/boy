@@ -3,6 +3,7 @@ import { toHex } from 'lib/hex'
 type JPa16 = { type: 'JP a16' }
 type JRzr8 = { type: 'JR Z,R8' }
 type JRr8 = { type: 'JR R8' }
+type CALLa16 = { type: 'CALL a16'}
 
 type Halt = { type: 'HALT' }
 type DI = { type: 'DI' }
@@ -19,6 +20,7 @@ type JumpInstruction =
     | JPa16
     | JRzr8
     | JRr8
+    | CALLa16
 
 type ControlInstruction = 
     | Halt
@@ -45,6 +47,7 @@ export namespace Instruction {
     export const JRzr8: JRzr8 = { type: 'JR Z,R8'}
     export const JRr8: JRr8 = { type: 'JR R8'}
     export const JPa16: JPa16 = { type: 'JP a16'}
+    export const CALLa16: CALLa16 = { type: 'CALL a16'}
 
     export const Halt: Halt = { type: 'HALT'}
     export const DI: DI = { type: 'DI'}
@@ -85,7 +88,8 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x3e: Instruction.LDAd8,
     0xea: Instruction.LDa16A,
     0xf3: Instruction.DI,
-    0xe0: Instruction.LDHa8A
+    0xe0: Instruction.LDHa8A,
+    0xcd: Instruction.CALLa16
 }
 
 export default Instruction
