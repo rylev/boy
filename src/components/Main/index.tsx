@@ -2,6 +2,8 @@ import * as React from 'react'
 import RomInput  from 'components/RomInput'
 import Internals from 'components/Internals'
 
+import './main.css'
+
 type Props = {}
 type State = {
     bios?: Uint8Array,
@@ -20,7 +22,6 @@ class Main extends React.Component<Props, State> {
 
     romInput(): JSX.Element | null {
         return (<div>
-            <p>Upload file</p>
             <RomInput romUploaded={this.romUploaded} />
         </div>)
     }
@@ -29,7 +30,7 @@ class Main extends React.Component<Props, State> {
         const { bios, rom } = this.state
 
         if (rom == undefined) {
-            return (<div>
+            return (<div className="page">
                 {this.romInput()}
             </div>)
         } else {

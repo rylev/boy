@@ -1,0 +1,20 @@
+.rom-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    font-size: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.rom-input-label {
+    cursor: pointer;
+    width: 100px;
+    height: 30px;
+    background: #3498db;
+    border-radius: 28px;
+    font-family: Arial;
+    color: #ffffff;
+    font-size: 20px;
+    padding: 10px 20px 10px 20px;
+}
