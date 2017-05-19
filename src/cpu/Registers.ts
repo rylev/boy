@@ -30,6 +30,14 @@ class Registers {
         this.h = (value & 0xFF00) >> 8
         this.l = (value & 0XFF)
     }
+
+    get de(): number {
+        return (this.d << 8) + this.e
+    }
+    set de(value: number) {
+        this.d = (value & 0xFF00) >> 8
+        this.e = (value & 0XFF)
+    }
 }
 
 class FlagRegister {

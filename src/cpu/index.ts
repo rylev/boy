@@ -146,6 +146,21 @@ export class CPU {
                 // - - - -
                 this.registers.c = this.readNextByte()
                 return [this.pc + 2, 8]
+            case 'LD (C),A':
+                // 2  8
+                // - - - -
+                this.bus.write(0xff00 + this.registers.c, this.registers.a)
+                return [this.pc + 2, 8]
+            case 'LD (HL),A':
+                // 1  8
+                // - - - -
+                this.bus.write(this.registers.hl, this.registers.a)
+                return [this.pc + 1, 8]
+            case 'LD DE,d16':
+                // 3  12
+                // - - - -
+                this.registers.de = this.readNextWord()
+                return [this.pc + 3, 12]
             
             case 'BIT 7,H':
                 // 1  4
@@ -162,7 +177,6 @@ export class CPU {
         if (condition) {
             return [this.pc + 2 + uint.asSigned(this.readNextByte()), 12]
         } else {
-            console.log(`0x${this.pc.toString(16)}`)
             return [this.pc + 2, 8]
         }
     }
