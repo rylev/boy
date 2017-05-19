@@ -1,8 +1,9 @@
 import { toHex } from 'lib/hex'
 
 type JPa16 = { type: 'JP a16' }
-type JRzr8 = { type: 'JR Z,R8' }
+type JRzr8 = { type: 'JR Z,r8' }
 type JRr8 = { type: 'JR R8' }
+type JRnzr8 = { type: 'JR NZ,r8' }
 type CALLa16 = { type: 'CALL a16'}
 
 type Halt = { type: 'HALT' }
@@ -26,6 +27,7 @@ type BIT7H = { type: 'BIT 7,H' }
 type JumpInstruction = 
     | JPa16
     | JRzr8
+    | JRnzr8
     | JRr8
     | CALLa16
 
@@ -59,7 +61,8 @@ export type Instruction =
     | PrefixInstruction
 
 export namespace Instruction {
-    export const JRzr8: JRzr8 = { type: 'JR Z,R8' }
+    export const JRzr8: JRzr8 = { type: 'JR Z,r8' }
+    export const JRnzr8: JRnzr8 = { type: 'JR NZ,r8' }
     export const JRr8: JRr8 = { type: 'JR R8' }
     export const JPa16: JPa16 = { type: 'JP a16' }
     export const CALLa16: CALLa16 = { type: 'CALL a16' }
@@ -109,6 +112,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
 
     0xc3: Instruction.JPa16,
     0x28: Instruction.JRzr8,
+    0x20: Instruction.JRnzr8,
     0x18: Instruction.JRr8,
     0xcd: Instruction.CALLa16,
 

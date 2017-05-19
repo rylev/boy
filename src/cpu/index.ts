@@ -92,14 +92,14 @@ export class CPU {
                 // 3  16
                 // - - - -
                 return [this.readNextWord(), 16]
-            case 'JR Z,R8':
+            case 'JR Z,r8':
                 // 2  12/8
                 // - - - -
-                if (this.registers.f.zero) {
-                    return [this.pc + uint.asSigned(this.readNextByte()), 12]
-                } else {
-                    return [this.pc + 2, 8]
-                }
+                return this.conditionalJump(this.registers.f.zero) 
+            case 'JR NZ,r8':
+                // 2  12/8
+                // - - - -
+                return this.conditionalJump(!this.registers.f.zero) 
             case 'JR R8':
                 // 2  12
                 // - - - -
@@ -139,13 +139,13 @@ export class CPU {
                 // 1  8
                 // - - - -
                 this.bus.write(this.registers.hl, this.registers.a)
-                this.registers.hl -= 1
+                this.registers.hl = this.registers.hl - 1
                 return [this.pc + 1, 8]
             
             case 'BIT 7,H':
                 // 1  4
                 // Z 0 1 -
-                this.bitTest(7)
+                this.bitTest(this.registers.h, 7)
                 return [this.pc + 1, 4]
 
             default:
@@ -153,8 +153,17 @@ export class CPU {
         }
     }
 
-    bitTest(bitPlace: number) {
-        this.registers.f.zero = ((this.registers.h >> (bitPlace - 1)) & 1) == 1
+    conditionalJump(condition: boolean): [Address, Cycles] {
+        if (condition) {
+            return [this.pc + 2 + uint.asSigned(this.readNextByte()), 12]
+        } else {
+            console.log(`0x${this.pc.toString(16)}`)
+            return [this.pc + 2, 8]
+        }
+    }
+
+    bitTest(value: number, bitPlace: number) {
+        this.registers.f.zero = ((value >> bitPlace) & 1) == 0
         this.registers.f.subtract = false
         this.registers.f.halfCarry = true
     }
