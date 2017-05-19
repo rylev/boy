@@ -2,7 +2,11 @@ import * as React from 'react'
 
 import './romInput.css'
 
-type Props = {romUploaded: (rom: Uint8Array) => void }
+type Props = {
+    label: string, 
+    id: string,
+    romUploaded: (rom: Uint8Array) => void 
+}
 
 class RomInput extends React.Component<Props, {}> {
     onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,9 +26,9 @@ class RomInput extends React.Component<Props, {}> {
     render () {
         return (
             <div className="rom-upload-button">
-                <input id="romInput" className="rom-input" type="file" accept=".gb" onChange={this.onChange}/>
-                <label htmlFor='romInput' className='rom-input-label'>
-                    Upload ROM
+                <input id={this.props.id}  className="rom-input" type="file" accept=".gb" onChange={this.onChange}/>
+                <label htmlFor={this.props.id} className='rom-input-label'>
+                    {this.props.label}
                 </label>
             </div>
         )

@@ -118,6 +118,11 @@ export class CPU {
                 // - - - -
                 this.bus.write(0xff00 + this.bus.read(this.pc + 1), this.registers.a)
                 return [this.pc + 2, 12]
+            case 'LD SP,d16':
+                // 3  12
+                // - - - -
+                this.sp = this.readNextWord()
+                return [this.pc + 3, 12]
             default:
                 return assertExhaustive(instruction)
         }

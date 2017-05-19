@@ -16,6 +16,7 @@ type CPd8 = { type: 'CP d8' }
 type LDAd8 = { type: 'LD A,d8' }
 type LDa16A = { type: 'LD (a16),A' }
 type LDHa8A = { type: 'LDH (a8),A' }
+type LDSPd16 = { type: 'LD SP,d16' }
 
 type JumpInstruction = 
     | JPa16
@@ -37,6 +38,7 @@ type LoadStoreInstruction =
     | LDAd8
     | LDa16A
     | LDHa8A
+    | LDSPd16
 
 export type Instruction =
     | JumpInstruction
@@ -62,6 +64,7 @@ export namespace Instruction {
     export const LDAd8: LDAd8 = { type: 'LD A,d8' }
     export const LDa16A: LDa16A = { type: 'LD (a16),A' }
     export const LDHa8A: LDHa8A = { type: 'LDH (a8),A' }
+    export const LDSPd16: LDSPd16 = { type: 'LD SP,d16' }
 
     export function fromByte(byte: number): Instruction {
         const instruction = byteToInstructionMap[byte]
@@ -82,17 +85,21 @@ export namespace Instruction {
 
 const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x09: Instruction.AddHLBC,
-    0xc3: Instruction.JPa16,
-    0x76: Instruction.Halt,
     0xfe: Instruction.CPd8,
-    0x28: Instruction.JRzr8,
     0xaf: Instruction.XORA,
+
+    0xc3: Instruction.JPa16,
+    0x28: Instruction.JRzr8,
     0x18: Instruction.JRr8,
+    0xcd: Instruction.CALLa16,
+
     0x3e: Instruction.LDAd8,
     0xea: Instruction.LDa16A,
-    0xf3: Instruction.DI,
+    0x31: Instruction.LDSPd16,
     0xe0: Instruction.LDHa8A,
-    0xcd: Instruction.CALLa16,
+
+    0x76: Instruction.Halt,
+    0xf3: Instruction.DI,
     0x00: Instruction.NOP
 }
 

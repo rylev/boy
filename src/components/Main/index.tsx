@@ -20,10 +20,15 @@ class Main extends React.Component<Props, State> {
         this.setState({rom: rom})
     }
 
-    romInput(): JSX.Element | null {
-        return (<div>
-            <RomInput romUploaded={this.romUploaded} />
-        </div>)
+    biosUploaded = (bios: Uint8Array) => {
+        this.setState({bios: bios})
+    }
+
+    biosUploadMessage(): JSX.Element | null {
+        if (this.state.bios !== undefined) {
+            return <div>BIOS has been uploaded!</div>
+        }
+        return null
     }
 
     render () {
@@ -31,7 +36,9 @@ class Main extends React.Component<Props, State> {
 
         if (rom == undefined) {
             return (<div className="page">
-                {this.romInput()}
+                {this.biosUploadMessage()}
+                <RomInput id="rom-input" romUploaded={this.romUploaded} label={"Upload Rom"} />
+                <RomInput id="id-input" romUploaded={this.biosUploaded} label={"Upload Bios"} />
             </div>)
         } else {
             return (
