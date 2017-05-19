@@ -4,6 +4,7 @@ class Bus {
     private _biosMapped: boolean
     private _bios: Uint8Array
     private _rom: Uint8Array
+    private _graphicsRam: Uint8Array
 
     constructor(bios: Uint8Array | undefined, rom: Uint8Array) {
         if (bios) {
@@ -11,6 +12,7 @@ class Bus {
             this._biosMapped = true
         }
         this._rom = rom
+        this._graphicsRam = new Uint8Array(0x9FFF - 0x8000)
     }
 
     get biosMapped(): boolean {
@@ -52,6 +54,8 @@ class Bus {
             throw new Error("Cannot write to bios")
         } else if (addr < 0x8000) {
             this._rom[addr] = value
+        } else if (addr >= 0x8000 && addr < 0xA000) {
+            this._graphicsRam[addr - 0x8000] = value
         } else if (addr >= 0xff00 && addr <= 0xff7f) {
             console.warn(`Writting '0x${toHex(value)}' to memory mapped IO which is not implemented`)
         } else if (addr >= 0xff80 && addr <= 0xffff) {

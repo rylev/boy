@@ -14,6 +14,7 @@ export class CPU {
     pc: number
     sp: number
     bus: Bus
+    private _prefix: boolean = false
     private _isRunning: boolean = false
 
     constructor(bios: Uint8Array | undefined, rom: Uint8Array) {
@@ -36,7 +37,7 @@ export class CPU {
             
     step() {
         const instructionByte = this.bus.read(this.pc)
-        const instruction = Instruction.fromByte(instructionByte)
+        const instruction = Instruction.fromByte(instructionByte, this._prefix)
         const [nextPC, _] = this.execute(instruction)
         // TODO: make sure the cpu runs at the right clock speed
         this.pc = nextPC
@@ -45,6 +46,7 @@ export class CPU {
     execute(instruction: Instruction): [Address, Cycles] {
         // OPCodes Map: http://pastraiser.com/cpu/gameboy/gameboy_opcodes.html
         // OPCodes Explanation: http://www.chrisantonellis.com/files/gameboy/gb-instructions.txt
+        this._prefix = false
         switch (instruction.type) {
             case 'HALT':
                 // 1  4
@@ -59,6 +61,11 @@ export class CPU {
                 // 1  4
                 // - - - -
                 // TODO: actually disable interrupts
+                return [this.pc + 1, 4]
+            case 'PREFIX CB':
+                // 1  4
+                // - - - -
+                this._prefix = true
                 return [this.pc + 1, 4]
 
             case 'ADD HL,BC':
@@ -123,9 +130,33 @@ export class CPU {
                 // - - - -
                 this.sp = this.readNextWord()
                 return [this.pc + 3, 12]
+            case 'LD HL,d16':
+                // 3  12
+                // - - - -
+                this.registers.hl = this.readNextWord()
+                return [this.pc + 3, 12]
+            case 'LD (HL-),A':
+                // 1  8
+                // - - - -
+                this.bus.write(this.registers.hl, this.registers.a)
+                this.registers.hl -= 1
+                return [this.pc + 1, 8]
+            
+            case 'BIT 7,H':
+                // 1  4
+                // Z 0 1 -
+                this.bitTest(7)
+                return [this.pc + 1, 4]
+
             default:
                 return assertExhaustive(instruction)
         }
+    }
+
+    bitTest(bitPlace: number) {
+        this.registers.f.zero = ((this.registers.h >> (bitPlace - 1)) & 1) == 1
+        this.registers.f.subtract = false
+        this.registers.f.halfCarry = true
     }
 
     cp(value: number) {
