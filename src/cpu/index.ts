@@ -141,6 +141,11 @@ export class CPU {
                 this.bus.write(this.registers.hl, this.registers.a)
                 this.registers.hl = this.registers.hl - 1
                 return [this.pc + 1, 8]
+            case 'LD C,d8':
+                // 2  8
+                // - - - -
+                this.registers.c = this.readNextByte()
+                return [this.pc + 2, 8]
             
             case 'BIT 7,H':
                 // 1  4
