@@ -4,16 +4,19 @@ import Internals from 'components/Internals'
 
 import './main.css'
 
-type Props = {}
+type Props = {
+    bios?: Uint8Array,
+    rom?: Uint8Array
+}
 type State = {
     bios?: Uint8Array,
     rom?: Uint8Array 
 }
 
 class Main extends React.Component<Props, State> {
-    constructor() {
-        super()
-        this.state = {}
+    constructor(props: Props) {
+        super(props)
+        this.state = { bios: this.props.bios , rom: this.props.rom }
     }
 
     romUploaded = (rom: Uint8Array) => {
@@ -31,19 +34,30 @@ class Main extends React.Component<Props, State> {
         return null
     }
 
+    romLoading() {
+        const { bios, rom } = this.state
+        const romLabel = rom === undefined ? "Upload ROM" : "Change ROM" 
+        const biosLabel = bios === undefined ? "Upload BIOS" : "Change BIOS"
+        return (
+            <div className="loading">
+                <RomInput id="rom-input" romUploaded={this.romUploaded} label={romLabel} />
+                <RomInput id="bios-input" romUploaded={this.biosUploaded} label={biosLabel} />
+            </div>
+        )
+    }
+
     render () {
         const { bios, rom } = this.state
 
         if (rom == undefined) {
             return (<div className="page">
-                {this.biosUploadMessage()}
-                <RomInput id="rom-input" romUploaded={this.romUploaded} label={"Upload Rom"} />
-                <RomInput id="id-input" romUploaded={this.biosUploaded} label={"Upload Bios"} />
+                {this.romLoading()}
             </div>)
         } else {
             return (
                 <div>
                     <Internals bios={bios} rom={rom} />
+                    {this.romLoading()}
                 </div>
             )
         }

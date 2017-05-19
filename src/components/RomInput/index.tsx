@@ -13,12 +13,22 @@ class RomInput extends React.Component<Props, {}> {
         const input = e.currentTarget
         const file = input.files && input.files[0]
         if (file) {
-            const reader = new FileReader()
+            const arrayReader = new FileReader()
+            const urlReader = new FileReader()
             const contents = new Blob([file])
-            reader.readAsArrayBuffer(contents)
-            reader.onload = () => {
-                const rom = new Uint8Array(reader.result)
+            arrayReader.readAsArrayBuffer(contents)
+            arrayReader.onload = () => {
+                const rom = new Uint8Array(arrayReader.result)
                 this.props.romUploaded(rom)
+            }
+            urlReader.readAsDataURL(contents)
+            urlReader.onload = () => {
+                try {
+                    localStorage.setItem(this.props.id, urlReader.result)
+                } catch (e) {
+                    // TODO: Handle Error
+                    console.log("Storage failed: " + e)
+                }
             }
         }
     }

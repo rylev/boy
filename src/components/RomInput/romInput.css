@@ -7,6 +7,10 @@
     pointer-events: none;
 }
 
+.rom-upload-button {
+    margin: 10px;
+}
+
 .rom-input-label {
     cursor: pointer;
     width: 100px;
