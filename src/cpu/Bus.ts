@@ -6,6 +6,7 @@ class Bus {
     private _rom: Uint8Array
     private _graphicsRam: Uint8Array
     private _memoryMappedIO: Uint8Array
+    private _zeroPagedRam: Uint8Array
 
     constructor(bios: Uint8Array | undefined, rom: Uint8Array) {
         if (bios) {
@@ -15,6 +16,7 @@ class Bus {
         this._rom = rom
         this._graphicsRam = new Uint8Array(0x9fff - 0x8000)
         this._memoryMappedIO = new Uint8Array(0xff7f - 0xff00)
+        this._zeroPagedRam = new Uint8Array(0xffff - 0xff80)
     }
 
     get biosMapped(): boolean {
@@ -61,7 +63,7 @@ class Bus {
         } else if (addr >= 0xff00 && addr <= 0xff7f) {
             this._memoryMappedIO[addr - 0xff00] = value
         } else if (addr >= 0xff80 && addr <= 0xffff) {
-            console.warn(`Writting '0x${toHex(value)}' to zero paged ram which is not implemented`)
+            this._zeroPagedRam[addr - 0xff80] = value
         } else {
             throw new Error(`Unrecognized address 0x${toHex(addr)}`)
         }
