@@ -27,6 +27,7 @@ type LD_HL_A = { type: 'LD (HL),A' }
 type LDDEd16 = { type: 'LD DE,d16' }
 type LDA_DE_ = { type: 'LD A,(DE)' }
 type LDCA = { type: 'LD C,A' }
+type LDBd8 = { type: 'LD B,d8' }
 
 type BIT7H = { type: 'BIT 7,H' }
 
@@ -61,6 +62,7 @@ type LoadStoreInstruction =
     | LDDEd16
     | LDA_DE_
     | LDCA
+    | LDBd8
 
 type PrefixInstruction = 
     | BIT7H
@@ -100,6 +102,7 @@ export namespace Instruction {
     export const LDHLA: LD_HL_A = { type: 'LD (HL),A' }
     export const LDDEd16: LDDEd16 = { type: 'LD DE,d16' }
     export const LDA_DE_: LDA_DE_ = { type: 'LD A,(DE)' }
+    export const LDBd8: LDBd8 = { type: 'LD B,d8' }
 
     export const BIT7H: BIT7H = { type: 'BIT 7,H' }
 
@@ -146,6 +149,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x11: Instruction.LDDEd16,
     0x1a: Instruction.LDA_DE_,
     0x4f: Instruction.LDCA,
+    0x06: Instruction.LDBd8,
 
     0xcb: Instruction.PREFIX,
     0x76: Instruction.Halt,

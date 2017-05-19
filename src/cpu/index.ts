@@ -171,6 +171,11 @@ export class CPU {
                 // - - - -
                 this.registers.c = this.registers.a
                 return [this.pc + 1, 4]
+            case 'LD B,d8':
+                // 2  8
+                // - - - -
+                this.registers.b = this.readNextByte()
+                return [this.pc + 2, 8]
             
             case 'BIT 7,H':
                 // 1  4
