@@ -9,7 +9,7 @@ type Address = number
 type Cycles = number
 
 export class CPU {
-    static get START_ADDR(): number { return 0x150 } 
+    static get START_ADDR(): number { return 0x100 } 
     registers: Registers 
     pc: number
     sp: number
@@ -60,11 +60,16 @@ export class CPU {
                 // - - - -
                 this._isRunning = false
                 return [this.pc + 1, 4]
+            case 'NOP':
+                // 1  4
+                // - - - -
+                return [this.pc + 1, 4]
             case 'DI':
                 // 1  4
                 // - - - -
                 // TODO: actually disable interrupts
                 return [this.pc + 1, 4]
+
             case 'CP d8':
                 // 2  8
                 // Z 1 H C
