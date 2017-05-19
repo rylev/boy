@@ -16,16 +16,17 @@ type XORA = { type: 'XOR A' }
 type CPd8 = { type: 'CP d8' }
 
 type LDAd8 = { type: 'LD A,d8' }
-type LDa16A = { type: 'LD (a16),A' }
-type LDHa8A = { type: 'LDH (a8),A' }
+type LD_a16_A = { type: 'LD (a16),A' }
+type LDH_a8_A = { type: 'LDH (a8),A' }
 type LDSPd16 = { type: 'LD SP,d16' }
 type LDHLd16 = { type: 'LD HL,d16' }
-type LDHLDA = { type: 'LD (HL-),A' }
+type LD_HLD_A = { type: 'LD (HL-),A' }
 type LDCd8 = { type: 'LD C,d8' }
-type LDCA = { type: 'LD (C),A' }
-type LDHLA = { type: 'LD (HL),A' }
+type LD_C_A = { type: 'LD (C),A' }
+type LD_HL_A = { type: 'LD (HL),A' }
 type LDDEd16 = { type: 'LD DE,d16' }
-type LDADE = { type: 'LD A,(DE)' }
+type LDA_DE_ = { type: 'LD A,(DE)' }
+type LDCA = { type: 'LD C,A' }
 
 type BIT7H = { type: 'BIT 7,H' }
 
@@ -49,16 +50,17 @@ type ArithmeticInstruction =
 
 type LoadStoreInstruction = 
     | LDAd8
-    | LDa16A
-    | LDHa8A
+    | LD_a16_A
+    | LDH_a8_A
     | LDSPd16
     | LDHLd16
-    | LDHLDA
+    | LD_HLD_A
     | LDCd8
-    | LDCA
-    | LDHLA
+    | LD_C_A
+    | LD_HL_A
     | LDDEd16
-    | LDADE
+    | LDA_DE_
+    | LDCA
 
 type PrefixInstruction = 
     | BIT7H
@@ -87,16 +89,17 @@ export namespace Instruction {
     export const XORA: XORA = { type: 'XOR A' }
 
     export const LDAd8: LDAd8 = { type: 'LD A,d8' }
-    export const LDa16A: LDa16A = { type: 'LD (a16),A' }
-    export const LDHa8A: LDHa8A = { type: 'LDH (a8),A' }
+    export const LD_a16_A: LD_a16_A = { type: 'LD (a16),A' }
+    export const LDH_a8_A: LDH_a8_A = { type: 'LDH (a8),A' }
     export const LDSPd16: LDSPd16 = { type: 'LD SP,d16' }
     export const LDHLd16: LDHLd16 = { type: 'LD HL,d16' }
-    export const LDHLDA: LDHLDA = { type: 'LD (HL-),A' }
+    export const LD_HLD_A: LD_HLD_A = { type: 'LD (HL-),A' }
     export const LDCd8: LDCd8 = { type: 'LD C,d8' }
-    export const LDCA: LDCA = { type: 'LD (C),A' }
-    export const LDHLA: LDHLA = { type: 'LD (HL),A' }
+    export const LD_C_A: LD_C_A = { type: 'LD (C),A' }
+    export const LDCA: LDCA = { type: 'LD C,A' }
+    export const LDHLA: LD_HL_A = { type: 'LD (HL),A' }
     export const LDDEd16: LDDEd16 = { type: 'LD DE,d16' }
-    export const LDADE: LDADE = { type: 'LD A,(DE)' }
+    export const LDA_DE_: LDA_DE_ = { type: 'LD A,(DE)' }
 
     export const BIT7H: BIT7H = { type: 'BIT 7,H' }
 
@@ -132,16 +135,17 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xcd: Instruction.CALLa16,
 
     0x3e: Instruction.LDAd8,
-    0xea: Instruction.LDa16A,
+    0xea: Instruction.LD_a16_A,
     0x31: Instruction.LDSPd16,
-    0xe0: Instruction.LDHa8A,
+    0xe0: Instruction.LDH_a8_A,
     0x21: Instruction.LDHLd16,
-    0x32: Instruction.LDHLDA,
+    0x32: Instruction.LD_HLD_A,
     0x0e: Instruction.LDCd8,
-    0xe2: Instruction.LDCA,
+    0xe2: Instruction.LD_C_A,
     0x77: Instruction.LDHLA,
     0x11: Instruction.LDDEd16,
-    0x1a: Instruction.LDADE,
+    0x1a: Instruction.LDA_DE_,
+    0x4f: Instruction.LDCA,
 
     0xcb: Instruction.PREFIX,
     0x76: Instruction.Halt,

@@ -166,6 +166,11 @@ export class CPU {
                 // - - - -
                 this.registers.a = this.bus.read(this.registers.de)
                 return [this.pc + 1, 8]
+            case 'LD C,A':
+                // 1  4
+                // - - - -
+                this.registers.c = this.registers.a
+                return [this.pc + 1, 4]
             
             case 'BIT 7,H':
                 // 1  4
