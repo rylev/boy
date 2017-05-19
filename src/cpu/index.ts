@@ -46,15 +46,6 @@ export class CPU {
         // OPCodes Map: http://pastraiser.com/cpu/gameboy/gameboy_opcodes.html
         // OPCodes Explanation: http://www.chrisantonellis.com/files/gameboy/gb-instructions.txt
         switch (instruction.type) {
-            case 'ADD HL,BC':
-                const [result, carry] = u16.wrappingAdd(this.registers.hl, this.registers.bc)
-                this.registers.hl = result
-                // 1  8
-                // - 0 H C
-                this.registers.f.subtract = false
-                this.registers.f.halfCarry = false // TODO: Set halfCarry
-                this.registers.f.carry = carry
-                return [this.pc + 1, 8]
             case 'HALT':
                 // 1  4
                 // - - - -
@@ -70,74 +61,88 @@ export class CPU {
                 // TODO: actually disable interrupts
                 return [this.pc + 1, 4]
 
+            case 'ADD HL,BC':
+                // 1  8
+                // - 0 H C
+                const [result, carry] = u16.wrappingAdd(this.registers.hl, this.registers.bc)
+                this.registers.hl = result
+                this.registers.f.subtract = false
+                this.registers.f.halfCarry = false // TODO: Set halfCarry
+                this.registers.f.carry = carry
+                return [this.pc + 1, 8]
             case 'CP d8':
                 // 2  8
                 // Z 1 H C
-                const data = this.bus.read(this.pc + 1)
-                this.registers.f.zero = this.registers.a === data
-                this.registers.f.subtract = true
-                this.registers.f.halfCarry = false // TODO: Set halfCarry
-                this.registers.f.carry = this.registers.a < data
+                this.cp(this.readNextByte())
                 return [this.pc + 2, 8]
+            case 'XOR A':
+                // 1  4
+                // Z 0 0 0
+                this.xor(this.registers.a)
+                return [this.pc + 1, 4]
+
             case 'JP a16': 
                 // 3  16
                 // - - - -
-                const address = this.bus.read(this.pc + 1) | (this.bus.read(this.pc + 2) << 8)
-                return [address, 16]
+                return [this.readNextWord(), 16]
             case 'JR Z,R8':
                 // 2  12/8
                 // - - - -
-                let newPC, cycles
                 if (this.registers.f.zero) {
-                    cycles = 12
-                    const relativeValue = this.bus.read(this.pc + 1)
-                    newPC = this.pc + uint.asSigned(relativeValue)
+                    return [this.pc + uint.asSigned(this.readNextByte()), 12]
                 } else {
-                    cycles = 8
-                    newPC = this.pc + 2
+                    return [this.pc + 2, 8]
                 }
-                return [newPC, cycles]
             case 'JR R8':
                 // 2  12
                 // - - - -
-                const relativeValue = this.bus.read(this.pc + 1)
-                const pc = this.pc + uint.asSigned(relativeValue)
-
-                return [pc, 12]
-
+                return [this.pc + uint.asSigned(this.readNextByte()), 12]
             case 'CALL a16':
                 // 3  24
                 // - - - -
                 this.push(this.pc + 3)
-                const lol = this.bus.read(this.pc + 1) | (this.bus.read(this.pc + 2) << 8)
-                return [lol, 24]
+                return [this.readNextWord(), 24]
             case 'LD A,d8':
                 // 2  8
                 // - - - -
-                const value = this.bus.read(this.pc + 1)
-                this.registers.a = value
+                this.registers.a = this.readNextByte()
                 return [this.pc + 2, 8]
+
             case 'LD (a16),A':
                 // 3  16
                 // - - - -
-                const ddress = (this.bus.read(this.pc + 1) << 8) + this.bus.read(this.pc + 2)
-                this.bus.write(ddress, this.registers.a)
+                this.bus.write(this.readNextWord(), this.registers.a)
                 return [this.pc + 3, 16]
             case 'LDH (a8),A':
                 // 2  12
                 // - - - -
-                const add = 0xff00 + this.bus.read(this.pc + 1)
-                this.bus.write(add, this.registers.a)
+                this.bus.write(0xff00 + this.bus.read(this.pc + 1), this.registers.a)
                 return [this.pc + 2, 12]
-            case 'XOR A':
-                // 1  4
-                // Z 0 0 0
-                this.registers.a ^= this.registers.a
-                this.registers.f.zero = this.registers.a === 0
-                return [this.pc + 1, 4]
             default:
                 return assertExhaustive(instruction)
         }
+    }
+
+    cp(value: number) {
+        this.registers.f.zero = this.registers.a === value
+        this.registers.f.subtract = true
+        this.registers.f.halfCarry = false // TODO: Set halfCarry
+        this.registers.f.carry = this.registers.a < value
+    }
+
+    xor(value: number) {
+        this.registers.a ^= value
+        this.registers.f.zero = this.registers.a === 0
+    }
+
+    readNextWord(): number {
+        // Gameboy is little endian so read pc + 2 as most significant bit
+        // and pc + 1 as least significant bit
+        return (this.bus.read(this.pc + 2) << 8) | this.bus.read(this.pc + 1)
+    }
+
+    readNextByte(): number {
+        return this.bus.read(this.pc + 1)
     }
 
     push(value: number) {

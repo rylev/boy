@@ -39,7 +39,55 @@ describe('CPU', () => {
             assert.equal(cpu.registers.f.carry, false)
             assert.equal(cpu.registers.f.subtract, true)
             assert.equal(cpu.registers.f.zero, true)
-            assert.equal(cpu.pc, CPU.START_ADDR + 3)
+            assert.equal(cpu.pc, rom.length)
+        })
+    })
+
+    describe('JR Z,r8', () => {
+        it('jumps when zero flag is set', () => {
+            const rom = createRom([
+                Instruction.toByte(Instruction.JRzr8),
+                0x04,
+                Instruction.toByte(Instruction.Halt),
+                Instruction.toByte(Instruction.Halt),
+                Instruction.toByte(Instruction.Halt)
+            ])
+            const cpu = new CPU(undefined, rom)
+            cpu.registers.f.zero = true
+            cpu.run()
+
+            assert.equal(cpu.pc, rom.length)
+        })
+
+        it('doesn\'t jump when zero flag is set', () => {
+            const rom = createRom([
+                Instruction.toByte(Instruction.JRzr8),
+                0x4,
+                Instruction.toByte(Instruction.Halt),
+                Instruction.toByte(Instruction.Halt),
+                Instruction.toByte(Instruction.Halt)
+            ])
+            const cpu = new CPU(undefined, rom)
+            cpu.registers.f.zero = false
+            cpu.run()
+
+            assert.equal(cpu.pc, rom.length - 2)
+        })
+
+        it('jumps when zero flag is set and next byte is negative', () => {
+            const rom = createRom([
+                Instruction.toByte(Instruction.NOP),
+                Instruction.toByte(Instruction.Halt),
+                Instruction.toByte(Instruction.JRzr8),
+                0xFE,
+                Instruction.toByte(Instruction.NOP)
+            ])
+            const cpu = new CPU(undefined, rom)
+            cpu.registers.f.zero = true
+            cpu.pc = rom.length - 3
+            cpu.run()
+
+            assert.equal(cpu.pc, rom.length - 3)
         })
     })
 })
