@@ -87,6 +87,11 @@ export class CPU {
                 // Z 0 0 0
                 this.xor(this.registers.a)
                 return [this.pc + 1, 4]
+            case 'RLA':
+                // 1  4
+                // 0 0 0 C
+                this.rotateLeft(this.registers.a, false)
+                return [this.pc + 1, 4]
 
             case 'JP a16': 
                 // 3  16
@@ -191,7 +196,7 @@ export class CPU {
             case 'RL C':
                 // 1  4
                 // Z 0 0 C
-                this.registers.c = this.rotateLeft(this.registers.c)
+                this.registers.c = this.rotateLeft(this.registers.c, true)
                 return [this.pc + 1, 4]
 
             default:
@@ -199,11 +204,11 @@ export class CPU {
         }
     }
 
-    rotateLeft(value: number): number {
+    rotateLeft(value: number, setZero: boolean): number {
         const carry = this.registers.f.carry ? 1 : 0
         const newValue = (value << 1) | carry
         this.registers.f.carry = (value & 0x80) != 0
-        this.registers.f.zero = newValue == 0
+        this.registers.f.zero = setZero && (newValue == 0)
         this.registers.f.halfCarry = false 
         this.registers.f.subtract = false
         return newValue

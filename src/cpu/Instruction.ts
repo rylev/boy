@@ -14,6 +14,7 @@ type PREFIX = { type: 'PREFIX CB' }
 type AddHLBC = { type: 'ADD HL,BC' }
 type XORA = { type: 'XOR A' }
 type CPd8 = { type: 'CP d8' }
+type RLA = { type: 'RLA' }
 
 type LDAd8 = { type: 'LD A,d8' }
 type LD_a16_A = { type: 'LD (a16),A' }
@@ -51,6 +52,7 @@ type ArithmeticInstruction =
     | AddHLBC 
     | XORA
     | CPd8
+    | RLA
 
 type LoadStoreInstruction = 
     | LDAd8
@@ -97,6 +99,7 @@ export namespace Instruction {
     export const AddHLBC: AddHLBC = { type: 'ADD HL,BC' }
     export const CPd8: CPd8 = { type: 'CP d8' }
     export const XORA: XORA = { type: 'XOR A' }
+    export const RLA: RLA = { type: 'RLA' }
 
     export const LDAd8: LDAd8 = { type: 'LD A,d8' }
     export const LD_a16_A: LD_a16_A = { type: 'LD (a16),A' }
@@ -141,6 +144,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x09: Instruction.AddHLBC,
     0xfe: Instruction.CPd8,
     0xaf: Instruction.XORA,
+    0x17: Instruction.RLA,
 
     0xc3: Instruction.JPa16,
     0x28: Instruction.JRzr8,
