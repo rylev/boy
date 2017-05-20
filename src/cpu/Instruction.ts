@@ -31,6 +31,7 @@ type LDCA = { type: 'LD C,A' }
 type LDBd8 = { type: 'LD B,d8' }
 
 type PUSHBC = { type: 'PUSH BC' }
+type POPBC = { type: 'POP BC' }
 
 type BIT7H = { type: 'BIT 7,H' }
 type RLC = { type: 'RL C' }
@@ -71,6 +72,7 @@ type LoadStoreInstruction =
 
 type StackInstruction = 
     | PUSHBC
+    | POPBC
 
 type PrefixInstruction = 
     | BIT7H
@@ -116,6 +118,7 @@ export namespace Instruction {
     export const LDBd8: LDBd8 = { type: 'LD B,d8' }
 
     export const PUSHBC: PUSHBC = { type: 'PUSH BC' }
+    export const POPBC: POPBC = { type: 'POP BC' }
 
     export const BIT7H: BIT7H = { type: 'BIT 7,H' }
     export const RLC: RLC = { type: 'RL C' }
@@ -167,6 +170,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x06: Instruction.LDBd8,
 
     0xc5: Instruction.PUSHBC,
+    0xc1: Instruction.POPBC,
 
     0xcb: Instruction.PREFIX,
     0x76: Instruction.Halt,

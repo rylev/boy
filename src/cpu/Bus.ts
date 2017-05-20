@@ -48,7 +48,9 @@ class Bus {
             value = this._bios[addr]
         } else if (addr < 0x8000) {
             value = this._rom[addr]
-        } 
+        }  else if (addr >= 0xff80 && addr <= 0xffff) {
+            value = this._zeroPagedRam[addr - 0xff80]
+        }
         if (value === undefined) { throw new Error(`No value at address 0x${toHex(addr)}`)}
         return value
     }

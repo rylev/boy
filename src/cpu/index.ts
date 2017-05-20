@@ -187,6 +187,11 @@ export class CPU {
                 // - - - -
                 this.push(this.registers.bc)
                 return [this.pc + 1, 16]
+            case 'POP BC':
+                // 1  12
+                // - - - -
+                this.registers.bc = this.pop()
+                return [this.pc +1, 12]
             
             case 'BIT 7,H':
                 // 1  4
@@ -257,6 +262,14 @@ export class CPU {
         const lsb = u16.lsb(value)  
         this.bus.write(this.sp, lsb)
         this.sp -= 1
+    }
+
+    pop(): number {
+        const lsb = this.bus.read(this.sp)
+        this.sp += 1
+        const msb = this.bus.read(this.sp)
+        this.sp += 1
+        return (msb << 8) | lsb
     }
 }
 

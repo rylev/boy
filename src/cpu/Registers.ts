@@ -22,6 +22,10 @@ class Registers {
     get bc(): number {
         return (this.b << 8) + this.c
     }
+    set bc(value: number) {
+        this.b = (value & 0xFF00) >> 8
+        this.c = (value & 0XFF)
+    }
 
     get hl(): number {
         return (this.h << 8) + this.l
