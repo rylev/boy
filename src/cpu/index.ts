@@ -176,16 +176,37 @@ export class CPU {
                 // - - - -
                 this.registers.b = this.readNextByte()
                 return [this.pc + 2, 8]
+
+            case 'PUSH BC':
+                // 1  16
+                // - - - -
+                this.push(this.registers.bc)
+                return [this.pc + 1, 16]
             
             case 'BIT 7,H':
                 // 1  4
                 // Z 0 1 -
                 this.bitTest(this.registers.h, 7)
                 return [this.pc + 1, 4]
+            case 'RL C':
+                // 1  4
+                // Z 0 0 C
+                this.registers.c = this.rotateLeft(this.registers.c)
+                return [this.pc + 1, 4]
 
             default:
                 return assertExhaustive(instruction)
         }
+    }
+
+    rotateLeft(value: number): number {
+        const carry = this.registers.f.carry ? 1 : 0
+        const newValue = (value << 1) | carry
+        this.registers.f.carry = (value & 0x80) != 0
+        this.registers.f.zero = newValue == 0
+        this.registers.f.halfCarry = false 
+        this.registers.f.subtract = false
+        return newValue
     }
 
     conditionalJump(condition: boolean): [Address, Cycles] {

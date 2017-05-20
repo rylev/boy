@@ -29,7 +29,10 @@ type LDA_DE_ = { type: 'LD A,(DE)' }
 type LDCA = { type: 'LD C,A' }
 type LDBd8 = { type: 'LD B,d8' }
 
+type PUSHBC = { type: 'PUSH BC' }
+
 type BIT7H = { type: 'BIT 7,H' }
+type RLC = { type: 'RL C' }
 
 type JumpInstruction = 
     | JPa16
@@ -64,14 +67,19 @@ type LoadStoreInstruction =
     | LDCA
     | LDBd8
 
+type StackInstruction = 
+    | PUSHBC
+
 type PrefixInstruction = 
     | BIT7H
+    | RLC
 
 export type Instruction =
     | JumpInstruction
     | ControlInstruction
     | ArithmeticInstruction
     | LoadStoreInstruction
+    | StackInstruction
     | PrefixInstruction
 
 export namespace Instruction {
@@ -104,7 +112,10 @@ export namespace Instruction {
     export const LDA_DE_: LDA_DE_ = { type: 'LD A,(DE)' }
     export const LDBd8: LDBd8 = { type: 'LD B,d8' }
 
+    export const PUSHBC: PUSHBC = { type: 'PUSH BC' }
+
     export const BIT7H: BIT7H = { type: 'BIT 7,H' }
+    export const RLC: RLC = { type: 'RL C' }
 
     export function fromByte(byte: number, prefix: boolean): Instruction {
         const instruction = prefix ? byteToPrefixInstructionMap[byte] : byteToInstructionMap[byte]
@@ -151,6 +162,8 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x4f: Instruction.LDCA,
     0x06: Instruction.LDBd8,
 
+    0xc5: Instruction.PUSHBC,
+
     0xcb: Instruction.PREFIX,
     0x76: Instruction.Halt,
     0xf3: Instruction.DI,
@@ -158,7 +171,8 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
 }
 
 const byteToPrefixInstructionMap: { [index: number]: Instruction | undefined } = {
-    0x7c: Instruction.BIT7H
+    0x7c: Instruction.BIT7H,
+    0x11: Instruction.RLC
 }
 
 export default Instruction
