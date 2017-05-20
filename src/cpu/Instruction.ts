@@ -5,6 +5,7 @@ type JRzr8 = { type: 'JR Z,r8' }
 type JRr8 = { type: 'JR R8' }
 type JRnzr8 = { type: 'JR NZ,r8' }
 type CALLa16 = { type: 'CALL a16'}
+type RET = { type: 'RET' }
 
 type Halt = { type: 'HALT' }
 type DI = { type: 'DI' }
@@ -15,6 +16,8 @@ type AddHLBC = { type: 'ADD HL,BC' }
 type XORA = { type: 'XOR A' }
 type CPd8 = { type: 'CP d8' }
 type RLA = { type: 'RLA' }
+type DECB = { type: 'DEC B' }
+type INCHL = { type: 'INC HL' }
 
 type LDAd8 = { type: 'LD A,d8' }
 type LD_a16_A = { type: 'LD (a16),A' }
@@ -22,6 +25,7 @@ type LDH_a8_A = { type: 'LDH (a8),A' }
 type LDSPd16 = { type: 'LD SP,d16' }
 type LDHLd16 = { type: 'LD HL,d16' }
 type LD_HLD_A = { type: 'LD (HL-),A' }
+type LD_HLI_A = { type: 'LD (HL+),A' }
 type LDCd8 = { type: 'LD C,d8' }
 type LD_C_A = { type: 'LD (C),A' }
 type LD_HL_A = { type: 'LD (HL),A' }
@@ -42,6 +46,7 @@ type JumpInstruction =
     | JRnzr8
     | JRr8
     | CALLa16
+    | RET
 
 type ControlInstruction = 
     | Halt
@@ -54,6 +59,8 @@ type ArithmeticInstruction =
     | XORA
     | CPd8
     | RLA
+    | DECB
+    | INCHL
 
 type LoadStoreInstruction = 
     | LDAd8
@@ -69,6 +76,7 @@ type LoadStoreInstruction =
     | LDA_DE_
     | LDCA
     | LDBd8
+    | LD_HLI_A
 
 type StackInstruction = 
     | PUSHBC
@@ -92,6 +100,7 @@ export namespace Instruction {
     export const JRr8: JRr8 = { type: 'JR R8' }
     export const JPa16: JPa16 = { type: 'JP a16' }
     export const CALLa16: CALLa16 = { type: 'CALL a16' }
+    export const RET: RET = { type: 'RET' }
 
     export const Halt: Halt = { type: 'HALT' }
     export const DI: DI = { type: 'DI' }
@@ -102,6 +111,8 @@ export namespace Instruction {
     export const CPd8: CPd8 = { type: 'CP d8' }
     export const XORA: XORA = { type: 'XOR A' }
     export const RLA: RLA = { type: 'RLA' }
+    export const DECB: DECB = { type: 'DEC B' }
+    export const INCHL: INCHL = { type: 'INC HL' }
 
     export const LDAd8: LDAd8 = { type: 'LD A,d8' }
     export const LD_a16_A: LD_a16_A = { type: 'LD (a16),A' }
@@ -109,6 +120,7 @@ export namespace Instruction {
     export const LDSPd16: LDSPd16 = { type: 'LD SP,d16' }
     export const LDHLd16: LDHLd16 = { type: 'LD HL,d16' }
     export const LD_HLD_A: LD_HLD_A = { type: 'LD (HL-),A' }
+    export const LD_HLI_A: LD_HLI_A = { type: 'LD (HL+),A' }
     export const LDCd8: LDCd8 = { type: 'LD C,d8' }
     export const LD_C_A: LD_C_A = { type: 'LD (C),A' }
     export const LDCA: LDCA = { type: 'LD C,A' }
@@ -148,12 +160,15 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xfe: Instruction.CPd8,
     0xaf: Instruction.XORA,
     0x17: Instruction.RLA,
+    0x05: Instruction.DECB,
+    0x23: Instruction.INCHL,
 
     0xc3: Instruction.JPa16,
     0x28: Instruction.JRzr8,
     0x20: Instruction.JRnzr8,
     0x18: Instruction.JRr8,
     0xcd: Instruction.CALLa16,
+    0xc9: Instruction.RET,
 
     0x3e: Instruction.LDAd8,
     0xea: Instruction.LD_a16_A,
@@ -161,6 +176,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xe0: Instruction.LDH_a8_A,
     0x21: Instruction.LDHLd16,
     0x32: Instruction.LD_HLD_A,
+    0x22: Instruction.LD_HLI_A,
     0x0e: Instruction.LDCd8,
     0xe2: Instruction.LD_C_A,
     0x77: Instruction.LDHLA,

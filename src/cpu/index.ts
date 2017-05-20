@@ -92,6 +92,16 @@ export class CPU {
                 // 0 0 0 C
                 this.rotateLeft(this.registers.a, false)
                 return [this.pc + 1, 4]
+            case 'DEC B':
+                // 1  4
+                // Z 1 H -
+                this.registers.b = this.dec(this.registers.b)
+                return [this.pc + 1, 4]
+            case 'INC HL':
+                // 1  8
+                // - - - -
+                this.registers.hl = this.registers.hl + 1
+                return [this.pc + 1, 8]
 
             case 'JP a16': 
                 // 3  16
@@ -114,12 +124,16 @@ export class CPU {
                 // - - - -
                 this.push(this.pc + 3)
                 return [this.readNextWord(), 24]
+            case 'RET':
+                // 1  16
+                // - - - -
+                return [this.pop(), 16]
+
             case 'LD A,d8':
                 // 2  8
                 // - - - -
                 this.registers.a = this.readNextByte()
                 return [this.pc + 2, 8]
-
             case 'LD (a16),A':
                 // 3  16
                 // - - - -
@@ -140,6 +154,12 @@ export class CPU {
                 // - - - -
                 this.registers.hl = this.readNextWord()
                 return [this.pc + 3, 12]
+            case 'LD (HL+),A':
+                // 1  8
+                // - - - -
+                this.bus.write(this.registers.hl, this.registers.a)
+                this.registers.hl = this.registers.hl + 1
+                return [this.pc + 1, 8]
             case 'LD (HL-),A':
                 // 1  8
                 // - - - -
@@ -209,11 +229,19 @@ export class CPU {
         }
     }
 
+    dec(value: number): number {
+        const newValue = value - 1
+        this.registers.f.zero = newValue === 0
+        this.registers.f.subtract = true
+        this.registers.f.halfCarry = false // TODO: set properly
+        return newValue
+    }
+
     rotateLeft(value: number, setZero: boolean): number {
         const carry = this.registers.f.carry ? 1 : 0
         const newValue = (value << 1) | carry
-        this.registers.f.carry = (value & 0x80) != 0
-        this.registers.f.zero = setZero && (newValue == 0)
+        this.registers.f.carry = (value & 0x80) !== 0
+        this.registers.f.zero = setZero && (newValue === 0)
         this.registers.f.halfCarry = false 
         this.registers.f.subtract = false
         return newValue
@@ -256,20 +284,24 @@ export class CPU {
     }
 
     push(value: number) {
+        this.sp -= 1 // TODO: Wrapping
         const msb = u16.msb(value)  
         this.bus.write(this.sp, msb)
+
         this.sp -= 1
         const lsb = u16.lsb(value)  
         this.bus.write(this.sp, lsb)
-        this.sp -= 1
     }
 
     pop(): number {
         const lsb = this.bus.read(this.sp)
-        this.sp += 1
+        this.sp += 1 // TODO: Wrapping
+
         const msb = this.bus.read(this.sp)
         this.sp += 1
-        return (msb << 8) | lsb
+
+        const value = (msb << 8) | lsb
+        return value
     }
 }
 
