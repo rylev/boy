@@ -21,9 +21,9 @@ export class CPU {
     private _isRunning: boolean = false
 
     constructor(bios: Uint8Array | undefined, rom: Uint8Array, draw: (data: ImageData) => void) {
-        this.bus = new Bus(bios, rom)
-        this.registers = new Registers()
         this.gpu = new GPU(draw)
+        this.bus = new Bus(bios, rom, this.gpu)
+        this.registers = new Registers()
         this.pc = bios ? 0 : CPU.START_ADDR
         this.sp = 0 
     }

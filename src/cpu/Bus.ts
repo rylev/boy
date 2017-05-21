@@ -1,21 +1,22 @@
 import { toHex } from 'lib/hex'
+import GPU from './GPU'
 
 class Bus {
     private _biosMapped: boolean
     private _bios: Uint8Array
     private _rom: Uint8Array
-    private _graphicsRam: Uint8Array
+    private _gpu: GPU
     private _memoryMappedIO: Uint8Array
     private _zeroPagedRam: Uint8Array
     private _workingRam: Uint8Array
 
-    constructor(bios: Uint8Array | undefined, rom: Uint8Array) {
+    constructor(bios: Uint8Array | undefined, rom: Uint8Array, gpu: GPU) {
         if (bios) {
             this._bios = bios
             this._biosMapped = true
         }
         this._rom = rom
-        this._graphicsRam = new Uint8Array(0x9fff - 0x7fff)
+        this._gpu = gpu
         this._memoryMappedIO = new Uint8Array(0xff7f - 0xff00)
         this._zeroPagedRam = new Uint8Array(0xffff - 0xff7f)
         this._workingRam = new Uint8Array(0xbfff - 0x9fff)
@@ -50,10 +51,10 @@ class Bus {
             value = this._bios[addr]
         } else if (addr < 0x8000) {
             value = this._rom[addr]
-        }  else if (addr >= 0x8000 && addr <= 0x9fff) {
-            value = this._graphicsRam[addr - 0x8000]
+        }  else if (addr >= GPU.VRAM_BEGIN && addr <= GPU.VRAM_END) {
+            value = this._gpu.vram[addr - GPU.VRAM_BEGIN]
         }  else if (addr >= 0xA000 && addr <= 0xbfff) {
-            value = this._graphicsRam[addr - 0xA000]
+            value = undefined // TODO: define
         }  else if (addr >= 0xff00 && addr <= 0xff7f) {
             // TODO: value = this._memoryMappedIO[addr - 0xff00]
             // Hard code vertical blank for now
@@ -70,8 +71,8 @@ class Bus {
             throw new Error("Cannot write to bios")
         } else if (addr < 0x8000) {
             this._rom[addr] = value
-        } else if (addr >= 0x8000 && addr < 0xA000) {
-            this._graphicsRam[addr - 0x8000] = value
+        } else if (addr >= GPU.VRAM_BEGIN && addr <= GPU.VRAM_END) {
+            this._gpu.vram[addr - GPU.VRAM_BEGIN] = value
         } else if (addr >= 0xff00 && addr <= 0xff7f) {
             this._memoryMappedIO[addr - 0xff00] = value
         } else if (addr >= 0xff80 && addr <= 0xffff) {

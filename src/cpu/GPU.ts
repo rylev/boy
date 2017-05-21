@@ -6,20 +6,22 @@ enum GPUMode {
 }
 
 class GPU {
-    private _data: Uint8Array
-    private _mode: GPUMode
-    private _timer: number = 0
-    private _line: number = 0
+    static readonly width = 160
+    static readonly height = 144
+    static readonly VRAM_BEGIN = 0x8000
+    static readonly VRAM_END = 0x9ffff
+
+    readonly vram = new Uint8Array(GPU.VRAM_END + 1 - GPU.VRAM_END)
+
+    private _mode = GPUMode.HorizontalBlank
+    private _data = new Uint8Array(GPU.width * GPU.height * 4)
+    private _timer = 0
+    private _line = 0
     private _draw: (data: ImageData) => void
-    readonly width: number
-    readonly height: number
 
     constructor(draw: (data: ImageData) => void) {
-        this.width = 160
-        this.height = 144
-        const dataLength = 160 * 144 * 4
-        this._data = new Uint8Array(dataLength)
-        for(let i=0; i < dataLength; i++) {
+        this._draw = draw
+        for(let i=0; i < this._data.length; i++) {
 		    this._data[i] = 255
         }
     }
@@ -36,8 +38,8 @@ class GPU {
                     if (this._line === 143) {
                         this._mode = GPUMode.VerticalBlank
                         this._draw({
-                            height: this.height,
-                            width: this.width,
+                            height: GPU.height,
+                            width: GPU.width,
                             data: Uint8ClampedArray.from(this._data)
                         })
                     } else {
