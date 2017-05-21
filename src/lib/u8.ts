@@ -14,12 +14,16 @@ namespace u8 {
     }
 
     export function wrappingSub(n1: number, n2: number): number {
+        const [result, carry] = this.overflowingSub(n1, n2)
+        return result
+    }
+
+    export function overflowingSub(n1: number, n2: number): [number, boolean] {
         const result = (n1 - n2) % (MAX_U8 + 1)
         if (result < 0) {
-            return MAX_U8 + result
+            return [MAX_U8 + result, true]
         } else {
-            return result
-
+            return [result, false]
         }
     }
 }

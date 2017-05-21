@@ -62,6 +62,7 @@ export class CPU {
         const instruction = Instruction.fromByte(instructionByte, this._prefix)
         const [nextPC, _] = this.execute(instruction)
         // TODO: make sure the cpu runs at the right clock speed
+        if (nextPC === 0x87) { console.log(pc, instruction)}
         this.pc = nextPC
     }
 
@@ -129,6 +130,11 @@ export class CPU {
                 // Z 1 H -
                 this.registers.c = this.dec(this.registers.c)
                 return [this.pc + 1, 4]
+            case 'DEC D':
+                // 1  4
+                // Z 1 H -
+                this.registers.d = this.dec(this.registers.d)
+                return [this.pc + 1, 4]
             case 'DEC E':
                 // 1  4
                 // Z 1 H -
@@ -144,6 +150,11 @@ export class CPU {
                 // Z 0 H -
                 this.registers.b = this.inc(this.registers.b)
                 return [this.pc + 1, 4]
+            case 'INC C':
+                // 1  4
+                // Z 0 H -
+                this.registers.c = this.inc(this.registers.c)
+                return [this.pc + 1, 4]
             case 'INC H':
                 // 1  4
                 // Z 0 H -
@@ -154,6 +165,11 @@ export class CPU {
                 // - - - -
                 this.registers.de = u16.wrappingAdd(this.registers.de, 1)
                 return [this.pc + 1, 8]
+            case 'SUB B':
+                // 1  4
+                // Z 1 H C
+                this.registers.a = this.sub(this.registers.b)
+                return [this.pc + 1, 4]
 
             case 'JP a16': 
                 // 3  16
@@ -186,6 +202,11 @@ export class CPU {
                 // 2  8
                 // - - - -
                 this.registers.a = this.readNextByte()
+                return [this.pc + 2, 8]
+            case 'LD D,d8':
+                // 2  8
+                // - - - -
+                this.registers.d = this.readNextByte()
                 return [this.pc + 2, 8]
             case 'LD E,d8':
                 // 2  8
@@ -240,10 +261,10 @@ export class CPU {
                 this.registers.c = this.readNextByte()
                 return [this.pc + 2, 8]
             case 'LD (C),A':
-                // 2  8
+                // 1  8
                 // - - - -
                 this.bus.write(0xff00 + this.registers.c, this.registers.a)
-                return [this.pc + 2, 8]
+                return [this.pc + 1, 8]
             case 'LD (HL),A':
                 // 1  8
                 // - - - -
@@ -315,6 +336,15 @@ export class CPU {
             default:
                 return assertExhaustive(instruction)
         }
+    }
+
+    sub(value: number): number {
+        const [sub, carry] = u8.overflowingSub(this.registers.a, value)
+        this.registers.f.zero = sub === 0
+        this.registers.f.subtract = true
+        this.registers.f.carry = carry
+        this.registers.f.halfCarry = false // TODO: set properly
+        return sub
     }
 
     inc(value: number): number {
