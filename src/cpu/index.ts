@@ -175,6 +175,11 @@ export class CPU {
                 // Z 1 H C
                 this.registers.a = this.sub(this.registers.b)
                 return [this.pc + 1, 4]
+            case 'ADD A,(HL)':
+                // 1  8
+                // Z 0 H C
+                this.registers.a = this.add(this.bus.read(this.registers.hl))
+                return [this.pc + 1, 4]
 
             case 'JP a16': 
                 // 3  16
@@ -295,6 +300,11 @@ export class CPU {
                 // - - - -
                 this.registers.b = this.readNextByte()
                 return [this.pc + 2, 8]
+            case 'LD A,B':
+                // 1  4
+                // - - - -
+                this.registers.a = this.registers.b
+                return [this.pc + 1, 4]
             case 'LD A,E':
                 // 1  4
                 // - - - -
@@ -346,6 +356,15 @@ export class CPU {
             default:
                 return assertExhaustive(instruction)
         }
+    }
+
+    add(value: number): number {
+        const [add, carry] = u8.overflowingAdd(this.registers.a, value)
+        this.registers.f.zero = add === 0
+        this.registers.f.subtract = false
+        this.registers.f.carry = carry
+        this.registers.f.halfCarry = false // TODO: set properly
+        return add
     }
 
     sub(value: number): number {

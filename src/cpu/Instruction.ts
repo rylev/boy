@@ -27,6 +27,7 @@ type INCDE = { type: 'INC DE' }
 type INCB = { type: 'INC B' }
 type INCC = { type: 'INC C' }
 type INCH = { type: 'INC H' }
+type ADDA_HL_ = { type: 'ADD A,(HL)' }
 type SUBB = { type: 'SUB B'}
 
 type LDAd8 = { type: 'LD A,d8' }
@@ -51,6 +52,7 @@ type LDHA = { type: 'LD H,A' }
 type LDDA = { type: 'LD D,A' }
 type LDAE = { type: 'LD A,E' }
 type LDAL = { type: 'LD A,L' }
+type LDAB = { type: 'LD A,B' }
 type LDAH = { type: 'LD A,H' }
 
 type PUSHBC = { type: 'PUSH BC' }
@@ -91,6 +93,7 @@ type ArithmeticInstruction =
     | INCDE
     | LDAE
     | LDAH
+    | ADDA_HL_
     | SUBB
 
 type LoadStoreInstruction = 
@@ -113,6 +116,7 @@ type LoadStoreInstruction =
     | LDBd8
     | LDHA
     | LDDA
+    | LDAB
     | LD_HLI_A
     | LDAL
 
@@ -160,6 +164,7 @@ export namespace Instruction {
     export const INCH: INCH = { type: 'INC H' }
     export const INCHL: INCHL = { type: 'INC HL' }
     export const INCDE: INCDE = { type: 'INC DE' }
+    export const ADDA_HL_: ADDA_HL_ = { type: 'ADD A,(HL)' }
     export const SUBB: SUBB = { type: 'SUB B' }
 
     export const LDAd8: LDAd8 = { type: 'LD A,d8' }
@@ -179,6 +184,7 @@ export namespace Instruction {
     export const LDDEd16: LDDEd16 = { type: 'LD DE,d16' }
     export const LDA_DE_: LDA_DE_ = { type: 'LD A,(DE)' }
     export const LDBd8: LDBd8 = { type: 'LD B,d8' }
+    export const LDAB: LDAB = { type: 'LD A,B' }
     export const LDAE: LDAE = { type: 'LD A,E' }
     export const LDAH: LDAH = { type: 'LD A,H' }
     export const LDDA: LDDA = { type: 'LD D,A' }
@@ -227,6 +233,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x1d: Instruction.DECE,
     0x23: Instruction.INCHL,
     0x13: Instruction.INCDE,
+    0x86: Instruction.ADDA_HL_,
     0x90: Instruction.SUBB,
     0x15: Instruction.DECD,
 
@@ -260,6 +267,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xf0: Instruction.LDHA_a8_,
     0x7c: Instruction.LDAH,
     0x7d: Instruction.LDAL,
+    0x78: Instruction.LDAB,
 
     0xc5: Instruction.PUSHBC,
     0xc1: Instruction.POPBC,
