@@ -134,6 +134,11 @@ export class CPU {
                 // - - - -
                 this.registers.hl = u16.wrappingAdd(this.registers.hl, 1)
                 return [this.pc + 1, 8]
+            case 'INC B':
+                // 1  4
+                // Z 0 H -
+                this.registers.b = this.inc(this.registers.b)
+                return [this.pc + 1, 8]
             case 'INC DE':
                 // 1  8
                 // - - - -
@@ -171,6 +176,11 @@ export class CPU {
                 // 2  8
                 // - - - -
                 this.registers.a = this.readNextByte()
+                return [this.pc + 2, 8]
+            case 'LD E,d8':
+                // 2  8
+                // - - - -
+                this.registers.e = this.readNextByte()
                 return [this.pc + 2, 8]
             case 'LD L,d8':
                 // 2  8
@@ -249,6 +259,16 @@ export class CPU {
                 // - - - -
                 this.registers.a = this.registers.e
                 return [this.pc + 1, 4]
+            case 'LD H,A':
+                // 1  4
+                // - - - -
+                this.registers.h = this.registers.a
+                return [this.pc + 1, 4]
+            case 'LD D,A':
+                // 1  4
+                // - - - -
+                this.registers.d = this.registers.a
+                return [this.pc + 1, 4]
 
             case 'PUSH BC':
                 // 1  16
@@ -275,6 +295,14 @@ export class CPU {
             default:
                 return assertExhaustive(instruction)
         }
+    }
+
+    inc(value: number): number {
+        const newValue = u8.wrappingAdd(value, 1)
+        this.registers.f.zero = newValue === 0
+        this.registers.f.subtract = false
+        this.registers.f.halfCarry = false // TODO: set properly
+        return newValue
     }
 
     dec(value: number): number {

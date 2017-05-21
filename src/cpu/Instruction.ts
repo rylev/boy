@@ -21,10 +21,12 @@ type DECB = { type: 'DEC B' }
 type DECC = { type: 'DEC C' }
 type INCHL = { type: 'INC HL' }
 type INCDE = { type: 'INC DE' }
+type INCB = { type: 'INC B' }
 
 type LDAd8 = { type: 'LD A,d8' }
 type LDBd8 = { type: 'LD B,d8' }
 type LDCd8 = { type: 'LD C,d8' }
+type LDEd8 = { type: 'LD E,d8' }
 type LDLd8 = { type: 'LD L,d8' }
 type LD_a16_A = { type: 'LD (a16),A' }
 type LDH_a8_A = { type: 'LDH (a8),A' }
@@ -37,6 +39,8 @@ type LD_HL_A = { type: 'LD (HL),A' }
 type LDDEd16 = { type: 'LD DE,d16' }
 type LDA_DE_ = { type: 'LD A,(DE)' }
 type LDCA = { type: 'LD C,A' }
+type LDHA = { type: 'LD H,A' }
+type LDDA = { type: 'LD D,A' }
 type LDAE = { type: 'LD A,E' }
 
 type PUSHBC = { type: 'PUSH BC' }
@@ -67,6 +71,7 @@ type ArithmeticInstruction =
     | DECA
     | DECB
     | DECC
+    | INCB
     | INCHL
     | INCDE
     | LDAE
@@ -74,6 +79,7 @@ type ArithmeticInstruction =
 type LoadStoreInstruction = 
     | LDAd8
     | LDLd8
+    | LDEd8
     | LD_a16_A
     | LDH_a8_A
     | LDSPd16
@@ -86,6 +92,8 @@ type LoadStoreInstruction =
     | LDA_DE_
     | LDCA
     | LDBd8
+    | LDHA
+    | LDDA
     | LD_HLI_A
 
 type StackInstruction = 
@@ -124,10 +132,12 @@ export namespace Instruction {
     export const DECA: DECA = { type: 'DEC A' }
     export const DECB: DECB = { type: 'DEC B' }
     export const DECC: DECC = { type: 'DEC C' }
+    export const INCB: INCB = { type: 'INC B' }
     export const INCHL: INCHL = { type: 'INC HL' }
     export const INCDE: INCDE = { type: 'INC DE' }
 
     export const LDAd8: LDAd8 = { type: 'LD A,d8' }
+    export const LDEd8: LDEd8 = { type: 'LD E,d8' }
     export const LDLd8: LDLd8 = { type: 'LD L,d8' }
     export const LD_a16_A: LD_a16_A = { type: 'LD (a16),A' }
     export const LDH_a8_A: LDH_a8_A = { type: 'LDH (a8),A' }
@@ -143,6 +153,8 @@ export namespace Instruction {
     export const LDA_DE_: LDA_DE_ = { type: 'LD A,(DE)' }
     export const LDBd8: LDBd8 = { type: 'LD B,d8' }
     export const LDAE: LDAE = { type: 'LD A,E' }
+    export const LDDA: LDDA = { type: 'LD D,A' }
+    export const LDHA: LDHA = { type: 'LD H,A' }
 
     export const PUSHBC: PUSHBC = { type: 'PUSH BC' }
     export const POPBC: POPBC = { type: 'POP BC' }
@@ -176,6 +188,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xaf: Instruction.XORA,
     0x17: Instruction.RLA,
     0x3d: Instruction.DECA,
+    0x04: Instruction.INCB,
     0x05: Instruction.DECB,
     0x0d: Instruction.DECC,
     0x23: Instruction.INCHL,
@@ -203,7 +216,10 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x1a: Instruction.LDA_DE_,
     0x4f: Instruction.LDCA,
     0x06: Instruction.LDBd8,
+    0x1e: Instruction.LDEd8,
     0x7b: Instruction.LDAE,
+    0x67: Instruction.LDHA,
+    0x57: Instruction.LDDA,
 
     0xc5: Instruction.PUSHBC,
     0xc1: Instruction.POPBC,
