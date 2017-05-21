@@ -1,6 +1,7 @@
 import Registers from './Registers'
 import Instruction from './Instruction'
 import Bus from './Bus'
+import GPU from './GPU'
 import { assertExhaustive } from 'typescript'
 import u16 from 'lib/u16'
 import u8 from 'lib/u8'
@@ -15,12 +16,14 @@ export class CPU {
     pc: number
     sp: number
     bus: Bus
+    gpu: GPU
     private _prefix: boolean = false
     private _isRunning: boolean = false
 
     constructor(bios: Uint8Array | undefined, rom: Uint8Array) {
         this.bus = new Bus(bios, rom)
         this.registers = new Registers()
+        this.gpu = new GPU()
         this.pc = bios ? 0 : CPU.START_ADDR
         this.sp = 0 
     }
@@ -60,9 +63,9 @@ export class CPU {
     step(pc: number = this.pc) {
         const instructionByte = this.bus.read(pc)
         const instruction = Instruction.fromByte(instructionByte, this._prefix)
-        const [nextPC, _] = this.execute(instruction)
+        const [nextPC, cycles] = this.execute(instruction)
+        this.gpu.step(cycles)
         // TODO: make sure the cpu runs at the right clock speed
-        if (nextPC === 0x87) { console.log(pc, instruction)}
         this.pc = nextPC
     }
 

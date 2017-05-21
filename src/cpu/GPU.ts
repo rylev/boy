@@ -8,7 +8,7 @@ enum GPUMode {
 class GPU {
     private _data: Uint8Array
     private _mode: GPUMode
-    private _modeClock: number = 0
+    private _timer: number = 0
     private _line: number = 0
     width: number
     height: number
@@ -24,12 +24,12 @@ class GPU {
     }
 
     step(time: number) {
-        this._modeClock += time
+        this._timer += time
 
         switch (this._mode) {
             case GPUMode.HorizontalBlank:
-                if (this._modeClock >= 204) {
-                    this._modeClock = 0
+                if (this._timer >= 204) {
+                    this._timer = 0
                     this._line++
 
                     if (this._line === 143) {
@@ -41,8 +41,8 @@ class GPU {
                 }
                 return
             case GPUMode.VerticalBlank:
-                if (this._modeClock >= 456) {
-                    this._modeClock = 0
+                if (this._timer >= 456) {
+                    this._timer = 0
                     this._line++
 
                     if (this._line > 153) {
@@ -52,14 +52,14 @@ class GPU {
                 }
                 return
             case GPUMode.OAMAccess:
-                if (this._modeClock >= 80) {
-                    this._modeClock = 0
+                if (this._timer >= 80) {
+                    this._timer = 0
                     this._mode = GPUMode.VRAMAccess
                 }
                 return
             case GPUMode.VRAMAccess:
-                if (this._modeClock >= 172) {
-                    this._modeClock = 0
+                if (this._timer >= 172) {
+                    this._timer = 0
                     this._mode = GPUMode.HorizontalBlank
 
                     this.renderScan()
@@ -72,3 +72,5 @@ class GPU {
 
     }
 }
+
+export default GPU
