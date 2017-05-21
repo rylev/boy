@@ -15,6 +15,7 @@ type PREFIX = { type: 'PREFIX CB' }
 type AddHLBC = { type: 'ADD HL,BC' }
 type XORA = { type: 'XOR A' }
 type CPd8 = { type: 'CP d8' }
+type CP_HL_ = { type: 'CP (HL)' }
 type RLA = { type: 'RLA' }
 type DECA = { type: 'DEC A' }
 type DECB = { type: 'DEC B' }
@@ -49,6 +50,7 @@ type LDCA = { type: 'LD C,A' }
 type LDHA = { type: 'LD H,A' }
 type LDDA = { type: 'LD D,A' }
 type LDAE = { type: 'LD A,E' }
+type LDAL = { type: 'LD A,L' }
 type LDAH = { type: 'LD A,H' }
 
 type PUSHBC = { type: 'PUSH BC' }
@@ -75,6 +77,7 @@ type ArithmeticInstruction =
     | AddHLBC 
     | XORA
     | CPd8
+    | CP_HL_
     | RLA
     | DECA
     | DECB
@@ -111,6 +114,7 @@ type LoadStoreInstruction =
     | LDHA
     | LDDA
     | LD_HLI_A
+    | LDAL
 
 type StackInstruction = 
     | PUSHBC
@@ -143,6 +147,7 @@ export namespace Instruction {
 
     export const AddHLBC: AddHLBC = { type: 'ADD HL,BC' }
     export const CPd8: CPd8 = { type: 'CP d8' }
+    export const CP_HL_: CP_HL_ = { type: 'CP (HL)' }
     export const XORA: XORA = { type: 'XOR A' }
     export const RLA: RLA = { type: 'RLA' }
     export const DECA: DECA = { type: 'DEC A' }
@@ -179,6 +184,7 @@ export namespace Instruction {
     export const LDDA: LDDA = { type: 'LD D,A' }
     export const LDHA: LDHA = { type: 'LD H,A' }
     export const LDHA_a8_: LDHA_a8_ = { type: 'LDH A,(a8)' }
+    export const LDAL: LDAL = { type: 'LD A,L' }
 
     export const PUSHBC: PUSHBC = { type: 'PUSH BC' }
     export const POPBC: POPBC = { type: 'POP BC' }
@@ -209,6 +215,7 @@ export namespace Instruction {
 const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x09: Instruction.AddHLBC,
     0xfe: Instruction.CPd8,
+    0xbe: Instruction.CP_HL_,
     0xaf: Instruction.XORA,
     0x17: Instruction.RLA,
     0x3d: Instruction.DECA,
@@ -252,6 +259,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x57: Instruction.LDDA,
     0xf0: Instruction.LDHA_a8_,
     0x7c: Instruction.LDAH,
+    0x7d: Instruction.LDAL,
 
     0xc5: Instruction.PUSHBC,
     0xc1: Instruction.POPBC,

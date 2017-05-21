@@ -105,6 +105,11 @@ export class CPU {
                 // Z 1 H C
                 this.cp(this.readNextByte())
                 return [this.pc + 2, 8]
+            case 'CP (HL)':
+                // 1  8
+                // Z 1 H C
+                this.cp(this.bus.read(this.registers.hl))
+                return [this.pc + 1, 8]
             case 'XOR A':
                 // 1  4
                 // Z 0 0 0
@@ -294,6 +299,11 @@ export class CPU {
                 // 1  4
                 // - - - -
                 this.registers.a = this.registers.e
+                return [this.pc + 1, 4]
+            case 'LD A,L':
+                // 1  4
+                // - - - -
+                this.registers.a = this.registers.l
                 return [this.pc + 1, 4]
             case 'LD A,H':
                 // 1  4

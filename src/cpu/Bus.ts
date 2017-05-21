@@ -7,6 +7,7 @@ class Bus {
     private _graphicsRam: Uint8Array
     private _memoryMappedIO: Uint8Array
     private _zeroPagedRam: Uint8Array
+    private _workingRam: Uint8Array
 
     constructor(bios: Uint8Array | undefined, rom: Uint8Array) {
         if (bios) {
@@ -14,9 +15,10 @@ class Bus {
             this._biosMapped = true
         }
         this._rom = rom
-        this._graphicsRam = new Uint8Array(0x9fff - 0x8000)
+        this._graphicsRam = new Uint8Array(0x9fff - 0x7fff)
         this._memoryMappedIO = new Uint8Array(0xff7f - 0xff00)
         this._zeroPagedRam = new Uint8Array(0xffff - 0xff7f)
+        this._workingRam = new Uint8Array(0xbfff - 0x9fff)
     }
 
     get biosMapped(): boolean {
@@ -48,6 +50,10 @@ class Bus {
             value = this._bios[addr]
         } else if (addr < 0x8000) {
             value = this._rom[addr]
+        }  else if (addr >= 0x8000 && addr <= 0x9fff) {
+            value = this._graphicsRam[addr - 0x8000]
+        }  else if (addr >= 0xA000 && addr <= 0xbfff) {
+            value = this._graphicsRam[addr - 0xA000]
         }  else if (addr >= 0xff00 && addr <= 0xff7f) {
             // TODO: value = this._memoryMappedIO[addr - 0xff00]
             // Hard code vertical blank for now
