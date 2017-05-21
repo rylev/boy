@@ -9,10 +9,12 @@ type Props = { cpu: CPUModel, pcClicked: () => void }
 type State = {}
 class CPU extends React.Component<Props, State> {
     register(label: string, register: number): JSX.Element {
+        if (register > 0xFF) { console.warn(`Register ${label} is over max: ${register}.`) }
+        if (register < 0x00) { console.warn(`Register ${label} is under 0.`) }
         return (
             <div className="reg">
                 <div className="regLabel">{label}</div>
-                <div className="regValue">0x{toHex(register, 4)}</div>
+                <div className="regValue">0x{toHex(register, 2)}</div>
             </div>
         )
     }

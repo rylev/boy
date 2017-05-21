@@ -3,7 +3,8 @@ import Instruction from './Instruction'
 import Bus from './Bus'
 import { assertExhaustive } from 'typescript'
 import u16 from 'lib/u16'
-import uint from 'lib/uint'
+import u8 from 'lib/u8'
+import Debugger from 'Debugger'
 
 type Address = number
 type Cycles = number
@@ -28,15 +29,36 @@ export class CPU {
         return this._isRunning
     }
 
-    run () {
+    run(debug: Debugger | undefined) {
+        if (debug !== undefined) {
+            this.runWithDebug(debug)
+        } else {
+            this.runWithoutDebug()
+        }
+    }
+
+    runWithoutDebug() {
         this._isRunning = true
         while (this._isRunning) {
-            this.step()
+            const pc = this.pc
+            this.step(pc)
+        }
+    }
+
+    runWithDebug(debug: Debugger) {
+        this._isRunning = true
+        while (this._isRunning) {
+            const pc = this.pc
+            if (debug.breakpoints.includes(pc)) {
+                this._isRunning = false
+                return
+            }
+            this.step(pc)
         }
     }
             
-    step() {
-        const instructionByte = this.bus.read(this.pc)
+    step(pc: number = this.pc) {
+        const instructionByte = this.bus.read(pc)
         const instruction = Instruction.fromByte(instructionByte, this._prefix)
         const [nextPC, _] = this.execute(instruction)
         // TODO: make sure the cpu runs at the right clock speed
@@ -71,7 +93,7 @@ export class CPU {
             case 'ADD HL,BC':
                 // 1  8
                 // - 0 H C
-                const [result, carry] = u16.wrappingAdd(this.registers.hl, this.registers.bc)
+                const [result, carry] = u16.overflowingAdd(this.registers.hl, this.registers.bc)
                 this.registers.hl = result
                 this.registers.f.subtract = false
                 this.registers.f.halfCarry = false // TODO: Set halfCarry
@@ -100,7 +122,7 @@ export class CPU {
             case 'INC HL':
                 // 1  8
                 // - - - -
-                this.registers.hl = this.registers.hl + 1
+                this.registers.hl = u16.wrappingAdd(this.registers.hl, 1)
                 return [this.pc + 1, 8]
 
             case 'JP a16': 
@@ -118,7 +140,7 @@ export class CPU {
             case 'JR R8':
                 // 2  12
                 // - - - -
-                return [this.pc + uint.asSigned(this.readNextByte()), 12]
+                return [this.pc + u8.asSigned(this.readNextByte()), 12]
             case 'CALL a16':
                 // 3  24
                 // - - - -
@@ -127,7 +149,8 @@ export class CPU {
             case 'RET':
                 // 1  16
                 // - - - -
-                return [this.pop(), 16]
+                const ret = this.pop()
+                return [ret, 16]
 
             case 'LD A,d8':
                 // 2  8
@@ -158,7 +181,7 @@ export class CPU {
                 // 1  8
                 // - - - -
                 this.bus.write(this.registers.hl, this.registers.a)
-                this.registers.hl = this.registers.hl + 1
+                this.registers.hl = u16.wrappingAdd(this.registers.hl, 1)
                 return [this.pc + 1, 8]
             case 'LD (HL-),A':
                 // 1  8
@@ -230,7 +253,7 @@ export class CPU {
     }
 
     dec(value: number): number {
-        const newValue = value - 1
+        const newValue = u8.wrappingSub(value, 1)
         this.registers.f.zero = newValue === 0
         this.registers.f.subtract = true
         this.registers.f.halfCarry = false // TODO: set properly
@@ -239,7 +262,7 @@ export class CPU {
 
     rotateLeft(value: number, setZero: boolean): number {
         const carry = this.registers.f.carry ? 1 : 0
-        const newValue = (value << 1) | carry
+        const newValue = ((value << 1) | carry) & 0xFF
         this.registers.f.carry = (value & 0x80) !== 0
         this.registers.f.zero = setZero && (newValue === 0)
         this.registers.f.halfCarry = false 
@@ -249,7 +272,7 @@ export class CPU {
 
     conditionalJump(condition: boolean): [Address, Cycles] {
         if (condition) {
-            return [this.pc + 2 + uint.asSigned(this.readNextByte()), 12]
+            return [this.pc + 2 + u8.asSigned(this.readNextByte()), 12]
         } else {
             return [this.pc + 2, 8]
         }

@@ -3,16 +3,25 @@ import * as React from 'react'
 import CPU from 'components/CPU'
 import Memory from 'components/Memory'
 import { CPU as CPUModel }from 'cpu'
+import Debugger from 'Debugger'
 import './internals.css'
 
 const BYTE_SIZE = 8
 type Props = { bios: Uint8Array | undefined, rom: Uint8Array }
-type State = { cpu: CPUModel, error?: Error, memoryOffset: number }
+type State = { 
+    debug?: Debugger,
+    cpu: CPUModel, 
+    error?: Error, 
+    memoryOffset: number 
+}
 class Internals extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props)
         const cpu = Internals.newCPU(props)
-        this.state = { cpu: cpu, memoryOffset: calculateMemoryOffset(cpu) }
+        this.state = { 
+            cpu: cpu, 
+            memoryOffset: calculateMemoryOffset(cpu), 
+        }
     }
 
     componentWillReceiveProps(newProps: Props) {
@@ -32,11 +41,26 @@ class Internals extends React.Component<Props, State> {
                         bus={cpu.bus} 
                         pc={cpu.pc} 
                         offset={memoryOffset} 
-                        changeOffset={newOffset => this.setState({memoryOffset: newOffset})} />
+                        changeOffset={newOffset => this.setState({memoryOffset: newOffset})}
+                        onByteClick={this.addBreakPoint} 
+                         />
                 </div>
+                {this.debug()}
                 {this.controls()}
             </div>
         )
+    }
+
+    debug(): JSX.Element | null {
+        const { debug } = this.state
+        if (debug === undefined) { return null }
+
+        return (
+            <div>
+                Breakpoints: {debug.breakpoints.join(",")}
+            </div>
+        )
+
     }
 
     error(): JSX.Element | null {
@@ -62,7 +86,8 @@ class Internals extends React.Component<Props, State> {
 
         const onClick = () => {
             try {
-                cpu.run()
+                cpu.run(this.state.debug)
+                this.forceUpdate()
             } catch (e) {
                 this.setState({ error: e })
             }
@@ -99,6 +124,17 @@ class Internals extends React.Component<Props, State> {
 
     pcClicked = () => {
         this.setState({memoryOffset: calculateMemoryOffset(this.state.cpu) })
+    }
+
+    addBreakPoint = (addr: number) => {
+        if (this.state.debug !== undefined) {
+            this.state.debug.breakpoints.push(addr)
+            this.setState({debug: this.state.debug})
+        } else {
+            const debug = new Debugger()
+            debug.breakpoints.push(addr)
+            this.setState({debug: debug})
+        }
     }
 
     static newCPU(props: Props): CPUModel {

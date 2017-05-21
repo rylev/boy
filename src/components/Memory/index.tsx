@@ -8,7 +8,8 @@ type Props = {
     bus: Bus, 
     pc: number, 
     offset: number, 
-    changeOffset: (newOffset: number) => void 
+    changeOffset: (newOffset: number) => void,
+    onByteClick: (addr: number) => void
 }
 type State = {}
 class Memory extends React.Component<Props, State> {
@@ -40,7 +41,11 @@ class Memory extends React.Component<Props, State> {
     byte(address: number, value: number): JSX.Element {
         const { pc } = this.props
         const isPC = pc === address ? 'isPC' : ''
-        return <div className={`byte ${isPC}`} key={address}>{toHex(value, 2)}</div>
+        return (
+            <div className={`byte ${isPC}`} key={address} onClick={() => this.props.onByteClick(address)}>
+                {toHex(value, 2)}
+            </div>
+        )
     }
 
     row(chunk: Uint8Array, numberOfBytes: number, index: number): JSX.Element {
