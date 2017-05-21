@@ -10,10 +10,11 @@ class GPU {
     private _mode: GPUMode
     private _timer: number = 0
     private _line: number = 0
-    width: number
-    height: number
+    private _draw: (data: ImageData) => void
+    readonly width: number
+    readonly height: number
 
-    constructor() {
+    constructor(draw: (data: ImageData) => void) {
         this.width = 160
         this.height = 144
         const dataLength = 160 * 144 * 4
@@ -34,7 +35,11 @@ class GPU {
 
                     if (this._line === 143) {
                         this._mode = GPUMode.VerticalBlank
-                        //TODO: Update DOM
+                        this._draw({
+                            height: this.height,
+                            width: this.width,
+                            data: Uint8ClampedArray.from(this._data)
+                        })
                     } else {
                         this._mode = GPUMode.OAMAccess
                     }

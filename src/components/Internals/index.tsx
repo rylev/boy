@@ -143,7 +143,7 @@ class Internals extends React.Component<Props, State> {
     }
 
     static newCPU(props: Props): CPUModel {
-        return new CPUModel(props.bios, props.rom)
+        return new CPUModel(props.bios, props.rom, () => {}) //TODO: provide proper draw function
     }
 }
 
