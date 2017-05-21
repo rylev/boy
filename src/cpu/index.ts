@@ -114,6 +114,11 @@ export class CPU {
                 // 0 0 0 C
                 this.rotateLeft(this.registers.a, false)
                 return [this.pc + 1, 4]
+            case 'DEC A':
+                // 1  4
+                // Z 1 H -
+                this.registers.a = this.dec(this.registers.a)
+                return [this.pc + 1, 4]
             case 'DEC B':
                 // 1  4
                 // Z 1 H -
@@ -123,6 +128,11 @@ export class CPU {
                 // 1  8
                 // - - - -
                 this.registers.hl = u16.wrappingAdd(this.registers.hl, 1)
+                return [this.pc + 1, 8]
+            case 'INC DE':
+                // 1  8
+                // - - - -
+                this.registers.de = u16.wrappingAdd(this.registers.de, 1)
                 return [this.pc + 1, 8]
 
             case 'JP a16': 
@@ -224,6 +234,11 @@ export class CPU {
                 // - - - -
                 this.registers.b = this.readNextByte()
                 return [this.pc + 2, 8]
+            case 'LD A,E':
+                // 1  4
+                // - - - -
+                this.registers.a = this.registers.e
+                return [this.pc + 1, 4]
 
             case 'PUSH BC':
                 // 1  16
