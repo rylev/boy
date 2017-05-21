@@ -143,7 +143,12 @@ export class CPU {
                 // 1  4
                 // Z 0 H -
                 this.registers.b = this.inc(this.registers.b)
-                return [this.pc + 1, 8]
+                return [this.pc + 1, 4]
+            case 'INC H':
+                // 1  4
+                // Z 0 H -
+                this.registers.h = this.inc(this.registers.h)
+                return [this.pc + 1, 4]
             case 'INC DE':
                 // 1  8
                 // - - - -
@@ -268,6 +273,11 @@ export class CPU {
                 // 1  4
                 // - - - -
                 this.registers.a = this.registers.e
+                return [this.pc + 1, 4]
+            case 'LD A,H':
+                // 1  4
+                // - - - -
+                this.registers.a = this.registers.h
                 return [this.pc + 1, 4]
             case 'LD H,A':
                 // 1  4
