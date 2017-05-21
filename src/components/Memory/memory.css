@@ -16,12 +16,10 @@
 .rowAddress {
     display: inline-block;
     font-weight: bold;
-    margin-left: 10px
 }
 
 .bytes {
     display: inline-block;
-    margin-right: 20px;
 }
 
 .isHeader {
@@ -36,8 +34,8 @@
 }
 
 #memory {
-    max-height: 500px;
-    min-height: 500px;
+    max-height: 460px;
+    min-height: 460px;
     max-width: 320px;
     min-width: 320px;
     display: flex;
@@ -47,7 +45,6 @@
 }
 
 .memoryMove {
-    margin: 10px;
     height: 20px;
     width: 100%;
 }
