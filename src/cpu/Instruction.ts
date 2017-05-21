@@ -18,23 +18,25 @@ type CPd8 = { type: 'CP d8' }
 type RLA = { type: 'RLA' }
 type DECA = { type: 'DEC A' }
 type DECB = { type: 'DEC B' }
+type DECC = { type: 'DEC C' }
 type INCHL = { type: 'INC HL' }
 type INCDE = { type: 'INC DE' }
 
 type LDAd8 = { type: 'LD A,d8' }
+type LDBd8 = { type: 'LD B,d8' }
+type LDCd8 = { type: 'LD C,d8' }
+type LDLd8 = { type: 'LD L,d8' }
 type LD_a16_A = { type: 'LD (a16),A' }
 type LDH_a8_A = { type: 'LDH (a8),A' }
 type LDSPd16 = { type: 'LD SP,d16' }
 type LDHLd16 = { type: 'LD HL,d16' }
 type LD_HLD_A = { type: 'LD (HL-),A' }
 type LD_HLI_A = { type: 'LD (HL+),A' }
-type LDCd8 = { type: 'LD C,d8' }
 type LD_C_A = { type: 'LD (C),A' }
 type LD_HL_A = { type: 'LD (HL),A' }
 type LDDEd16 = { type: 'LD DE,d16' }
 type LDA_DE_ = { type: 'LD A,(DE)' }
 type LDCA = { type: 'LD C,A' }
-type LDBd8 = { type: 'LD B,d8' }
 type LDAE = { type: 'LD A,E' }
 
 type PUSHBC = { type: 'PUSH BC' }
@@ -64,12 +66,14 @@ type ArithmeticInstruction =
     | RLA
     | DECA
     | DECB
+    | DECC
     | INCHL
     | INCDE
     | LDAE
 
 type LoadStoreInstruction = 
     | LDAd8
+    | LDLd8
     | LD_a16_A
     | LDH_a8_A
     | LDSPd16
@@ -119,10 +123,12 @@ export namespace Instruction {
     export const RLA: RLA = { type: 'RLA' }
     export const DECA: DECA = { type: 'DEC A' }
     export const DECB: DECB = { type: 'DEC B' }
+    export const DECC: DECC = { type: 'DEC C' }
     export const INCHL: INCHL = { type: 'INC HL' }
     export const INCDE: INCDE = { type: 'INC DE' }
 
     export const LDAd8: LDAd8 = { type: 'LD A,d8' }
+    export const LDLd8: LDLd8 = { type: 'LD L,d8' }
     export const LD_a16_A: LD_a16_A = { type: 'LD (a16),A' }
     export const LDH_a8_A: LDH_a8_A = { type: 'LDH (a8),A' }
     export const LDSPd16: LDSPd16 = { type: 'LD SP,d16' }
@@ -171,6 +177,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x17: Instruction.RLA,
     0x3d: Instruction.DECA,
     0x05: Instruction.DECB,
+    0x0d: Instruction.DECC,
     0x23: Instruction.INCHL,
     0x13: Instruction.INCDE,
 
@@ -182,6 +189,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xc9: Instruction.RET,
 
     0x3e: Instruction.LDAd8,
+    0x2e: Instruction.LDLd8,
     0xea: Instruction.LD_a16_A,
     0x31: Instruction.LDSPd16,
     0xe0: Instruction.LDH_a8_A,

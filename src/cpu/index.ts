@@ -124,6 +124,11 @@ export class CPU {
                 // Z 1 H -
                 this.registers.b = this.dec(this.registers.b)
                 return [this.pc + 1, 4]
+            case 'DEC C':
+                // 1  4
+                // Z 1 H -
+                this.registers.c = this.dec(this.registers.c)
+                return [this.pc + 1, 4]
             case 'INC HL':
                 // 1  8
                 // - - - -
@@ -150,7 +155,7 @@ export class CPU {
             case 'JR R8':
                 // 2  12
                 // - - - -
-                return [this.pc + u8.asSigned(this.readNextByte()), 12]
+                return this.conditionalJump(true)
             case 'CALL a16':
                 // 3  24
                 // - - - -
@@ -166,6 +171,11 @@ export class CPU {
                 // 2  8
                 // - - - -
                 this.registers.a = this.readNextByte()
+                return [this.pc + 2, 8]
+            case 'LD L,d8':
+                // 2  8
+                // - - - -
+                this.registers.l = this.readNextByte()
                 return [this.pc + 2, 8]
             case 'LD (a16),A':
                 // 3  16

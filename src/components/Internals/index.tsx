@@ -58,7 +58,7 @@ class Internals extends React.Component<Props, State> {
 
         return (
             <div>
-                Breakpoints: {debug.breakpoints.join(",")}
+                Breakpoints: {debug.breakpoints.map(bp => `0x${bp.toString(16)}`).join(",")}
             </div>
         )
 
