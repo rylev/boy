@@ -5,7 +5,7 @@ import { CPU as CPUModel } from 'cpu'
 import { toHex } from 'lib/hex'
 import "./cpu.css"
 
-type Props = { cpu: CPUModel, pcClicked: () => void }
+type Props = { cpu: CPUModel, pcClicked: () => void, spClicked: () => void }
 type State = {}
 class CPU extends React.Component<Props, State> {
     register(label: string, register: number): JSX.Element {
@@ -50,10 +50,10 @@ class CPU extends React.Component<Props, State> {
     }
 
     sp() {
-        const { cpu } = this.props
+        const { cpu, spClicked } = this.props
 
         return (
-            <div className="sp">
+            <div className="sp" onClick={spClicked}>
                 <div className="spLabel">SP</div>
                 <div className="spValue">0x{toHex(cpu.sp, 4)}</div>
             </div>

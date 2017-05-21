@@ -16,7 +16,7 @@ class Bus {
         this._rom = rom
         this._graphicsRam = new Uint8Array(0x9fff - 0x8000)
         this._memoryMappedIO = new Uint8Array(0xff7f - 0xff00)
-        this._zeroPagedRam = new Uint8Array(0xffff - 0xff80)
+        this._zeroPagedRam = new Uint8Array(0xffff - 0xff7f)
     }
 
     get biosMapped(): boolean {

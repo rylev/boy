@@ -9,6 +9,9 @@
 .isPC {
     background: red;
 }
+.isSP {
+    background: blue;
+}
 
 .rowAddress {
     display: inline-block;
@@ -33,15 +36,24 @@
 }
 
 #memory {
+    max-height: 500px;
+    min-height: 500px;
     max-width: 320px;
     min-width: 320px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .memoryMove {
     margin: 10px;
+    height: 20px;
+    width: 100%;
 }
 
 .memoryViewer {
+    height: 600px;
     display: flex;
     flex-direction: column;
+    justify-content: center;
 }

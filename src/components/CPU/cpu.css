@@ -30,4 +30,5 @@
     text-align: center;
     border: solid black 1px;
     border-top: 0;
+    cursor: pointer;
 }

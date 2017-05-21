@@ -7,6 +7,7 @@ import './memory.css'
 type Props = { 
     bus: Bus, 
     pc: number, 
+    sp: number,
     offset: number, 
     changeOffset: (newOffset: number) => void,
     onByteClick: (addr: number) => void
@@ -23,10 +24,10 @@ class Memory extends React.Component<Props, State> {
         const rows = mapChunk(bus, options, (chunk, i) => this.row(chunk, options.size, i))
         const upButton = this.props.offset > 0 
             ? <button className="memoryMove memoryDown" onClick={this.moveDown}>▲</button>
-            : null
+            : <div className="memoryMove"></div>
         const downButton = this.props.offset < (8192 - options.count)
             ? <button className="memoryMove memoryUp" onClick={this.moveUp}>▼</button>
-            : null
+            : <div className="memoryMove"></div>
         return (
             <div className="memoryViewer">
                {upButton} 
@@ -39,10 +40,11 @@ class Memory extends React.Component<Props, State> {
     }
 
     byte(address: number, value: number): JSX.Element {
-        const { pc } = this.props
+        const { pc, sp } = this.props
         const isPC = pc === address ? 'isPC' : ''
+        const isSP = sp === address ? 'isSP' : ''
         return (
-            <div className={`byte ${isPC}`} key={address} onClick={() => this.props.onByteClick(address)}>
+            <div className={`byte ${isPC} ${isSP}`} key={address} onClick={() => this.props.onByteClick(address)}>
                 {toHex(value, 2)}
             </div>
         )
@@ -76,6 +78,7 @@ function mapChunk<T>(bus: Bus, chunkOptions: ChunkOptions, callback: (slice: Uin
     let index = 0
     while (index < chunkOptions.count) {
         const start = (chunkOptions.offset * chunkOptions.size) + (index * chunkOptions.size) 
+        if (start > 0xffff) { return result }
         const end = start + chunkOptions.size 
         result.push(callback(bus.slice(start, end), index))
         index = index + 1

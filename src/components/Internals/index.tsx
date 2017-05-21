@@ -36,10 +36,11 @@ class Internals extends React.Component<Props, State> {
             <div>
                 {this.error()}
                 <div className="internals">
-                    <CPU cpu={cpu} pcClicked={this.pcClicked}/>
+                    <CPU cpu={cpu} pcClicked={this.pcClicked} spClicked={this.spClicked}/>
                     <Memory 
                         bus={cpu.bus} 
                         pc={cpu.pc} 
+                        sp={cpu.sp}
                         offset={memoryOffset} 
                         changeOffset={newOffset => this.setState({memoryOffset: newOffset})}
                         onByteClick={this.addBreakPoint} 
@@ -124,6 +125,10 @@ class Internals extends React.Component<Props, State> {
 
     pcClicked = () => {
         this.setState({memoryOffset: calculateMemoryOffset(this.state.cpu) })
+    }
+
+    spClicked = () => {
+        this.setState({memoryOffset: Math.trunc(this.state.cpu.sp / BYTE_SIZE) })
     }
 
     addBreakPoint = (addr: number) => {
