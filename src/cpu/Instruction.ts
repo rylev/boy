@@ -19,6 +19,7 @@ type RLA = { type: 'RLA' }
 type DECA = { type: 'DEC A' }
 type DECB = { type: 'DEC B' }
 type DECC = { type: 'DEC C' }
+type DECE = { type: 'DEC E' }
 type INCHL = { type: 'INC HL' }
 type INCDE = { type: 'INC DE' }
 type INCB = { type: 'INC B' }
@@ -29,6 +30,7 @@ type LDCd8 = { type: 'LD C,d8' }
 type LDEd8 = { type: 'LD E,d8' }
 type LDLd8 = { type: 'LD L,d8' }
 type LD_a16_A = { type: 'LD (a16),A' }
+type LDHA_a8_ = { type: 'LDH A,(a8)' }
 type LDH_a8_A = { type: 'LDH (a8),A' }
 type LDSPd16 = { type: 'LD SP,d16' }
 type LDHLd16 = { type: 'LD HL,d16' }
@@ -71,6 +73,7 @@ type ArithmeticInstruction =
     | DECA
     | DECB
     | DECC
+    | DECE
     | INCB
     | INCHL
     | INCDE
@@ -82,6 +85,7 @@ type LoadStoreInstruction =
     | LDEd8
     | LD_a16_A
     | LDH_a8_A
+    | LDHA_a8_
     | LDSPd16
     | LDHLd16
     | LD_HLD_A
@@ -132,6 +136,7 @@ export namespace Instruction {
     export const DECA: DECA = { type: 'DEC A' }
     export const DECB: DECB = { type: 'DEC B' }
     export const DECC: DECC = { type: 'DEC C' }
+    export const DECE: DECE = { type: 'DEC E' }
     export const INCB: INCB = { type: 'INC B' }
     export const INCHL: INCHL = { type: 'INC HL' }
     export const INCDE: INCDE = { type: 'INC DE' }
@@ -155,6 +160,7 @@ export namespace Instruction {
     export const LDAE: LDAE = { type: 'LD A,E' }
     export const LDDA: LDDA = { type: 'LD D,A' }
     export const LDHA: LDHA = { type: 'LD H,A' }
+    export const LDHA_a8_: LDHA_a8_ = { type: 'LDH A,(a8)' }
 
     export const PUSHBC: PUSHBC = { type: 'PUSH BC' }
     export const POPBC: POPBC = { type: 'POP BC' }
@@ -191,6 +197,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x04: Instruction.INCB,
     0x05: Instruction.DECB,
     0x0d: Instruction.DECC,
+    0x1d: Instruction.DECE,
     0x23: Instruction.INCHL,
     0x13: Instruction.INCDE,
 
@@ -220,6 +227,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x7b: Instruction.LDAE,
     0x67: Instruction.LDHA,
     0x57: Instruction.LDDA,
+    0xf0: Instruction.LDHA_a8_,
 
     0xc5: Instruction.PUSHBC,
     0xc1: Instruction.POPBC,

@@ -129,6 +129,11 @@ export class CPU {
                 // Z 1 H -
                 this.registers.c = this.dec(this.registers.c)
                 return [this.pc + 1, 4]
+            case 'DEC E':
+                // 1  4
+                // Z 1 H -
+                this.registers.e = this.dec(this.registers.e)
+                return [this.pc + 1, 4]
             case 'INC HL':
                 // 1  8
                 // - - - -
@@ -196,6 +201,11 @@ export class CPU {
                 // 2  12
                 // - - - -
                 this.bus.write(0xff00 + this.bus.read(this.pc + 1), this.registers.a)
+                return [this.pc + 2, 12]
+            case 'LDH A,(a8)':
+                // 2  12
+                // - - - -
+                this.registers.a = this.bus.read(0xff00 + this.readNextByte()) // TODO: wrap
                 return [this.pc + 2, 12]
             case 'LD SP,d16':
                 // 3  12

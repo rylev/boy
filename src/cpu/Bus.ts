@@ -48,6 +48,10 @@ class Bus {
             value = this._bios[addr]
         } else if (addr < 0x8000) {
             value = this._rom[addr]
+        }  else if (addr >= 0xff00 && addr <= 0xff7f) {
+            // TODO: value = this._memoryMappedIO[addr - 0xff00]
+            // Hard code vertical blank for now
+            value = 0x90
         }  else if (addr >= 0xff80 && addr <= 0xffff) {
             value = this._zeroPagedRam[addr - 0xff80]
         }
