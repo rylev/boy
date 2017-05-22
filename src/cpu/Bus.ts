@@ -1,5 +1,5 @@
 import { toHex } from 'lib/hex'
-import GPU from './GPU'
+import GPU, { Color } from './GPU'
 
 class Bus {
     private _biosMapped: boolean
@@ -74,7 +74,7 @@ class Bus {
         } else if (addr >= GPU.VRAM_BEGIN && addr <= GPU.VRAM_END) {
             this._gpu.writeVram(addr - GPU.VRAM_BEGIN, value)
         } else if (addr >= 0xff00 && addr <= 0xff7f) {
-            this.writeIO(addr)
+            this.writeIO(addr, value)
         } else if (addr >= 0xff80 && addr <= 0xffff) {
             this._zeroPagedRam[addr - 0xff80] = value
         } else {
@@ -82,7 +82,7 @@ class Bus {
         }
     }
 
-    writeIO(addr: number) {
+    writeIO(addr: number, value: number) {
         switch (addr) {
             case 0xff11:
                 // http://bgb.bircd.org/pandocs.htm#soundoverview
@@ -103,11 +103,24 @@ class Bus {
                 return
             case 0xff40: 
                 // TODO: LCD Control
-            case 0xff42:
-                // TODO: Scroll Y 
-            case 0xff47:
-                // TODO: BG Palette Data
                 console.warn(`Writing to video register is ignored: 0x${toHex(addr)}`)
+            case 0xff42:
+                this._gpu.scrollY = value
+                return
+            case 0xff47:
+                function bitsToColor(bits: number): Color {
+                    switch (bits) {
+                        case 0: return Color.White
+                        case 1: return Color.LightGray
+                        case 2: return Color.DarkGray
+                        case 3: return Color.Black
+                        default: throw new Error("Should not be possible")
+                    }
+                }
+                this._gpu.color3 = bitsToColor(value >> 6)
+                this._gpu.color2 = bitsToColor((value >> 4) & 0b11)
+                this._gpu.color1 = bitsToColor((value >> 2) & 0b11)
+                this._gpu.color0 = bitsToColor(value & 0b11)
                 return
             case 0xff50:
                 console.warn(`Writing unkownn location: 0x${toHex(addr)}`)

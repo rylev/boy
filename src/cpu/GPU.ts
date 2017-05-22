@@ -33,6 +33,13 @@ enum ObjectSize {
     os16x16
 }
 
+export enum Color {
+    White = 255,
+    LightGray = 192,
+    DarkGray = 96,
+    Black = 0
+}
+
 const WHITE = 255
 const tile = new Array(8).fill(new Array(8).fill(TileValue.Zero))
 
@@ -60,7 +67,10 @@ class GPU {
     backgroundAndWindowTileMap: BackgroundAndWindowTileMap = BackgroundAndWindowTileMap.x8000
     objectSize: ObjectSize = ObjectSize.os8x8
     objectDisplayEnable: boolean = true
-    palette = [[255,255,255,255], [192,192,192,255], [ 96, 96, 96,255],[  0,  0,  0,255]] 
+    color0 = Color.Black
+    color1 = Color.DarkGray
+    color2 = Color.LightGray
+    color3 = Color.White
 
     scrollX: number 
     scrollY: number
@@ -153,11 +163,12 @@ class GPU {
 
         for (var i = 0; i < 160; i++) {
             // Re-map the tile pixel through the palette
-            const color = this.palette[this._tileSet[tileIndex][y][x]]
-            this._canvas[canvasOffset] = color[0]
-            this._canvas[canvasOffset + 1] = color[1]
-            this._canvas[canvasOffset + 2] = color[2]
-            this._canvas[canvasOffset + 3] = color[3]
+            const value = this._tileSet[tileIndex][y][x]
+            const color = this.valueToColor(value)
+            this._canvas[canvasOffset] = color
+            this._canvas[canvasOffset + 1] = color
+            this._canvas[canvasOffset + 2] = color
+            this._canvas[canvasOffset + 3] = 255 
             canvasOffset += 4
 
             x = x + 1
@@ -169,6 +180,15 @@ class GPU {
                     tileIndex += 256
                 }
             }
+        }
+    }
+
+    valueToColor(value: TileValue) {
+        switch (value) {
+            case TileValue.Zero: return this.color0
+            case TileValue.One: return this.color1
+            case TileValue.Two: return this.color2
+            case TileValue.Three: return this.color3
         }
     }
 }
