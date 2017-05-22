@@ -40,7 +40,7 @@ class GPU {
     static readonly width = 160
     static readonly height = 144
     static readonly VRAM_BEGIN = 0x8000
-    static readonly VRAM_END = 0x9ffff
+    static readonly VRAM_END = 0x9fff
     static readonly NUMBER_OF_TILES = 384
 
     readonly vram = new Uint8Array(GPU.VRAM_END - GPU.VRAM_BEGIN + 1)
