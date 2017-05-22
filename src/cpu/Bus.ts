@@ -72,7 +72,7 @@ class Bus {
         } else if (addr < 0x8000) {
             this._rom[addr] = value
         } else if (addr >= GPU.VRAM_BEGIN && addr <= GPU.VRAM_END) {
-            this._gpu.vram[addr - GPU.VRAM_BEGIN] = value
+            this._gpu.writeVram(addr - GPU.VRAM_BEGIN, value)
         } else if (addr >= 0xff00 && addr <= 0xff7f) {
             this._memoryMappedIO[addr - 0xff00] = value
         } else if (addr >= 0xff80 && addr <= 0xffff) {
