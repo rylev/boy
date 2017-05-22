@@ -36,6 +36,7 @@ class Internals extends React.Component<Props, State> {
             <div>
                 {this.error()}
                 <div className="internals">
+                    <canvas id="screen" height="144" width="160"/>
                     <CPU cpu={cpu} pcClicked={this.pcClicked} spClicked={this.spClicked}/>
                     <Memory 
                         bus={cpu.bus} 
@@ -90,6 +91,7 @@ class Internals extends React.Component<Props, State> {
                 cpu.run(this.state.debug)
                 this.forceUpdate()
             } catch (e) {
+                console.error(e)
                 this.setState({ error: e })
             }
         }
@@ -143,7 +145,14 @@ class Internals extends React.Component<Props, State> {
     }
 
     static newCPU(props: Props): CPUModel {
-        return new CPUModel(props.bios, props.rom, () => {}) //TODO: provide proper draw function
+        const draw = (data: ImageData) => { 
+            const screen = document.getElementById('screen') as HTMLCanvasElement | null
+            if (screen === null) { throw "Could not get reference to screen" }
+            const context = screen.getContext('2d')
+            if (context === null) { throw "Could not get context from screen" }
+            context.putImageData(data, 0, 0)
+        }
+        return new CPUModel(props.bios, props.rom, draw)
     }
 }
 

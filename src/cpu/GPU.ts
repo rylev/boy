@@ -43,7 +43,7 @@ class GPU {
     static readonly VRAM_END = 0x9ffff
     static readonly NUMBER_OF_TILES = 384
 
-    readonly vram = new Uint8Array(GPU.VRAM_END - GPU.VRAM_END + 1)
+    readonly vram = new Uint8Array(GPU.VRAM_END - GPU.VRAM_BEGIN + 1)
 
     private _tileSet: TileValue[][][] = new Array(GPU.NUMBER_OF_TILES).fill(tile)
     private _mode = GPUMode.HorizontalBlank
@@ -53,13 +53,13 @@ class GPU {
     private _draw: (data: ImageData) => void
 
     // Registers
-    lcdDisplayEnabled: boolean
-    windowDisplayEnabled: boolean
-    windowTileMap: WindowTileMap
-    backgroundTileMap: BackgroundTileMap
-    backgroundAndWindowTileMap: BackgroundAndWindowTileMap
-    objectSize: ObjectSize
-    objectDisplayEnable: boolean
+    lcdDisplayEnabled: boolean = true
+    windowDisplayEnabled: boolean = true
+    windowTileMap: WindowTileMap = WindowTileMap.x9800
+    backgroundTileMap: BackgroundTileMap = BackgroundTileMap.x9800
+    backgroundAndWindowTileMap: BackgroundAndWindowTileMap = BackgroundAndWindowTileMap.x8000
+    objectSize: ObjectSize = ObjectSize.os8x8
+    objectDisplayEnable: boolean = true
     palette = [[255,255,255,255], [192,192,192,255], [ 96, 96, 96,255],[  0,  0,  0,255]] 
 
     scrollX: number 
@@ -81,11 +81,11 @@ class GPU {
 
                     if (this._line === 143) {
                         this._mode = GPUMode.VerticalBlank
-                        this._draw({
-                            height: GPU.height,
-                            width: GPU.width,
-                            data: Uint8ClampedArray.from(this._canvas)
-                        })
+                        this._draw(new ImageData(
+                            Uint8ClampedArray.from(this._canvas),
+                            GPU.width,
+                            GPU.height
+                        ))
                     } else {
                         this._mode = GPUMode.OAMAccess
                     }
@@ -121,21 +121,24 @@ class GPU {
 
     writeVram(index: number, value: number) {
         this.vram[index] = value
-        const addr = (index + GPU.VRAM_BEGIN) & 0x1FFE
-        const tile = (addr >> 4) & 511
-        const y = (addr >> 1) & 7
+        if (index >= 0x1800) { return }
+
+        const tileIndex = Math.trunc(index / 16)
+        const y = Math.trunc((index % 16) / 2)
 
         for (let x = 0; x < 8; x++) {
-            const sx = 1 << (7 - x)
+            const bitMask = (1 << (7 - x))
 
-            this._tileSet[tile][y][x] = ((this.vram[addr] & sx) ? TileValue.One : TileValue.Zero) 
-                + ((this.vram[addr + 1] & sx) ? TileValue.Two : TileValue.Zero)
+            const lsb = this.vram[index] & bitMask
+            const msb = this.vram[index + 1] & bitMask
+            const lsbValue = lsb == 1 ? TileValue.One : TileValue.Zero 
+            const msbValue = msb == 1 ? TileValue.Two : TileValue.Zero
+            this._tileSet[tileIndex][y][x] = msbValue + lsbValue
         }
-
     }
 
     renderScan() {
-        const mapline = u8.wrappingAdd(this._line, scrollY) >> 3 // TODO: why 3
+        const mapline = u8.wrappingAdd(this._line, scrollY) 
         const mapOffset = (this.backgroundTileMap - GPU.VRAM_BEGIN) + mapline
         let lineOffset = this.scrollX >> 3 // TODO: why 3
 
