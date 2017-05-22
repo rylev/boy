@@ -74,11 +74,46 @@ class Bus {
         } else if (addr >= GPU.VRAM_BEGIN && addr <= GPU.VRAM_END) {
             this._gpu.writeVram(addr - GPU.VRAM_BEGIN, value)
         } else if (addr >= 0xff00 && addr <= 0xff7f) {
-            this._memoryMappedIO[addr - 0xff00] = value
+            this.writeIO(addr)
         } else if (addr >= 0xff80 && addr <= 0xffff) {
             this._zeroPagedRam[addr - 0xff80] = value
         } else {
             throw new Error(`Unrecognized address 0x${toHex(addr)}`)
+        }
+    }
+
+    writeIO(addr: number) {
+        switch (addr) {
+            case 0xff11:
+                // http://bgb.bircd.org/pandocs.htm#soundoverview
+                // TODO: Channel 1 Sound length/Wave pattern
+            case 0xff12:
+                // TODO: Channel 1 Volume Envelope
+            case 0xff13:
+                // Channel 1 Frequency lo
+            case 0xff14:
+                // Channel 1 Frequency hi
+            case 0xff24:
+                // TODO: Channel control / ON-OFF / Volume
+            case 0xff25:
+                // TODO: Selection of Sound output terminal
+            case 0xff26:
+                // TODO: Sound on/off
+                console.warn(`Writing to sound register is ignored: 0x${toHex(addr)}`)
+                return
+            case 0xff40: 
+                // TODO: LCD Control
+            case 0xff42:
+                // TODO: Scroll Y 
+            case 0xff47:
+                // TODO: BG Palette Data
+                console.warn(`Writing to video register is ignored: 0x${toHex(addr)}`)
+                return
+            case 0xff50:
+                console.warn(`Writing unkownn location: 0x${toHex(addr)}`)
+                return
+            default:
+                throw new Error(`Unrecognized IO address 0x${toHex(addr)}`)
         }
     }
 
