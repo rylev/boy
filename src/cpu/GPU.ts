@@ -136,30 +136,35 @@ class GPU {
         this.vram[index] = value
         if (index >= 0x1800) { return }
 
-        const tileIndex = Math.trunc(index / 16)
-        const y = Math.trunc((index % 16) / 2)
+        // Tiles are encoded in two bits with the first byte always
+        // on an even address. Bitwise anding the address with 0xffe
+        // gives us the address of the first byte of the tile.
+        const normalizedAddr = index & 0xffe 
+        const tileIndex = Math.trunc(index / 16) // Tiles begin every 16 bytes
+        const y = Math.trunc((index % 16) / 2) // Every two bytes is a new row
 
         for (let x = 0; x < 8; x++) {
             const bitMask = (1 << (7 - x))
 
-            const lsb = this.vram[index] & bitMask
-            const msb = this.vram[index + 1] & bitMask
-            const lsbValue = lsb == 1 ? TileValue.One : TileValue.Zero 
-            const msbValue = msb == 1 ? TileValue.Two : TileValue.Zero
+            const lsb = this.vram[normalizedAddr] & bitMask
+            const msb = this.vram[normalizedAddr + 1] & bitMask
+            const lsbValue = lsb > 0 ? TileValue.One : TileValue.Zero 
+            const msbValue = msb > 0 ? TileValue.Two : TileValue.Zero
+
             this._tileSet[tileIndex][y][x] = msbValue + lsbValue
         }
     }
 
     renderScan() {
         const mapline = u8.wrappingAdd(this.line, scrollY) 
-        const mapOffset = (this.backgroundTileMap - GPU.VRAM_BEGIN) + mapline
-        let lineOffset = this.scrollX >> 3 // TODO: why 3
+        const tileMapOffset = (this.backgroundTileMap - GPU.VRAM_BEGIN) + mapline
+        const y = (this.line + this.scrollY) & 7 // Cycle through 0 - 7
 
-        let x = this.scrollX & 7 // TODO: why 7
-        const y = (this.line + this.scrollY) & 7 // TODO: why 7
+        let lineOffset = this.scrollX >> 3 // Count up 1 every 8 steps
+        let x = this.scrollX & 7 // cycle through 0 - 7
 
         let canvasOffset = this.line * GPU.width * 4
-        let tileIndex = this.vram[mapOffset + lineOffset]
+        let tileIndex = this.vram[tileMapOffset + lineOffset]
 
         if(this.backgroundTileMap === BackgroundTileMap.x9c00 && tileIndex < 128) {
             tileIndex += 256
@@ -179,7 +184,7 @@ class GPU {
             if (x === 8) {
                 x = 0
                 lineOffset = (lineOffset + 1) & 31
-                tileIndex = this.vram[mapOffset + lineOffset];
+                tileIndex = this.vram[tileMapOffset + lineOffset];
                 if (this.backgroundTileMap === BackgroundTileMap.x9c00 && tileIndex < 128) {
                     tileIndex += 256
                 }
