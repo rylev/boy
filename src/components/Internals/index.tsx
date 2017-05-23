@@ -87,13 +87,16 @@ class Internals extends React.Component<Props, State> {
         if (error) { return null }
 
         const onClick = () => {
-            try {
-                cpu.run(this.state.debug)
-                this.forceUpdate()
-            } catch (e) {
-                console.error(e)
-                this.setState({ error: e })
-            }
+            let interval = setInterval(() => {
+                try {
+                    cpu.run(this.state.debug)
+                    this.forceUpdate()
+                } catch (e) {
+                    clearInterval(interval)
+                    console.error(e)
+                    this.setState({ error: e })
+                }
+            }, 1000)
         }
         return <button className="run control" onClick={onClick}>Run</button>
     }

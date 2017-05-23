@@ -11,6 +11,7 @@ type Address = number
 type Cycles = number
 
 export class CPU {
+    static get CLOCK_SPEED(): number { return 4194304 } 
     static get START_ADDR(): number { return 0x100 } 
     registers: Registers 
     pc: number
@@ -19,6 +20,7 @@ export class CPU {
     gpu: GPU
     private _prefix: boolean = false
     private _isRunning: boolean = false
+    private _clockTicks = 0
 
     constructor(bios: Uint8Array | undefined, rom: Uint8Array, draw: (data: ImageData) => void) {
         this.gpu = new GPU(draw)
@@ -45,6 +47,9 @@ export class CPU {
         while (this._isRunning) {
             const pc = this.pc
             this.step(pc)
+            if (this._clockTicks > CPU.CLOCK_SPEED) {
+                return
+            }
         }
     }
 
@@ -57,6 +62,9 @@ export class CPU {
                 return
             }
             this.step(pc)
+            if (this._clockTicks > CPU.CLOCK_SPEED) {
+                return
+            }
         }
     }
             
@@ -66,7 +74,7 @@ export class CPU {
         const instruction = Instruction.fromByte(instructionByte, this._prefix)
         const [nextPC, cycles] = this.execute(instruction)
         this.gpu.step(cycles)
-        // TODO: make sure the cpu runs at the right clock speed
+        this._clockTicks += cycles
         this.pc = nextPC
     }
 
