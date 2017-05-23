@@ -14,21 +14,22 @@ enum TileValue {
     Three
 }
 
-enum WindowTileMap {
-    x9800 = 0x9800,
-    x9c00 = 0x9c00
-}
-enum BackgroundTileMap {
+export enum WindowTileMap {
     x9800 = 0x9800,
     x9c00 = 0x9c00
 }
 
-enum BackgroundAndWindowTileMap {
+export enum BackgroundTileMap {
+    x9800 = 0x9800,
+    x9c00 = 0x9c00
+}
+
+export enum BackgroundAndWindowTileMap {
     x8000,
     x8800,
 }
 
-enum ObjectSize {
+export enum ObjectSize {
     os8x8,
     os16x16
 }
@@ -56,12 +57,12 @@ class GPU {
     private _mode = GPUMode.HorizontalBlank
     private _canvas = new Uint8Array(GPU.width * GPU.height * 4)
     private _timer = 0
-    private _line = 0
     private _draw: (data: ImageData) => void
 
     // Registers
     lcdDisplayEnabled: boolean = true
     windowDisplayEnabled: boolean = true
+    backgroundDisplayEnabled: boolean = true
     windowTileMap: WindowTileMap = WindowTileMap.x9800
     backgroundTileMap: BackgroundTileMap = BackgroundTileMap.x9800
     backgroundAndWindowTileMap: BackgroundAndWindowTileMap = BackgroundAndWindowTileMap.x8000
@@ -75,6 +76,8 @@ class GPU {
     scrollX: number 
     scrollY: number
 
+    line = 0
+
     constructor(draw: (data: ImageData) => void) {
         this._draw = draw
         this._canvas = this._canvas.map(_ => WHITE)
@@ -87,10 +90,11 @@ class GPU {
             case GPUMode.HorizontalBlank:
                 if (this._timer >= 204) {
                     this._timer = 0
-                    this._line++
+                    this.line++
 
-                    if (this._line === 143) {
+                    if (this.line === 143) {
                         this._mode = GPUMode.VerticalBlank
+                        console.log(this._canvas.filter(x => x!== 255).length)
                         this._draw(new ImageData(
                             Uint8ClampedArray.from(this._canvas),
                             GPU.width,
@@ -104,11 +108,11 @@ class GPU {
             case GPUMode.VerticalBlank:
                 if (this._timer >= 456) {
                     this._timer = 0
-                    this._line++
+                    this.line++
 
-                    if (this._line > 153) {
+                    if (this.line > 153) {
                         this._mode = GPUMode.OAMAccess
-                        this._line = 0
+                        this.line = 0
                     }
                 }
                 return
@@ -130,6 +134,7 @@ class GPU {
     }
 
     writeVram(index: number, value: number) {
+        // 0x8010 => 0x8190
         this.vram[index] = value
         if (index >= 0x1800) { return }
 
@@ -148,14 +153,15 @@ class GPU {
     }
 
     renderScan() {
-        const mapline = u8.wrappingAdd(this._line, scrollY) 
+        const mapline = u8.wrappingAdd(this.line, scrollY) 
         const mapOffset = (this.backgroundTileMap - GPU.VRAM_BEGIN) + mapline
         let lineOffset = this.scrollX >> 3 // TODO: why 3
 
         let x = this.scrollX & 7 // TODO: why 7
-        const y = (this._line + this.scrollY) & 7 // TODO: why 7
+        const y = (this.line + this.scrollY) & 7 // TODO: why 7
 
-        let canvasOffset = this._line * GPU.width * 4
+        let canvasOffset = this.line * GPU.width * 4
+        console.log('Reading from vram', (mapOffset + lineOffset).toString(16))
         let tileIndex = this.vram[mapOffset + lineOffset]
         if(this.backgroundTileMap === BackgroundTileMap.x9c00 && tileIndex < 128) {
             tileIndex += 256

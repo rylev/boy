@@ -35,8 +35,8 @@ class Internals extends React.Component<Props, State> {
         return (
             <div>
                 {this.error()}
+                <canvas id="screen" height="144" width="160"/>
                 <div className="internals">
-                    <canvas id="screen" height="144" width="160"/>
                     <CPU cpu={cpu} pcClicked={this.pcClicked} spClicked={this.spClicked}/>
                     <Memory 
                         bus={cpu.bus} 
@@ -151,6 +151,7 @@ class Internals extends React.Component<Props, State> {
             const context = screen.getContext('2d')
             if (context === null) { throw "Could not get context from screen" }
             context.putImageData(data, 0, 0)
+            console.log(context.getImageData(0, 0, 160, 144).data.filter(x => x !== 255).length)
         }
         return new CPUModel(props.bios, props.rom, draw)
     }

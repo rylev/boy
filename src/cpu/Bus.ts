@@ -1,12 +1,11 @@
 import { toHex } from 'lib/hex'
-import GPU, { Color } from './GPU'
+import GPU, { Color, WindowTileMap, BackgroundTileMap, BackgroundAndWindowTileMap, ObjectSize } from './GPU'
 
 class Bus {
     private _biosMapped: boolean
     private _bios: Uint8Array
     private _rom: Uint8Array
     private _gpu: GPU
-    private _memoryMappedIO: Uint8Array
     private _zeroPagedRam: Uint8Array
     private _workingRam: Uint8Array
 
@@ -17,7 +16,6 @@ class Bus {
         }
         this._rom = rom
         this._gpu = gpu
-        this._memoryMappedIO = new Uint8Array(0xff7f - 0xff00)
         this._zeroPagedRam = new Uint8Array(0xffff - 0xff7f)
         this._workingRam = new Uint8Array(0xbfff - 0x9fff)
     }
@@ -56,9 +54,7 @@ class Bus {
         }  else if (addr >= 0xA000 && addr <= 0xbfff) {
             value = undefined // TODO: define
         }  else if (addr >= 0xff00 && addr <= 0xff7f) {
-            // TODO: value = this._memoryMappedIO[addr - 0xff00]
-            // Hard code vertical blank for now
-            value = 0x90
+            value = this.readIO(addr)
         }  else if (addr >= 0xff80 && addr <= 0xffff) {
             value = this._zeroPagedRam[addr - 0xff80]
         }
@@ -67,6 +63,7 @@ class Bus {
     }
 
     write(addr: number, value: number) {
+        if (value > 0xFF) { throw Error(`Value ${value.toString(16)} to address ${addr.toString(16)} is to too big`)}
         if (addr < 0x100 && this._biosMapped) {
             throw new Error("Cannot write to bios")
         } else if (addr < 0x8000) {
@@ -79,6 +76,18 @@ class Bus {
             this._zeroPagedRam[addr - 0xff80] = value
         } else {
             throw new Error(`Unrecognized address 0x${toHex(addr)}`)
+        }
+    }
+
+    readIO(addr: number): number {
+        switch (addr) {
+            case 0xff44: 
+                return this._gpu.line
+            case 0xff42:
+                return this._gpu.scrollY
+            default:
+                throw new Error(`Reading unrecognized IO address 0x${toHex(addr)}`)
+
         }
     }
 
@@ -102,8 +111,17 @@ class Bus {
                 console.warn(`Writing to sound register is ignored: 0x${toHex(addr)}`)
                 return
             case 0xff40: 
-                // TODO: LCD Control
-                console.warn(`Writing to video register is ignored: 0x${toHex(addr)}`)
+                this._gpu.lcdDisplayEnabled = (value >> 7) === 1
+                this._gpu.windowTileMap = ((value >> 6) & 0b1) === 0 ? WindowTileMap.x9800 : WindowTileMap.x9c00
+                this._gpu.windowDisplayEnabled = ((value >> 5) & 0b1) === 1 
+                this._gpu.backgroundAndWindowTileMap = ((value >> 4) & 0b1) === 0 
+                    ? BackgroundAndWindowTileMap.x8800 
+                    : BackgroundAndWindowTileMap.x8000
+                this._gpu.backgroundTileMap = ((value >> 3) & 0b1) === 0 ? BackgroundTileMap.x9800 : BackgroundTileMap.x9c00
+                this._gpu.objectSize = ((value >> 2) & 0b1) === 0 ? ObjectSize.os8x8 : ObjectSize.os16x16
+                this._gpu.objectDisplayEnable = ((value >> 1) & 0b1) === 1 
+                this._gpu.backgroundDisplayEnabled = (value & 0b1) === 1 
+                return
             case 0xff42:
                 this._gpu.scrollY = value
                 return
@@ -123,10 +141,10 @@ class Bus {
                 this._gpu.color0 = bitsToColor(value & 0b11)
                 return
             case 0xff50:
-                console.warn(`Writing unkownn location: 0x${toHex(addr)}`)
+                console.warn(`Writing to 0x${toHex(addr)}. TODO: unmap bootrom`)
                 return
             default:
-                throw new Error(`Unrecognized IO address 0x${toHex(addr)}`)
+                throw new Error(`Writting to unrecognized IO address 0x${toHex(addr)}`)
         }
     }
 
