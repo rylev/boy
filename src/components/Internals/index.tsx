@@ -151,7 +151,6 @@ class Internals extends React.Component<Props, State> {
             const context = screen.getContext('2d')
             if (context === null) { throw "Could not get context from screen" }
             context.putImageData(data, 0, 0)
-            console.log(context.getImageData(0, 0, 160, 144).data.filter(x => x !== 255).length)
         }
         return new CPUModel(props.bios, props.rom, draw)
     }

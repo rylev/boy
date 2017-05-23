@@ -94,7 +94,6 @@ class GPU {
 
                     if (this.line === 143) {
                         this._mode = GPUMode.VerticalBlank
-                        console.log(this._canvas.filter(x => x!== 255).length)
                         this._draw(new ImageData(
                             Uint8ClampedArray.from(this._canvas),
                             GPU.width,
@@ -134,7 +133,6 @@ class GPU {
     }
 
     writeVram(index: number, value: number) {
-        // 0x8010 => 0x8190
         this.vram[index] = value
         if (index >= 0x1800) { return }
 
@@ -161,11 +159,11 @@ class GPU {
         const y = (this.line + this.scrollY) & 7 // TODO: why 7
 
         let canvasOffset = this.line * GPU.width * 4
-        console.log('Reading from vram', (mapOffset + lineOffset).toString(16))
         let tileIndex = this.vram[mapOffset + lineOffset]
+
         if(this.backgroundTileMap === BackgroundTileMap.x9c00 && tileIndex < 128) {
             tileIndex += 256
-        }
+        } 
 
         for (var i = 0; i < 160; i++) {
             // Re-map the tile pixel through the palette
@@ -174,7 +172,7 @@ class GPU {
             this._canvas[canvasOffset] = color
             this._canvas[canvasOffset + 1] = color
             this._canvas[canvasOffset + 2] = color
-            this._canvas[canvasOffset + 3] = 255 
+            this._canvas[canvasOffset + 3] = 255
             canvasOffset += 4
 
             x = x + 1
@@ -182,7 +180,7 @@ class GPU {
                 x = 0
                 lineOffset = (lineOffset + 1) & 31
                 tileIndex = this.vram[mapOffset + lineOffset];
-                if(this.backgroundTileMap === BackgroundTileMap.x9c00 && tileIndex < 128) {
+                if (this.backgroundTileMap === BackgroundTileMap.x9c00 && tileIndex < 128) {
                     tileIndex += 256
                 }
             }
