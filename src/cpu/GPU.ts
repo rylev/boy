@@ -41,7 +41,6 @@ export enum Color {
     Black = 0
 }
 
-const WHITE = 255
 const tile = new Array(8).fill(new Array(8).fill(TileValue.Zero))
 
 class GPU {
@@ -80,7 +79,8 @@ class GPU {
 
     constructor(draw: (data: ImageData) => void) {
         this._draw = draw
-        this._canvas = this._canvas.map(_ => WHITE)
+        this._canvas = this._canvas.map(_ => Color.White)
+        this.draw()
     }
 
     step(time: number) {
@@ -93,12 +93,9 @@ class GPU {
                     this.line++
 
                     if (this.line === 143) {
+
+                        this.draw()
                         this._mode = GPUMode.VerticalBlank
-                        this._draw(new ImageData(
-                            Uint8ClampedArray.from(this._canvas),
-                            GPU.width,
-                            GPU.height
-                        ))
                     } else {
                         this._mode = GPUMode.OAMAccess
                     }
@@ -199,6 +196,14 @@ class GPU {
             case TileValue.Two: return this.color2
             case TileValue.Three: return this.color3
         }
+    }
+
+    draw() {
+        this._draw(new ImageData(
+            Uint8ClampedArray.from(this._canvas),
+            GPU.width,
+            GPU.height
+        ))
     }
 }
 

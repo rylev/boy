@@ -33,7 +33,11 @@ export class CPU {
     get isRunning(): boolean {
         return this._isRunning
     }
-
+    
+    pause () {
+        this._isRunning = false
+    }
+            
     run(debug: Debugger | undefined) {
         if (debug !== undefined) {
             this.runWithDebug(debug)
@@ -48,6 +52,7 @@ export class CPU {
             const pc = this.pc
             this.step(pc)
             if (this._clockTicks > CPU.CLOCK_SPEED) {
+                this._clockTicks = 0
                 return
             }
         }
@@ -63,11 +68,12 @@ export class CPU {
             }
             this.step(pc)
             if (this._clockTicks > CPU.CLOCK_SPEED) {
+                this._clockTicks = 0
                 return
             }
         }
     }
-            
+
     step(pc: number = this.pc) {
         if (pc > 0x100) { throw new Error("Made it out of boot rom") }
         const instructionByte = this.bus.read(pc)

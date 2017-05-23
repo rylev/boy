@@ -9,10 +9,11 @@ import './internals.css'
 const BYTE_SIZE = 8
 type Props = { bios: Uint8Array | undefined, rom: Uint8Array }
 type State = { 
-    debug?: Debugger,
     cpu: CPUModel, 
+    memoryOffset: number,
     error?: Error, 
-    memoryOffset: number 
+    cpuTask?: number,
+    debug?: Debugger
 }
 class Internals extends React.Component<Props, State> {
     constructor(props: Props) {
@@ -22,6 +23,10 @@ class Internals extends React.Component<Props, State> {
             cpu: cpu, 
             memoryOffset: calculateMemoryOffset(cpu), 
         }
+    }
+
+    componentDidUpdate() {
+        (window as any).cpu = this.state.cpu
     }
 
     componentWillReceiveProps(newProps: Props) {
@@ -62,7 +67,6 @@ class Internals extends React.Component<Props, State> {
                 Breakpoints: {debug.breakpoints.map(bp => `0x${bp.toString(16)}`).join(",")}
             </div>
         )
-
     }
 
     error(): JSX.Element | null {
@@ -73,13 +77,23 @@ class Internals extends React.Component<Props, State> {
     }
 
     controls(): JSX.Element {
-        return (
-            <div className="controls">
-                {this.runButton()}
-                {this.stepButton()}
-                {this.resetButton()}
-            </div>
-        )
+        const { cpu } = this.state
+        if (!cpu.isRunning) {
+            return (
+                <div className="controls">
+                    {this.runButton()}
+                    {this.stepButton()}
+                    {this.resetButton()}
+                </div>
+            )
+        } else {
+            return (
+                <div className="controls">
+                    {this.stopButton()}
+                </div>
+            )
+
+        }
     }
 
     runButton(): JSX.Element | null {
@@ -87,28 +101,30 @@ class Internals extends React.Component<Props, State> {
         if (error) { return null }
 
         const onClick = () => {
-            let interval = setInterval(() => {
+            const task = setInterval(() => {
                 try {
                     cpu.run(this.state.debug)
                     this.forceUpdate()
                 } catch (e) {
-                    clearInterval(interval)
+                    cpu.pause()
+                    clearInterval(task)
                     console.error(e)
-                    this.setState({ error: e })
+                    this.setState({ error: e, cpuTask: undefined })
                 }
             }, 1000)
+            this.setState({cpuTask: task})
         }
         return <button className="run control" onClick={onClick}>Run</button>
     }
 
     stepButton(): JSX.Element | null {
-        const { cpu, error } = this.state
-        if (error) { return null }
+        const { error, cpu } = this.state
+        if (error ) { return null }
 
         const onClick = () => {
             try {
                 cpu.step()
-                this.setState({ cpu: cpu, memoryOffset: calculateMemoryOffset(this.state.cpu)})
+                this.setState({ memoryOffset: calculateMemoryOffset(this.state.cpu)})
             } catch (e) {
                 this.setState({ error: e })
             }
@@ -116,7 +132,9 @@ class Internals extends React.Component<Props, State> {
         return <button className="step control" onClick={onClick}>Step</button>
     }
 
-    resetButton(): JSX.Element {
+    resetButton(): JSX.Element | null {
+        const { cpu } = this.state
+        
         const onClick = () => {
             const cpu = Internals.newCPU(this.props)
             this.setState({ 
@@ -126,6 +144,17 @@ class Internals extends React.Component<Props, State> {
             })
         }
         return <button className="reset control" onClick={onClick}>Reset</button>
+    }
+
+    stopButton (): JSX.Element {
+        const onClick = () => {
+            const { cpu, cpuTask } = this.state
+            cpu.pause()
+            if (cpuTask !== undefined) { clearInterval(cpuTask) }
+            this.setState({ cpuTask: undefined })
+        }
+
+        return <button className="stop control" onClick={onClick}>Stop</button>
     }
 
     pcClicked = () => {
@@ -150,9 +179,9 @@ class Internals extends React.Component<Props, State> {
     static newCPU(props: Props): CPUModel {
         const draw = (data: ImageData) => { 
             const screen = document.getElementById('screen') as HTMLCanvasElement | null
-            if (screen === null) { throw "Could not get reference to screen" }
+            if (screen === null) { return }
             const context = screen.getContext('2d')
-            if (context === null) { throw "Could not get context from screen" }
+            if (context === null) { return }
             context.putImageData(data, 0, 0)
         }
         return new CPUModel(props.bios, props.rom, draw)
