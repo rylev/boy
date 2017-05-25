@@ -25,7 +25,6 @@ class TileSet extends React.Component<Props, State> {
 
 
     render() {
-
         return (
             <div>
                 <canvas ref="tileset" />
@@ -35,10 +34,19 @@ class TileSet extends React.Component<Props, State> {
 
     flush(gpu: GPU, ctx: CanvasRenderingContext2D) {
         const tileSet = gpu.tileSet
-        const canvasData: Uint8Array = new Uint8Array(tileSet.length * 8 * 8 * 4)
-        let index = 0
-        for (let tile of tileSet) {
-            for (let row of tile) {
+        const tileWidth = 8
+        const tileHeight = 8
+        const width = 16 
+        const height = Math.trunc(tileSet.length / width) 
+        const valuesPerPixel = 4
+        const canvasData: Uint8Array = new Uint8Array(tileSet.length * tileHeight * tileWidth * valuesPerPixel)
+
+        tileSet.forEach((tile, tileIndex) => {
+            const tileRow = Math.trunc(tileIndex / tileHeight)
+            const tileColumn = tileIndex % tileWidth
+            tile.forEach((row, rowIndex) => {
+                const beginningOfCanvasRow = ((tileRow * tileHeight) + rowIndex) * (tileWidth * width) * valuesPerPixel
+                let index = beginningOfCanvasRow + (tileColumn * tileWidth * valuesPerPixel)
                 for (let pixel of row) {
                     canvasData[index] = gpu.valueToColor(pixel)
                     canvasData[index + 1] = gpu.valueToColor(pixel)
@@ -46,15 +54,14 @@ class TileSet extends React.Component<Props, State> {
                     canvasData[index + 3] = 255
                     index = index + 4
                 }
-            }
-        }
-        const width = 64
-        const height = 384
+            })
+        })
+        const canvasWidth = width * tileWidth
+        const canvasHeight = height * tileHeight
         const data = new ImageData(
             Uint8ClampedArray.from(canvasData),
-            width,
-            height
-            
+            canvasWidth,
+            canvasHeight
         )
 
         ctx.clearRect(0,0, width, height)
