@@ -34,23 +34,30 @@ class TileSet extends React.Component<Props, State> {
 
     flush(gpu: GPU, ctx: CanvasRenderingContext2D) {
         const tileSet = gpu.tileSet
+
+        const valuesPerPixel = 4
         const tileWidth = 8
         const tileHeight = 8
-        const width = 16 
+
+        const effectiveWidth = tileWidth * valuesPerPixel
+        const width = 8 
         const height = Math.trunc(tileSet.length / width) 
-        const valuesPerPixel = 4
+
+        const rowWidth = tileWidth * width * valuesPerPixel
         const canvasData: Uint8Array = new Uint8Array(tileSet.length * tileHeight * tileWidth * valuesPerPixel)
 
         tileSet.forEach((tile, tileIndex) => {
-            const tileRow = Math.trunc(tileIndex / tileWidth)
-            const tileColumn = tileIndex % tileHeight
+            const tileRow = Math.trunc(tileIndex / tileHeight)
+            const tileColumn = tileIndex % tileWidth
             tile.forEach((row, rowIndex) => {
-                const beginningOfCanvasRow = ((tileRow * tileHeight) + rowIndex) * (tileWidth * width) * valuesPerPixel
-                let index = beginningOfCanvasRow + (tileColumn * tileWidth * valuesPerPixel)
+                const beginningOfCanvasRow = ((tileRow * tileHeight) + rowIndex) * rowWidth
+                let index = beginningOfCanvasRow + (tileColumn * effectiveWidth)
+
                 for (let pixel of row) {
-                    canvasData[index] = gpu.valueToColor(pixel)
-                    canvasData[index + 1] = gpu.valueToColor(pixel)
-                    canvasData[index + 2] = gpu.valueToColor(pixel)
+                    const color = gpu.valueToColor(pixel)
+                    canvasData[index] = color
+                    canvasData[index + 1] = color
+                    canvasData[index + 2] = color
                     canvasData[index + 3] = 255
                     index = index + 4
                 }
