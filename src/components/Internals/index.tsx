@@ -3,6 +3,7 @@ import * as React from 'react'
 import CPU from 'components/CPU'
 import Memory from 'components/Memory'
 import TileSet from 'components/TileSet'
+import Background from 'components/Background'
 import { CPU as CPUModel }from 'cpu'
 import Debugger from 'Debugger'
 import './internals.css'
@@ -53,6 +54,7 @@ class Internals extends React.Component<Props, State> {
                         onByteClick={this.addBreakPoint} 
                          />
                     <TileSet gpu={cpu.gpu}/>
+                    <Background gpu={cpu.gpu}/>
                 </div>
                 {this.debug()}
                 {this.controls()}

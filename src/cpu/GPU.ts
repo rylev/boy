@@ -7,7 +7,7 @@ enum GPUMode {
     VRAMAccess
 }
 
-enum TileValue {
+export enum TileValue {
     Zero = 0,
     One,
     Two,
@@ -134,12 +134,7 @@ class GPU {
 
     writeVram(index: number, value: number) {
         this.vram[index] = value
-        if (index >= 0x1800) { 
-            if (value > 0) {
-                console.log(index.toString(16), value.toString(16))
-            }
-            return 
-        }
+        if (index >= 0x1800) { return }
 
         // Tiles are encoded in two bits with the first byte always
         // on an even address. Bitwise anding the address with 0xffe
@@ -172,10 +167,6 @@ class GPU {
 
         let canvasOffset = this.line * GPU.width * 4
         let tileIndex = this.vram[tileMapOffset + 0x100]// + lineOffset]
-        if (this.vram[0x1910] > 0) {
-            //console.log(tileMapOffset.toString(16), y)
-
-        }
 
         // if(this.backgroundTileMap === BackgroundTileMap.x9c00 && tileIndex < 128) {
         //     tileIndex += 256
@@ -209,6 +200,10 @@ class GPU {
             case TileValue.Two: return this.color2
             case TileValue.Three: return this.color3
         }
+    }
+
+    background1(): Uint8Array {
+        return this.vram.slice(0x1800, 0x1bff)
     }
 
     draw() {
