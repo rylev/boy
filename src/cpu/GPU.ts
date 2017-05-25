@@ -59,7 +59,7 @@ class GPU {
     private _timer = 0
     private _draw: (data: ImageData) => void
 
-    tileSet: TileValue[][][] = new Array(GPU.NUMBER_OF_TILES).fill(blankTile())
+    tileSet: TileValue[][][] = new Array(GPU.NUMBER_OF_TILES).fill(0).map(t => blankTile())
 
     // Registers
     lcdDisplayEnabled: boolean = true

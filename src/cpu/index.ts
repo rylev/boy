@@ -20,6 +20,7 @@ export class CPU {
     gpu: GPU
     private _prefix: boolean = false
     private _isRunning: boolean = false
+    private _isPaused: boolean = false
     private _clockTicks = 0
 
     constructor(bios: Uint8Array | undefined, rom: Uint8Array, draw: (data: ImageData) => void) {
@@ -35,10 +36,15 @@ export class CPU {
     }
     
     pause () {
-        this._isRunning = false
+        this._isPaused = true
+    }
+
+    unpause() {
+        this._isPaused = false
     }
             
     run(debug: Debugger | undefined) {
+        if (this._isPaused) { return }
         if (debug !== undefined) {
             this.runWithDebug(debug)
         } else {
@@ -64,6 +70,7 @@ export class CPU {
             const pc = this.pc
             if (debug.breakpoints.includes(pc)) {
                 this._isRunning = false
+                this._isPaused = true
                 return
             }
             this.step(pc)

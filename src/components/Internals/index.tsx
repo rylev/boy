@@ -99,10 +99,12 @@ class Internals extends React.Component<Props, State> {
     }
 
     runButton(): JSX.Element | null {
-        const { cpu, error } = this.state
+        const { error } = this.state
         if (error) { return null }
 
         const onClick = () => {
+            const { cpu } = this.state
+            cpu.unpause()
             const task = setInterval(() => {
                 try {
                     cpu.run(this.state.debug)
