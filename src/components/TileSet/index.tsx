@@ -64,7 +64,6 @@ class TileSet extends React.Component<Props, State> {
             canvasHeight
         )
 
-        ctx.clearRect(0,0, width, height)
         ctx.putImageData(data, 0, 0)
     }
 }
