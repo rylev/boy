@@ -2,6 +2,7 @@ import * as React from 'react'
 
 import CPU from 'components/CPU'
 import Memory from 'components/Memory'
+import TileSet from 'components/TileSet'
 import { CPU as CPUModel }from 'cpu'
 import Debugger from 'Debugger'
 import './internals.css'
@@ -51,6 +52,7 @@ class Internals extends React.Component<Props, State> {
                         changeOffset={newOffset => this.setState({memoryOffset: newOffset})}
                         onByteClick={this.addBreakPoint} 
                          />
+                    <TileSet gpu={cpu.gpu}/>
                 </div>
                 {this.debug()}
                 {this.controls()}
@@ -119,7 +121,7 @@ class Internals extends React.Component<Props, State> {
 
     stepButton(): JSX.Element | null {
         const { error, cpu } = this.state
-        if (error ) { return null }
+        if (error) { return null }
 
         const onClick = () => {
             try {

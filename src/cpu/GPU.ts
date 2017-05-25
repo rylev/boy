@@ -41,7 +41,9 @@ export enum Color {
     Black = 0
 }
 
-const tile = new Array(8).fill(new Array(8).fill(TileValue.Zero))
+function blankTile(): TileValue[][] {
+    return new Array(8).fill(new Array(8).fill(TileValue.Zero))
+}
 
 class GPU {
     static readonly width = 160
@@ -52,11 +54,12 @@ class GPU {
 
     readonly vram = new Uint8Array(GPU.VRAM_END - GPU.VRAM_BEGIN + 1)
 
-    private _tileSet: TileValue[][][] = new Array(GPU.NUMBER_OF_TILES).fill(tile)
     private _mode = GPUMode.HorizontalBlank
     private _canvas = new Uint8Array(GPU.width * GPU.height * 4)
     private _timer = 0
     private _draw: (data: ImageData) => void
+
+    tileSet: TileValue[][][] = new Array(GPU.NUMBER_OF_TILES).fill(blankTile())
 
     // Registers
     lcdDisplayEnabled: boolean = true
@@ -148,7 +151,7 @@ class GPU {
             const lsbValue = lsb > 0 ? TileValue.One : TileValue.Zero 
             const msbValue = msb > 0 ? TileValue.Two : TileValue.Zero
 
-            this._tileSet[tileIndex][y][x] = msbValue + lsbValue
+            this.tileSet[tileIndex][y][x] = msbValue + lsbValue
         }
     }
 
@@ -169,7 +172,7 @@ class GPU {
 
         for (var i = 0; i < 160; i++) {
             // Re-map the tile pixel through the palette
-            const value = this._tileSet[tileIndex][y][x]
+            const value = this.tileSet[tileIndex][y][x]
             const color = this.valueToColor(value)
             this._canvas[canvasOffset] = color
             this._canvas[canvasOffset + 1] = color
