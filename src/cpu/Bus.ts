@@ -81,10 +81,23 @@ class Bus {
 
     readIO(addr: number): number {
         switch (addr) {
-            case 0xff44: 
-                return this._gpu.line
             case 0xff42:
                 return this._gpu.scrollY
+            case 0xff44: 
+                return this._gpu.line
+            case 0xff47:
+                function colorToBits(color: Color): number {
+                    switch (color) {
+                        case Color.Black: return 0b11
+                        case Color.DarkGray: return 0b10
+                        case Color.LightGray: return 0b01
+                        case Color.White: return 0b00
+                    }
+                }
+                return (colorToBits(this._gpu.color3) << 6) | 
+                       (colorToBits(this._gpu.color2) << 4) | 
+                       (colorToBits(this._gpu.color1) << 2) | 
+                       colorToBits(this._gpu.color0)
             default:
                 throw new Error(`Reading unrecognized IO address 0x${toHex(addr)}`)
 

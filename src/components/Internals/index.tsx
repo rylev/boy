@@ -109,9 +109,10 @@ class Internals extends React.Component<Props, State> {
                     this.forceUpdate()
                 } catch (e) {
                     cpu.pause()
-                    clearInterval(task)
                     console.error(e)
+                    clearInterval(task)
                     this.setState({ error: e, cpuTask: undefined })
+                } finally {
                 }
             }, 1000)
             this.setState({cpuTask: task})
@@ -120,13 +121,15 @@ class Internals extends React.Component<Props, State> {
     }
 
     stepButton(): JSX.Element | null {
-        const { error, cpu } = this.state
+        const { error } = this.state
         if (error) { return null }
 
         const onClick = () => {
+            const { cpu, cpuTask } = this.state
             try {
                 cpu.step()
-                this.setState({ memoryOffset: calculateMemoryOffset(this.state.cpu)})
+                if (cpuTask) { clearInterval(cpuTask) }
+                this.setState({ cpuTask: undefined, memoryOffset: calculateMemoryOffset(this.state.cpu)})
             } catch (e) {
                 this.setState({ error: e })
             }

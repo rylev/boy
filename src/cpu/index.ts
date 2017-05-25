@@ -136,7 +136,7 @@ export class CPU {
             case 'RLA':
                 // 1  4
                 // 0 0 0 C
-                this.rotateLeft(this.registers.a, false)
+                this.registers.a = this.rotateLeft(this.registers.a, false)
                 return [this.pc + 1, 4]
             case 'DEC A':
                 // 1  4

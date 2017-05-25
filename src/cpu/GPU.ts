@@ -70,10 +70,10 @@ class GPU {
     backgroundAndWindowTileMap: BackgroundAndWindowTileMap = BackgroundAndWindowTileMap.x8000
     objectSize: ObjectSize = ObjectSize.os8x8
     objectDisplayEnable: boolean = true
-    color0 = Color.Black
-    color1 = Color.DarkGray
-    color2 = Color.LightGray
-    color3 = Color.White
+    color0 = Color.White
+    color1 = Color.LightGray
+    color2 = Color.DarkGray
+    color3 = Color.Black
 
     scrollX: number = 0
     scrollY: number = 0
