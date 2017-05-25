@@ -52,7 +52,7 @@ class GPU {
     static readonly VRAM_END = 0x9fff
     static readonly NUMBER_OF_TILES = 384
 
-    readonly vram = new Uint8Array(GPU.VRAM_END - GPU.VRAM_BEGIN + 1)
+    readonly vram = new Uint8Array(GPU.VRAM_END - GPU.VRAM_BEGIN + 1).fill(0)
 
     private _mode = GPUMode.HorizontalBlank
     private _canvas = new Uint8Array(GPU.width * GPU.height * 4)
@@ -75,8 +75,8 @@ class GPU {
     color2 = Color.LightGray
     color3 = Color.White
 
-    scrollX: number 
-    scrollY: number
+    scrollX: number = 0
+    scrollY: number = 0
 
     line = 0
 
@@ -156,7 +156,7 @@ class GPU {
     }
 
     renderScan() {
-        const mapline = u8.wrappingAdd(this.line, scrollY) 
+        const mapline = u8.wrappingAdd(this.line, this.scrollY) 
         const tileMapOffset = (this.backgroundTileMap - GPU.VRAM_BEGIN) + mapline
         const y = (this.line + this.scrollY) & 7 // Cycle through 0 - 7
 
