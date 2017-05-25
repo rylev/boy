@@ -42,7 +42,7 @@ export enum Color {
 }
 
 function blankTile(): TileValue[][] {
-    return new Array(8).fill(new Array(8).fill(TileValue.Zero))
+    return new Array(8).fill(0).map(_ => new Array(8).fill(TileValue.Zero))
 }
 
 class GPU {
@@ -59,7 +59,7 @@ class GPU {
     private _timer = 0
     private _draw: (data: ImageData) => void
 
-    tileSet: TileValue[][][] = new Array(GPU.NUMBER_OF_TILES).fill(0).map(t => blankTile())
+    tileSet: TileValue[][][] = new Array(GPU.NUMBER_OF_TILES).fill(0).map(_ => blankTile())
 
     // Registers
     lcdDisplayEnabled: boolean = true
@@ -142,12 +142,14 @@ class GPU {
         const normalizedAddr = index & 0xffe 
         const tileIndex = Math.trunc(index / 16) // Tiles begin every 16 bytes
         const y = Math.trunc((index % 16) / 2) // Every two bytes is a new row
+        const vram1 = this.vram[normalizedAddr]
+        const vram2 = this.vram[normalizedAddr + 1]
 
         for (let x = 0; x < 8; x++) {
             const bitMask = (1 << (7 - x))
 
-            const lsb = this.vram[normalizedAddr] & bitMask
-            const msb = this.vram[normalizedAddr + 1] & bitMask
+            const lsb = vram1 & bitMask
+            const msb = vram2 & bitMask
             const lsbValue = lsb > 0 ? TileValue.One : TileValue.Zero 
             const msbValue = msb > 0 ? TileValue.Two : TileValue.Zero
 
