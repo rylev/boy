@@ -4,7 +4,7 @@ import * as ReactDOM from 'react-dom'
 import GPU, { TileValue, BackgroundTileMap } from 'cpu/GPU'
 import './background.css'
 
-type Props = { gpu: GPU }
+type Props = { gpu: GPU, onClick: () => void }
 type State = { ctx: CanvasRenderingContext2D }
 class Background extends React.Component<Props, State> {
     componentDidMount() {
@@ -25,7 +25,7 @@ class Background extends React.Component<Props, State> {
     }
 
     render() {
-        return <canvas height="256" width="256" id="background" ref="background" />
+        return <canvas onClick={this.props.onClick} height="256" width="256" id="background" ref="background" />
     }
 
     flush(gpu: GPU, ctx: CanvasRenderingContext2D) {
@@ -49,19 +49,32 @@ class Background extends React.Component<Props, State> {
         tiles.forEach((tile, tileIndex) => {
             const tileRow = Math.trunc(tileIndex / heightInTiles)
             const tileColumn = tileIndex % widthInTiles
-            tile.forEach((row, rowIndex) => {
-                const beginningOfCanvasRow = ((tileRow * tileHeight) + rowIndex) * rowWidth
-                let index = beginningOfCanvasRow + (tileColumn * tileWidth * valuesPerPixel)
+            tile.forEach((innerRow, innerRowIndex) => {
+                const pixelRow = (tileRow * tileHeight) + innerRowIndex
+                const beginningOfCanvasRow = pixelRow * rowWidth
+                const beginningOfColumn = tileColumn * tileWidth 
+                let index = beginningOfCanvasRow + (beginningOfColumn * valuesPerPixel)
 
-                for (let pixel of row) {
-                    const color = gpu.valueToColor(pixel)
-                    
-                    canvasData[index] = color
-                    canvasData[index + 1] = color
-                    canvasData[index + 2] = color
+                innerRow.forEach((pixel, i) => {
+                    const pixelColumn = beginningOfColumn + i
+                    const onScreenBorderX = (gpu.scrollY === pixelRow || pixelRow === gpu.scrollY + 144) && 
+                        (pixelColumn > gpu.scrollX && pixelColumn < gpu.scrollX + 160)
+                    const onScreenBorderY = (gpu.scrollX === pixelColumn || gpu.scrollX + 160 === pixelColumn) && 
+                        (pixelRow > gpu.scrollY && pixelRow < gpu.scrollY + 144)
+                    if (onScreenBorderX || onScreenBorderY) {
+                        canvasData[index] = 255
+                        canvasData[index + 1] = 0
+                        canvasData[index + 2] = 0
+                    } else {
+                        const color = gpu.valueToColor(pixel)
+                        canvasData[index] = color
+                        canvasData[index + 1] = color
+                        canvasData[index + 2] = color
+                    }
                     canvasData[index + 3] = 255
+                    
                     index = index + valuesPerPixel
-                }
+                })
             })
         })
         const canvasWidth = widthInTiles * tileWidth

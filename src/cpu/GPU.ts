@@ -158,15 +158,17 @@ class GPU {
     }
 
     renderScan() {
-        const mapline = u8.wrappingAdd(this.line, 0)//this.scrollY) 
-        const tileMapOffset = (this.backgroundTileMap - GPU.VRAM_BEGIN) + mapline
-        const y = (this.line % 8)//+ this.scrollY) % 8 // Cycle through 0 - 7
+        const mapLine = this.line + this.scrollY//u8.wrappingAdd(this.line, this.scrollY) 
+        const tileMapOffset = (this.backgroundTileMap - GPU.VRAM_BEGIN) + mapLine
+        // When line and scrollY are zero we just start at the top of the tile
+        // If they're non-zero we must index into the tile cycling through 0 - 7
+        const y = (this.line + this.scrollY) % 8 
 
         let lineOffset = Math.trunc(this.scrollX / 8) // Count up 1 every 8 steps
-        let x = this.scrollX % 8 // cycle through 0 - 7
+        let x = 0 //this.scrollX % 8 // cycle through 0 - 7
 
         let canvasOffset = this.line * GPU.width * 4
-        let tileIndex = this.vram[tileMapOffset + 0x100]// + lineOffset]
+        let tileIndex = this.vram[tileMapOffset + lineOffset]
 
         // if(this.backgroundTileMap === BackgroundTileMap.x9c00 && tileIndex < 128) {
         //     tileIndex += 256

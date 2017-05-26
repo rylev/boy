@@ -54,7 +54,7 @@ class Internals extends React.Component<Props, State> {
                         onByteClick={this.addBreakPoint} 
                          />
                     <TileSet gpu={cpu.gpu}/>
-                    <Background gpu={cpu.gpu}/>
+                    <Background gpu={cpu.gpu} onClick={this.backgroundClicked} />
                 </div>
                 {this.debug()}
                 {this.controls()}
@@ -172,6 +172,10 @@ class Internals extends React.Component<Props, State> {
 
     spClicked = () => {
         this.setState({memoryOffset: Math.trunc(this.state.cpu.sp / BYTE_SIZE) })
+    }
+
+    backgroundClicked = () => {
+        this.setState({memoryOffset: Math.trunc(this.state.cpu.gpu.backgroundTileMap / BYTE_SIZE) })
     }
 
     addBreakPoint = (addr: number) => {
