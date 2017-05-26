@@ -34,12 +34,17 @@ class Background extends React.Component<Props, State> {
     flush(gpu: GPU, ctx: CanvasRenderingContext2D) {
         const background = gpu.background1()
         const tileSet = gpu.tileSet
+
         const widthInTiles = 32 
         const heightInTiles = 32
+
         const tileWidth = 8
         const tileHeight = 8
+
         const valuesPerPixel = 4
+
         const rowWidth = tileWidth * widthInTiles * valuesPerPixel
+
         const canvasData: Uint8Array = new Uint8Array(widthInTiles * heightInTiles * tileHeight * tileWidth * valuesPerPixel).fill(0)
         const tiles: TileValue[][][] = Array.from(background).map((byte: number) => tileSet[byte])
 

@@ -2,12 +2,13 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 
 import GPU from 'cpu/GPU'
+import './tileSet.css'
 
 type Props = { gpu: GPU }
 type State = { ctx: CanvasRenderingContext2D }
 class TileSet extends React.Component<Props, State> {
     componentDidMount() {
-        const canvas = ReactDOM.findDOMNode(this.refs.tileset) as HTMLCanvasElement
+        const canvas = ReactDOM.findDOMNode(this.refs.tileSet) as HTMLCanvasElement
         const ctx = canvas.getContext('2d')
         if (ctx === null) { return }
 
@@ -27,7 +28,7 @@ class TileSet extends React.Component<Props, State> {
     render() {
         return (
             <div>
-                <canvas id="tileset" ref="tileset" />
+                <canvas id="tileSet" ref="tileSet" />
             </div>
         )
     }
@@ -39,19 +40,18 @@ class TileSet extends React.Component<Props, State> {
         const tileWidth = 8
         const tileHeight = 8
 
-        const effectiveWidth = tileWidth * valuesPerPixel
-        const width = 8 
-        const height = Math.trunc(tileSet.length / width) 
+        const widthInTiles = 8 
+        const heightInTiles = Math.trunc(tileSet.length / widthInTiles) 
 
-        const rowWidth = tileWidth * width * valuesPerPixel
+        const rowWidth = tileWidth * widthInTiles * valuesPerPixel
         const canvasData: Uint8Array = new Uint8Array(tileSet.length * tileHeight * tileWidth * valuesPerPixel)
 
         tileSet.forEach((tile, tileIndex) => {
-            const tileRow = Math.trunc(tileIndex / tileHeight)
-            const tileColumn = tileIndex % tileWidth
+            const tileRow = Math.trunc(tileIndex / heightInTiles)
+            const tileColumn = tileIndex % widthInTiles
             tile.forEach((row, rowIndex) => {
                 const beginningOfCanvasRow = ((tileRow * tileHeight) + rowIndex) * rowWidth
-                let index = beginningOfCanvasRow + (tileColumn * effectiveWidth)
+                let index = beginningOfCanvasRow + (tileColumn * tileWidth * valuesPerPixel)
 
                 for (let pixel of row) {
                     const color = gpu.valueToColor(pixel)
@@ -63,8 +63,8 @@ class TileSet extends React.Component<Props, State> {
                 }
             })
         })
-        const canvasWidth = width * tileWidth
-        const canvasHeight = height * tileHeight
+        const canvasWidth = widthInTiles * tileWidth
+        const canvasHeight = heightInTiles * tileHeight
         const data = new ImageData(
             Uint8ClampedArray.from(canvasData),
             canvasWidth,

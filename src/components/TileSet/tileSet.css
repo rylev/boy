@@ -1,4 +1,5 @@
 #tileSet {
-    height: 500px;
-    width: 500px;
+    height: 64px;
+    width: 64px;
+    border: 1px solid black
 }
