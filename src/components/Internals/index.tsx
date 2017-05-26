@@ -107,33 +107,33 @@ class Internals extends React.Component<Props, State> {
         const onClick = () => {
             const { cpu } = this.state
             cpu.unpause()
-            const task = setInterval(() => {
-                this.stepFrame(cpu, task)
-            }, 1000)
-            this.setState({cpuTask: task})
+            this.stepFrame(cpu,0)
+            this.setState({cpuTask: 1})
         }
         return <button className="run control" onClick={onClick}>Run</button>
     }
 
-    stepFrame(cpu: CPUModel, task: number) {
+    stepFrame(cpu: CPUModel, time: number) {
         const frameTask = setTimeout(() => {
             try {
                 if (cpu.isPaused) { return }
+                const t1 = new Date().getTime()
                 cpu.run(this.state.debug)
-                if (cpu.clockTicksInSecond < CPUModel.CLOCKS_PER_SECOND) {
-                    this.stepFrame(cpu, task)
-                } else {
+                const t2 = new Date().getTime()
+                const time = 16.7 - (t2 - t1)
+                if (time < 0) { console.warn("Took more than the allowed time")}
+                this.stepFrame(cpu, Math.max(time, 0))
+                if (cpu.clockTicksInSecond > CPUModel.CLOCKS_PER_SECOND) { 
                     cpu.clockTicksInSecond = 0
                     this.setState({cpu: cpu})
                 }
             } catch (e) {
                 cpu.pause()
                 console.error(e)
-                clearInterval(task)
                 clearInterval(frameTask)
                 this.setState({ error: e, cpuTask: undefined })
             }
-        }, 16)
+        }, time)
 
     }
 
