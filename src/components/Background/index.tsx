@@ -1,7 +1,8 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 
-import GPU, { TileValue } from 'cpu/GPU'
+import GPU, { TileValue, BackgroundTileMap } from 'cpu/GPU'
+import './background.css'
 
 type Props = { gpu: GPU }
 type State = { ctx: CanvasRenderingContext2D }
@@ -24,14 +25,11 @@ class Background extends React.Component<Props, State> {
     }
 
     render() {
-        return (
-            <div>
-                <canvas id="background" ref="background" />
-            </div>
-        )
+        return <canvas height="256" width="256" id="background" ref="background" />
     }
 
     flush(gpu: GPU, ctx: CanvasRenderingContext2D) {
+        if (gpu.backgroundTileMap !== BackgroundTileMap.x9800) { throw Error("We only support tilemap at 0x9800 for now")}
         const background = gpu.background1()
         const tileSet = gpu.tileSet
 
@@ -57,6 +55,7 @@ class Background extends React.Component<Props, State> {
 
                 for (let pixel of row) {
                     const color = gpu.valueToColor(pixel)
+                    
                     canvasData[index] = color
                     canvasData[index + 1] = color
                     canvasData[index + 2] = color
@@ -72,6 +71,7 @@ class Background extends React.Component<Props, State> {
             canvasWidth,
             canvasHeight
         )
+
 
         ctx.putImageData(data, 0, 0)
     }

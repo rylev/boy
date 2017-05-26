@@ -26,11 +26,7 @@ class TileSet extends React.Component<Props, State> {
 
 
     render() {
-        return (
-            <div>
-                <canvas id="tileSet" ref="tileSet" />
-            </div>
-        )
+        return <canvas height="384" width="64" id="tileSet" ref="tileSet" /> 
     }
 
     flush(gpu: GPU, ctx: CanvasRenderingContext2D) {
@@ -44,10 +40,10 @@ class TileSet extends React.Component<Props, State> {
         const heightInTiles = Math.trunc(tileSet.length / widthInTiles) 
 
         const rowWidth = tileWidth * widthInTiles * valuesPerPixel
-        const canvasData: Uint8Array = new Uint8Array(tileSet.length * tileHeight * tileWidth * valuesPerPixel)
+        const canvasData: Uint8Array = new Uint8Array(widthInTiles * heightInTiles * tileHeight * tileWidth * valuesPerPixel).fill(0)
 
         tileSet.forEach((tile, tileIndex) => {
-            const tileRow = Math.trunc(tileIndex / heightInTiles)
+            const tileRow = Math.trunc(tileIndex / widthInTiles)
             const tileColumn = tileIndex % widthInTiles
             tile.forEach((row, rowIndex) => {
                 const beginningOfCanvasRow = ((tileRow * tileHeight) + rowIndex) * rowWidth
@@ -59,7 +55,7 @@ class TileSet extends React.Component<Props, State> {
                     canvasData[index + 1] = color
                     canvasData[index + 2] = color
                     canvasData[index + 3] = 255
-                    index = index + 4
+                    index = index + valuesPerPixel
                 }
             })
         })
