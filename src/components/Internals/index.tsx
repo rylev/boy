@@ -108,20 +108,33 @@ class Internals extends React.Component<Props, State> {
             const { cpu } = this.state
             cpu.unpause()
             const task = setInterval(() => {
-                try {
-                    cpu.run(this.state.debug)
-                    this.forceUpdate()
-                } catch (e) {
-                    cpu.pause()
-                    console.error(e)
-                    clearInterval(task)
-                    this.setState({ error: e, cpuTask: undefined })
-                } finally {
-                }
+                this.stepFrame(cpu, task)
             }, 1000)
             this.setState({cpuTask: task})
         }
         return <button className="run control" onClick={onClick}>Run</button>
+    }
+
+    stepFrame(cpu: CPUModel, task: number) {
+        const frameTask = setTimeout(() => {
+            try {
+                if (cpu.isPaused) { return }
+                cpu.run(this.state.debug)
+                if (cpu.clockTicksInSecond < CPUModel.CLOCKS_PER_SECOND) {
+                    this.stepFrame(cpu, task)
+                } else {
+                    cpu.clockTicksInSecond = 0
+                    this.setState({cpu: cpu})
+                }
+            } catch (e) {
+                cpu.pause()
+                console.error(e)
+                clearInterval(task)
+                clearInterval(frameTask)
+                this.setState({ error: e, cpuTask: undefined })
+            }
+        }, 16)
+
     }
 
     stepButton(): JSX.Element | null {

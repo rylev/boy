@@ -11,17 +11,19 @@ type Address = number
 type Cycles = number
 
 export class CPU {
-    static get CLOCK_SPEED(): number { return 4194304 } 
+    static get CLOCKS_PER_FRAME(): number { return 70224 } 
+    static get CLOCKS_PER_SECOND(): number { return 4194304 } 
     static get START_ADDR(): number { return 0x100 } 
     registers: Registers 
     pc: number
     sp: number
     bus: Bus
     gpu: GPU
+    clockTicksInFrame = 0
+    clockTicksInSecond = 0
     private _prefix: boolean = false
     private _isRunning: boolean = false
     private _isPaused: boolean = false
-    private _clockTicks = 0
 
     constructor(bios: Uint8Array | undefined, rom: Uint8Array, draw: (data: ImageData) => void) {
         this.gpu = new GPU(draw)
@@ -33,6 +35,10 @@ export class CPU {
 
     get isRunning(): boolean {
         return this._isRunning
+    }
+
+    get isPaused(): boolean {
+        return this._isPaused
     }
     
     pause () {
@@ -57,8 +63,8 @@ export class CPU {
         while (this._isRunning) {
             const pc = this.pc
             this.step(pc)
-            if (this._clockTicks > CPU.CLOCK_SPEED) {
-                this._clockTicks = 0
+            if (this.clockTicksInFrame > CPU.CLOCKS_PER_FRAME) {
+                this.clockTicksInFrame = 0
                 return
             }
         }
@@ -74,8 +80,8 @@ export class CPU {
                 return
             }
             this.step(pc)
-            if (this._clockTicks > CPU.CLOCK_SPEED) {
-                this._clockTicks = 0
+            if (this.clockTicksInFrame > CPU.CLOCKS_PER_FRAME) {
+                this.clockTicksInFrame = 0
                 return
             }
         }
@@ -87,7 +93,8 @@ export class CPU {
         const instruction = Instruction.fromByte(instructionByte, this._prefix)
         const [nextPC, cycles] = this.execute(instruction)
         this.gpu.step(cycles)
-        this._clockTicks += cycles
+        this.clockTicksInFrame += cycles
+        this.clockTicksInSecond += cycles
         this.pc = nextPC
     }
 
