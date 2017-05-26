@@ -62,10 +62,16 @@ class Background extends React.Component<Props, State> {
                         (pixelColumnIndex > gpu.scrollX && pixelColumnIndex < gpu.scrollX + 160)
                     const onScreenBorderY = (gpu.scrollX === pixelColumnIndex || gpu.scrollX + 160 === pixelColumnIndex) && 
                         (pixelRowIndex > gpu.scrollY && pixelRowIndex < gpu.scrollY + 144)
+                    const onTileBorderX = (pixelRowIndex % 8 === 0)
+                    const onTileBorderY = (pixelColumnIndex % 8 === 0)
                     if (onScreenBorderX || onScreenBorderY) {
                         canvasData[index] = 255
                         canvasData[index + 1] = 0
                         canvasData[index + 2] = 0
+                    } else if (onTileBorderX || onTileBorderY) {
+                        canvasData[index] = 0
+                        canvasData[index + 1] = 0
+                        canvasData[index + 2] = 255
                     } else {
                         const color = gpu.valueToColor(pixel)
                         canvasData[index] = color

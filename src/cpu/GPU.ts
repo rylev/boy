@@ -158,14 +158,16 @@ class GPU {
     }
 
     renderScan() {
-        const mapLine = this.line + this.scrollY//u8.wrappingAdd(this.line, this.scrollY) 
-        const tileMapOffset = (this.backgroundTileMap - GPU.VRAM_BEGIN) + mapLine
+        const viewPortYOffset = u8.wrappingAdd(this.line, this.scrollY) 
+        const tileOffset = Math.trunc(viewPortYOffset / 8) * 32
+
+        const tileMapOffset = (this.backgroundTileMap - GPU.VRAM_BEGIN) + tileOffset
         // When line and scrollY are zero we just start at the top of the tile
         // If they're non-zero we must index into the tile cycling through 0 - 7
-        const y = (this.line + this.scrollY) % 8 
+        const yOffset = (this.line + this.scrollY) % 8 
 
-        let lineOffset = Math.trunc(this.scrollX / 8) // Count up 1 every 8 steps
-        let x = 0 //this.scrollX % 8 // cycle through 0 - 7
+        let lineOffset = 0// Math.trunc(this.scrollX / 8) // Count up 1 every 8 steps
+        let xOffset = 0 //this.scrollX % 8 // cycle through 0 - 7
 
         let canvasOffset = this.line * GPU.width * 4
         let tileIndex = this.vram[tileMapOffset + lineOffset]
@@ -175,7 +177,7 @@ class GPU {
         // } 
 
         for (var i = 0; i < 160; i++) {
-            const value = this.tileSet[tileIndex][y][x]
+            const value = this.tileSet[tileIndex][yOffset][xOffset]
             const color = this.valueToColor(value)
             this._canvas[canvasOffset] = color
             this._canvas[canvasOffset + 1] = color
@@ -183,9 +185,9 @@ class GPU {
             this._canvas[canvasOffset + 3] = 255
             canvasOffset += 4
 
-            x = x + 1
-            if (x === 8) {
-                x = 0
+            xOffset = xOffset + 1
+            if (xOffset === 8) {
+                xOffset = 0
                 lineOffset = (lineOffset + 1) & 0x1f
                 tileIndex = this.vram[tileMapOffset + lineOffset]
                 // if (this.backgroundTileMap === BackgroundTileMap.x9c00 && tileIndex < 128) {
