@@ -16,9 +16,9 @@ describe('CPU', () => {
                 0x01,
                 Instruction.toByte(Instruction.Halt),
             ])
-            const cpu = new CPU(undefined, rom)
+            const cpu = new CPU(undefined, rom, {})
             const flagsBefore = cpu.registers.f
-            cpu.run()
+            cpu.runFrame()
 
             assert.equal(cpu.pc, rom.length)
             assert.equal(flagsBefore, cpu.registers.f)
@@ -32,9 +32,9 @@ describe('CPU', () => {
                 0x10, 
                 Instruction.toByte(Instruction.Halt)
             ])
-            const cpu = new CPU(undefined, rom)
+            const cpu = new CPU(undefined, rom, {})
             cpu.registers.a = 0x10
-            cpu.run()
+            cpu.runFrame()
 
             assert.equal(cpu.registers.f.carry, false)
             assert.equal(cpu.registers.f.subtract, true)
@@ -50,11 +50,13 @@ describe('CPU', () => {
                 0x04,
                 Instruction.toByte(Instruction.Halt),
                 Instruction.toByte(Instruction.Halt),
-                Instruction.toByte(Instruction.Halt)
+                Instruction.toByte(Instruction.Halt),
+                Instruction.toByte(Instruction.Halt),
+                Instruction.toByte(Instruction.Halt),
             ])
-            const cpu = new CPU(undefined, rom)
+            const cpu = new CPU(undefined, rom, {})
             cpu.registers.f.zero = true
-            cpu.run()
+            cpu.runFrame()
 
             assert.equal(cpu.pc, rom.length)
         })
@@ -67,9 +69,9 @@ describe('CPU', () => {
                 Instruction.toByte(Instruction.Halt),
                 Instruction.toByte(Instruction.Halt)
             ])
-            const cpu = new CPU(undefined, rom)
+            const cpu = new CPU(undefined, rom, {})
             cpu.registers.f.zero = false
-            cpu.run()
+            cpu.runFrame()
 
             assert.equal(cpu.pc, rom.length - 2)
         })
@@ -82,10 +84,10 @@ describe('CPU', () => {
                 0xFE,
                 Instruction.toByte(Instruction.NOP)
             ])
-            const cpu = new CPU(undefined, rom)
+            const cpu = new CPU(undefined, rom, {})
             cpu.registers.f.zero = true
             cpu.pc = rom.length - 3
-            cpu.run()
+            cpu.runFrame()
 
             assert.equal(cpu.pc, rom.length - 3)
         })

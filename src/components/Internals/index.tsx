@@ -216,10 +216,10 @@ class Internals extends React.Component<Props, State> {
             if (context === null) { return }
             context.putImageData(data, 0, 0)
         }
-        const cpu = new CPUModel(props.bios, props.rom, draw)
-        cpu.onError = (e: Error) => { this.setState({error: e}) }
-        cpu.onPause = () => { this.setState({runningState: RunningState.Paused})}
-        cpu.onMaxClockCycles = () => { this.setState({cpu: cpu})}
+        const onError = (e: Error) => { this.setState({error: e, runningState: RunningState.Stopped}) }
+        const onPause = () => { this.setState({runningState: RunningState.Paused})}
+        const onMaxClockCycles = () => { this.setState({cpu: cpu})}
+        const cpu = new CPUModel(props.bios, props.rom, { draw, onError, onPause, onMaxClockCycles })
         return cpu
     }
 }

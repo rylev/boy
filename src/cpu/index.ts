@@ -9,6 +9,12 @@ import Debugger from 'Debugger'
 
 type Address = number
 type Cycles = number
+type CPUCallbacks = {
+    onPause?: () => void,
+    onMaxClockCycles?: () => void,
+    draw?: (data: ImageData) => void,
+    onError?: (error: Error) => void
+}
 
 export class CPU {
     static get CLOCKS_PER_FRAME(): number { return 70224 } 
@@ -24,17 +30,19 @@ export class CPU {
     private _prefix: boolean = false
     private _isRunning: boolean = false
     private _isPaused: boolean = false
+    private _onPause: (() => void) | undefined
+    private _onError: ((error: Error) => void) | undefined
+    private _onMaxClockCycles: (() => void) | undefined
 
-    onPause: (() => void) | undefined
-    onError: ((error: Error) => void) | undefined
-    onMaxClockCycles: (() => void) | undefined
-
-    constructor(bios: Uint8Array | undefined, rom: Uint8Array, draw: (data: ImageData) => void) {
-        this.gpu = new GPU(draw)
+    constructor(bios: Uint8Array | undefined, rom: Uint8Array, callbacks: CPUCallbacks) {
+        this.gpu = new GPU(callbacks.draw)
         this.bus = new Bus(bios, rom, this.gpu)
         this.registers = new Registers()
         this.pc = bios ? 0 : CPU.START_ADDR
         this.sp = 0 
+        this._onError = callbacks.onError
+        this._onMaxClockCycles = callbacks.onMaxClockCycles
+        this._onPause = callbacks.onPause
     }
 
     get isRunning(): boolean {
@@ -47,14 +55,14 @@ export class CPU {
     
     pause () {
         this._isPaused = true
-        this.onPause && this.onPause()
+        this._onPause && this._onPause()
     }
 
     unpause() {
         this._isPaused = false
     }
             
-    runFrame(debug: Debugger | undefined): number {
+    runFrame(debug?: Debugger): number {
         if (this._isPaused) { return 0 }
         const t1 = new Date().getTime()
 
@@ -67,12 +75,7 @@ export class CPU {
                 break
             }
 
-            try {
-                this.step(pc)
-
-            } catch (e) {
-                this.onError && this.onError(e)
-            }
+            this.step(pc)
 
             if (this.clockTicksInFrame > CPU.CLOCKS_PER_FRAME) {
                 this.clockTicksInFrame = 0
@@ -81,7 +84,7 @@ export class CPU {
             }
             if (this.clockTicksInSecond > CPU.CLOCKS_PER_SECOND) { 
                 this.clockTicksInSecond = 0
-                this.onMaxClockCycles && this.onMaxClockCycles()
+                this._onMaxClockCycles && this._onMaxClockCycles()
                 break
             }
         }
@@ -93,9 +96,16 @@ export class CPU {
         const instructionByte = this.bus.read(pc)
         const instruction = Instruction.fromByte(instructionByte, this._prefix)
 
-        const [nextPC, cycles] = this.execute(instruction)
 
-        this.gpu.step(cycles)
+        let nextPC, cycles
+        try {
+            [nextPC, cycles] = this.execute(instruction)
+            this.gpu.step(cycles)
+        } catch (e) {
+            this._isRunning = false
+            this._onError && this._onError(e)
+            return
+        }
 
         this.clockTicksInFrame += cycles
         this.clockTicksInSecond += cycles

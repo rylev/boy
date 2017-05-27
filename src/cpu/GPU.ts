@@ -80,8 +80,8 @@ class GPU {
 
     line = 0
 
-    constructor(draw: (data: ImageData) => void) {
-        this._draw = draw
+    constructor(draw: ((data: ImageData) => void) | undefined) {
+        this._draw = draw || (() => {})
         this._canvas = this._canvas.map(_ => Color.White)
         this.draw()
     }
