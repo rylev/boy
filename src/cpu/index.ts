@@ -25,6 +25,10 @@ export class CPU {
     private _isRunning: boolean = false
     private _isPaused: boolean = false
 
+    onPause: (() => void) | undefined
+    onError: ((error: Error) => void) | undefined
+    onMaxClockCycles: (() => void) | undefined
+
     constructor(bios: Uint8Array | undefined, rom: Uint8Array, draw: (data: ImageData) => void) {
         this.gpu = new GPU(draw)
         this.bus = new Bus(bios, rom, this.gpu)
@@ -43,32 +47,46 @@ export class CPU {
     
     pause () {
         this._isPaused = true
+        this.onPause && this.onPause()
     }
 
     unpause() {
         this._isPaused = false
     }
             
-    run(debug: Debugger | undefined) {
-        if (this._isPaused) { return }
+    runFrame(debug: Debugger | undefined): number {
+        if (this._isPaused) { return 0 }
+        const t1 = new Date().getTime()
 
         this._isRunning = true
         while (this._isRunning) {
             const pc = this.pc
             if (debug && debug.breakpoints.includes(pc)) {
                 this._isRunning = false
-                this._isPaused = true
-                return
+                this.pause()
+                break
             }
 
-            this.step(pc)
+            try {
+                this.step(pc)
+
+            } catch (e) {
+                this.onError && this.onError(e)
+            }
 
             if (this.clockTicksInFrame > CPU.CLOCKS_PER_FRAME) {
                 this.clockTicksInFrame = 0
                 this._isRunning = false
-                return 
+                break
+            }
+            if (this.clockTicksInSecond > CPU.CLOCKS_PER_SECOND) { 
+                this.clockTicksInSecond = 0
+                this.onMaxClockCycles && this.onMaxClockCycles()
+                break
             }
         }
+        const t2 = new Date().getTime()
+        return t2 - t1
     }
 
     step(pc: number = this.pc) {

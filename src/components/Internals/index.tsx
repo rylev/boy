@@ -26,7 +26,7 @@ type State = {
 class Internals extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props)
-        const cpu = Internals.newCPU(props)
+        const cpu = this.newCPU(props)
         this.state = { 
             cpu: cpu, 
             memoryOffset: calculateMemoryOffset(cpu), 
@@ -39,7 +39,7 @@ class Internals extends React.Component<Props, State> {
 
     componentWillReceiveProps(newProps: Props) {
         if (newProps !== this.props) {
-            this.setState({ cpu: Internals.newCPU(newProps) })
+            this.setState({ cpu: this.newCPU(newProps) })
         }
     }
 
@@ -153,7 +153,7 @@ class Internals extends React.Component<Props, State> {
     }
 
     reset = () => {
-        const cpu = Internals.newCPU(this.props)
+        const cpu = this.newCPU(this.props)
         this.setState({ 
             cpu: cpu, 
             error: undefined, 
@@ -195,35 +195,20 @@ class Internals extends React.Component<Props, State> {
             const { runningState } = this.state
             if (runningState !== RunningState.Running) { return }
 
-            const t1 = new Date().getTime()
-            try {
-                cpu.run(this.state.debug)
-            } catch (e) {
-                console.error(e)
-                this.setState({ error: e, runningState: RunningState.Stopped })
-                return 
-            }
-            const t2 = new Date().getTime()
-
-            if (cpu.isPaused) { this.setState({runningState: RunningState.Paused})}
+            let timeDiff = cpu.runFrame(this.state.debug)
 
             if (runContinuously) { 
-                let timeDiff = 16.7 - (t2 - t1)
                 if (previousTimeDiff < 0) { timeDiff = timeDiff + previousTimeDiff }
 
                 this.stepFrame(cpu, timeDiff, runContinuously)
             } else {
-                this.setState({runningState: RunningState.Paused})
-            }
-            if (cpu.clockTicksInSecond > CPUModel.CLOCKS_PER_SECOND) { 
-                cpu.clockTicksInSecond = 0
-                this.setState({cpu: cpu})
+                cpu.pause()
             }
         }, Math.max(previousTimeDiff, 0))
     }
 
 
-    static newCPU(props: Props): CPUModel {
+    newCPU(props: Props): CPUModel {
         const draw = (data: ImageData) => { 
             const screen = document.getElementById('screen') as HTMLCanvasElement | null
             if (screen === null) { return }
@@ -231,7 +216,11 @@ class Internals extends React.Component<Props, State> {
             if (context === null) { return }
             context.putImageData(data, 0, 0)
         }
-        return new CPUModel(props.bios, props.rom, draw)
+        const cpu = new CPUModel(props.bios, props.rom, draw)
+        cpu.onError = (e: Error) => { this.setState({error: e}) }
+        cpu.onPause = () => { this.setState({runningState: RunningState.Paused})}
+        cpu.onMaxClockCycles = () => { this.setState({cpu: cpu})}
+        return cpu
     }
 }
 
