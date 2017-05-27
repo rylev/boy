@@ -51,38 +51,22 @@ export class CPU {
             
     run(debug: Debugger | undefined) {
         if (this._isPaused) { return }
-        if (debug !== undefined) {
-            this.runWithDebug(debug)
-        } else {
-            this.runWithoutDebug()
-        }
-    }
 
-    runWithoutDebug() {
         this._isRunning = true
         while (this._isRunning) {
             const pc = this.pc
-            this.step(pc)
-            if (this.clockTicksInFrame > CPU.CLOCKS_PER_FRAME) {
-                this.clockTicksInFrame = 0
-                return
-            }
-        }
-    }
-
-    runWithDebug(debug: Debugger) {
-        this._isRunning = true
-        while (this._isRunning) {
-            const pc = this.pc
-            if (debug.breakpoints.includes(pc)) {
+            if (debug && debug.breakpoints.includes(pc)) {
                 this._isRunning = false
                 this._isPaused = true
                 return
             }
+
             this.step(pc)
+
             if (this.clockTicksInFrame > CPU.CLOCKS_PER_FRAME) {
                 this.clockTicksInFrame = 0
-                return
+                this._isRunning = false
+                return 
             }
         }
     }
@@ -90,10 +74,14 @@ export class CPU {
     step(pc: number = this.pc) {
         const instructionByte = this.bus.read(pc)
         const instruction = Instruction.fromByte(instructionByte, this._prefix)
+
         const [nextPC, cycles] = this.execute(instruction)
+
         this.gpu.step(cycles)
+
         this.clockTicksInFrame += cycles
         this.clockTicksInSecond += cycles
+
         this.pc = nextPC
     }
 

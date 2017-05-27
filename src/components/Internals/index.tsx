@@ -88,100 +88,83 @@ class Internals extends React.Component<Props, State> {
 
     controls(): JSX.Element {
         const { cpu, runningState, error } = this.state
-        if (runningState !== RunningState.Running) {
-            return (
-                <div className="controls">
-                    {error ? null : this.runButton()}
-                    {error ? null : this.stepButton()}
-                    {this.resetButton()}
-                </div>
-            )
-        } else {
+        if (runningState === RunningState.Running) {
             return (
                 <div className="controls">
                     {this.stopButton()}
                 </div>
             )
         }
+
+        return (
+            <div className="controls">
+                {error ? null : this.runButton()}
+                {error ? null : this.runFrameButton()}
+                {error ? null : this.stepButton()}
+                {this.resetButton()}
+            </div>
+        )
     }
 
     runButton(): JSX.Element | null {
-        const onClick = () => {
-            const { cpu } = this.state
-            cpu.unpause()
-            this.setState({runningState: RunningState.Running})
-            this.stepFrame(cpu, 0)
-        }
-        return <button className="run control" onClick={onClick}>Run</button>
+        return <button className="run control" onClick={this.run}>Run</button>
     }
 
-    stepFrame(cpu: CPUModel, previousTimeDiff: number, runContinuously: boolean = true) {
-        const frameTask = setTimeout(() => {
-            const { runningState } = this.state
-            if (runningState !== RunningState.Running) { return }
-            const t1 = new Date().getTime()
-
-            try {
-                cpu.run(this.state.debug)
-            } catch (e) {
-                cpu.pause()
-                console.error(e)
-                clearInterval(frameTask)
-                this.setState({ error: e, runningState: RunningState.Stopped })
-                return 
-            }
-            if (cpu.isPaused) { this.setState({runningState: RunningState.Paused})}
-            const t2 = new Date().getTime()
-            let timeDiff = 16.7 - (t2 - t1)
-            if (previousTimeDiff < 0) { timeDiff = timeDiff + previousTimeDiff }
-            
-            if (runContinuously) { 
-                this.stepFrame(cpu, timeDiff)
-            }
-            if (cpu.clockTicksInSecond > CPUModel.CLOCKS_PER_SECOND) { 
-                cpu.clockTicksInSecond = 0
-                this.setState({cpu: cpu})
-            }
-        }, Math.max(previousTimeDiff, 0))
+    runFrameButton(): JSX.Element | null {
+        return <button className="runFrame control" onClick={this.runFrame}>Run Frame</button>
     }
 
     stepButton(): JSX.Element | null {
-        const onClick = () => {
-            const { cpu } = this.state
-            this.setState({ runningState: RunningState.Running })
-            try {
-                cpu.step()
-            } catch (e) {
-                this.setState({ error: e })
-            }
-            this.setState({ runningState: RunningState.Paused, memoryOffset: calculateMemoryOffset(this.state.cpu)})
-        }
-
-        return <button className="step control" onClick={onClick}>Step</button>
+        return <button className="step control" onClick={this.step}>Step</button>
     }
 
     resetButton(): JSX.Element | null {
-        const { cpu } = this.state
-        
-        const onClick = () => {
-            const cpu = Internals.newCPU(this.props)
-            this.setState({ 
-                cpu: cpu, 
-                error: undefined, 
-                memoryOffset: calculateMemoryOffset(cpu)
-            })
-        }
-        return <button className="reset control" onClick={onClick}>Reset</button>
+        return <button className="reset control" onClick={this.reset}>Reset</button>
     }
 
     stopButton (): JSX.Element {
-        const onClick = () => {
-            const { cpu } = this.state
-            cpu.pause()
-            this.setState({ runningState: RunningState.Paused })
-        }
+        return <button className="stop control" onClick={this.pause}>Stop</button>
+    }
 
-        return <button className="stop control" onClick={onClick}>Stop</button>
+    run = () => {
+        const { cpu } = this.state
+        cpu.unpause()
+        this.setState({ runningState: RunningState.Running }, () => {
+            this.stepFrame(cpu, 0, true)
+        })
+    }
+
+    runFrame = () => {
+        const { cpu } = this.state
+        cpu.unpause()
+        this.setState({ runningState: RunningState.Running }, () => {
+            this.stepFrame(cpu, 0, false)
+        })
+    }
+
+    step = () => {
+        const { cpu } = this.state
+        try {
+            cpu.step()
+        } catch (e) {
+            this.setState({ error: e })
+        }
+        this.setState({ memoryOffset: calculateMemoryOffset(cpu)})
+    }
+
+    reset = () => {
+        const cpu = Internals.newCPU(this.props)
+        this.setState({ 
+            cpu: cpu, 
+            error: undefined, 
+            memoryOffset: calculateMemoryOffset(cpu)
+        })
+    }
+
+    pause = () => {
+        const { cpu } = this.state
+        cpu.pause()
+        this.setState({ runningState: RunningState.Paused })
     }
 
     pcClicked = () => {
@@ -206,6 +189,39 @@ class Internals extends React.Component<Props, State> {
             this.setState({debug: debug})
         }
     }
+
+    stepFrame(cpu: CPUModel, previousTimeDiff: number, runContinuously: boolean) {
+        setTimeout(() => {
+            const { runningState } = this.state
+            if (runningState !== RunningState.Running) { return }
+
+            const t1 = new Date().getTime()
+            try {
+                cpu.run(this.state.debug)
+            } catch (e) {
+                console.error(e)
+                this.setState({ error: e, runningState: RunningState.Stopped })
+                return 
+            }
+            const t2 = new Date().getTime()
+
+            if (cpu.isPaused) { this.setState({runningState: RunningState.Paused})}
+
+            if (runContinuously) { 
+                let timeDiff = 16.7 - (t2 - t1)
+                if (previousTimeDiff < 0) { timeDiff = timeDiff + previousTimeDiff }
+
+                this.stepFrame(cpu, timeDiff, runContinuously)
+            } else {
+                this.setState({runningState: RunningState.Paused})
+            }
+            if (cpu.clockTicksInSecond > CPUModel.CLOCKS_PER_SECOND) { 
+                cpu.clockTicksInSecond = 0
+                this.setState({cpu: cpu})
+            }
+        }, Math.max(previousTimeDiff, 0))
+    }
+
 
     static newCPU(props: Props): CPUModel {
         const draw = (data: ImageData) => { 
