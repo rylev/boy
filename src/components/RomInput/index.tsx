@@ -27,7 +27,7 @@ class RomInput extends React.Component<Props, {}> {
                     localStorage.setItem(this.props.id, urlReader.result)
                 } catch (e) {
                     // TODO: Handle Error
-                    console.log("Storage failed: " + e)
+                    console.error("Storage failed: " + e)
                 }
             }
         }

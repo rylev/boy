@@ -1,6 +1,7 @@
 import Registers from './Registers'
 import Instruction from './Instruction'
 import Bus from './Bus'
+import GPU from './GPU'
 import { assertExhaustive } from 'typescript'
 import u16 from 'lib/u16'
 import u8 from 'lib/u8'
@@ -10,16 +11,23 @@ type Address = number
 type Cycles = number
 
 export class CPU {
+    static get CLOCKS_PER_FRAME(): number { return 70224 } 
+    static get CLOCKS_PER_SECOND(): number { return 4194304 } 
     static get START_ADDR(): number { return 0x100 } 
     registers: Registers 
     pc: number
     sp: number
     bus: Bus
+    gpu: GPU
+    clockTicksInFrame = 0
+    clockTicksInSecond = 0
     private _prefix: boolean = false
     private _isRunning: boolean = false
+    private _isPaused: boolean = false
 
-    constructor(bios: Uint8Array | undefined, rom: Uint8Array) {
-        this.bus = new Bus(bios, rom)
+    constructor(bios: Uint8Array | undefined, rom: Uint8Array, draw: (data: ImageData) => void) {
+        this.gpu = new GPU(draw)
+        this.bus = new Bus(bios, rom, this.gpu)
         this.registers = new Registers()
         this.pc = bios ? 0 : CPU.START_ADDR
         this.sp = 0 
@@ -29,7 +37,20 @@ export class CPU {
         return this._isRunning
     }
 
+    get isPaused(): boolean {
+        return this._isPaused
+    }
+    
+    pause () {
+        this._isPaused = true
+    }
+
+    unpause() {
+        this._isPaused = false
+    }
+            
     run(debug: Debugger | undefined) {
+        if (this._isPaused) { return }
         if (debug !== undefined) {
             this.runWithDebug(debug)
         } else {
@@ -42,6 +63,10 @@ export class CPU {
         while (this._isRunning) {
             const pc = this.pc
             this.step(pc)
+            if (this.clockTicksInFrame > CPU.CLOCKS_PER_FRAME) {
+                this.clockTicksInFrame = 0
+                return
+            }
         }
     }
 
@@ -51,18 +76,24 @@ export class CPU {
             const pc = this.pc
             if (debug.breakpoints.includes(pc)) {
                 this._isRunning = false
+                this._isPaused = true
                 return
             }
             this.step(pc)
+            if (this.clockTicksInFrame > CPU.CLOCKS_PER_FRAME) {
+                this.clockTicksInFrame = 0
+                return
+            }
         }
     }
-            
+
     step(pc: number = this.pc) {
         const instructionByte = this.bus.read(pc)
         const instruction = Instruction.fromByte(instructionByte, this._prefix)
-        const [nextPC, _] = this.execute(instruction)
-        // TODO: make sure the cpu runs at the right clock speed
-        if (nextPC === 0x87) { console.log(pc, instruction)}
+        const [nextPC, cycles] = this.execute(instruction)
+        this.gpu.step(cycles)
+        this.clockTicksInFrame += cycles
+        this.clockTicksInSecond += cycles
         this.pc = nextPC
     }
 
@@ -118,7 +149,7 @@ export class CPU {
             case 'RLA':
                 // 1  4
                 // 0 0 0 C
-                this.rotateLeft(this.registers.a, false)
+                this.registers.a = this.rotateLeft(this.registers.a, false)
                 return [this.pc + 1, 4]
             case 'DEC A':
                 // 1  4
