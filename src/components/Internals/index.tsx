@@ -9,12 +9,18 @@ import Debugger from 'Debugger'
 import './internals.css'
 
 const BYTE_SIZE = 8
+enum RunningState {
+    Running,
+    Stopped,
+    Paused
+}
+
 type Props = { bios: Uint8Array | undefined, rom: Uint8Array }
 type State = { 
     cpu: CPUModel, 
     memoryOffset: number,
     error?: Error, 
-    cpuTask?: number,
+    runningState?: RunningState,
     debug?: Debugger
 }
 class Internals extends React.Component<Props, State> {
@@ -81,12 +87,12 @@ class Internals extends React.Component<Props, State> {
     }
 
     controls(): JSX.Element {
-        const { cpu } = this.state
-        if (!cpu.isRunning) {
+        const { cpu, runningState, error } = this.state
+        if (runningState !== RunningState.Running) {
             return (
                 <div className="controls">
-                    {this.runButton()}
-                    {this.stepButton()}
+                    {error ? null : this.runButton()}
+                    {error ? null : this.stepButton()}
                     {this.resetButton()}
                 </div>
             )
@@ -96,62 +102,61 @@ class Internals extends React.Component<Props, State> {
                     {this.stopButton()}
                 </div>
             )
-
         }
     }
 
     runButton(): JSX.Element | null {
-        const { error } = this.state
-        if (error) { return null }
-
         const onClick = () => {
             const { cpu } = this.state
             cpu.unpause()
+            this.setState({runningState: RunningState.Running})
             this.stepFrame(cpu, 0)
-            this.setState({cpuTask: 1})
         }
         return <button className="run control" onClick={onClick}>Run</button>
     }
 
-    stepFrame(cpu: CPUModel, previousTimeDiff: number) {
+    stepFrame(cpu: CPUModel, previousTimeDiff: number, runContinuously: boolean = true) {
         const frameTask = setTimeout(() => {
+            const { runningState } = this.state
+            if (runningState !== RunningState.Running) { return }
+            const t1 = new Date().getTime()
+
             try {
-                if (cpu.isPaused) { return }
-                const t1 = new Date().getTime()
                 cpu.run(this.state.debug)
-                const t2 = new Date().getTime()
-                let timeDiff = 16.7 - (t2 - t1)
-                if (previousTimeDiff < 0) { timeDiff = timeDiff + previousTimeDiff }
-                
-                this.stepFrame(cpu, timeDiff)
-                if (cpu.clockTicksInSecond > CPUModel.CLOCKS_PER_SECOND) { 
-                    cpu.clockTicksInSecond = 0
-                    this.setState({cpu: cpu})
-                }
             } catch (e) {
                 cpu.pause()
                 console.error(e)
                 clearInterval(frameTask)
-                this.setState({ error: e, cpuTask: undefined })
+                this.setState({ error: e, runningState: RunningState.Stopped })
+                return 
+            }
+            if (cpu.isPaused) { this.setState({runningState: RunningState.Paused})}
+            const t2 = new Date().getTime()
+            let timeDiff = 16.7 - (t2 - t1)
+            if (previousTimeDiff < 0) { timeDiff = timeDiff + previousTimeDiff }
+            
+            if (runContinuously) { 
+                this.stepFrame(cpu, timeDiff)
+            }
+            if (cpu.clockTicksInSecond > CPUModel.CLOCKS_PER_SECOND) { 
+                cpu.clockTicksInSecond = 0
+                this.setState({cpu: cpu})
             }
         }, Math.max(previousTimeDiff, 0))
-
     }
 
     stepButton(): JSX.Element | null {
-        const { error } = this.state
-        if (error) { return null }
-
         const onClick = () => {
-            const { cpu, cpuTask } = this.state
+            const { cpu } = this.state
+            this.setState({ runningState: RunningState.Running })
             try {
                 cpu.step()
-                if (cpuTask) { clearInterval(cpuTask) }
-                this.setState({ cpuTask: undefined, memoryOffset: calculateMemoryOffset(this.state.cpu)})
             } catch (e) {
                 this.setState({ error: e })
             }
+            this.setState({ runningState: RunningState.Paused, memoryOffset: calculateMemoryOffset(this.state.cpu)})
         }
+
         return <button className="step control" onClick={onClick}>Step</button>
     }
 
@@ -171,10 +176,9 @@ class Internals extends React.Component<Props, State> {
 
     stopButton (): JSX.Element {
         const onClick = () => {
-            const { cpu, cpuTask } = this.state
+            const { cpu } = this.state
             cpu.pause()
-            if (cpuTask !== undefined) { clearInterval(cpuTask) }
-            this.setState({ cpuTask: undefined })
+            this.setState({ runningState: RunningState.Paused })
         }
 
         return <button className="stop control" onClick={onClick}>Stop</button>
