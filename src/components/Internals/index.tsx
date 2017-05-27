@@ -51,24 +51,34 @@ class Internals extends React.Component<Props, State> {
                 <canvas id="screen" height="144" width="160"/>
                 <div className="internals">
                     <CPU cpu={cpu} pcClicked={this.pcClicked} spClicked={this.spClicked}/>
-                    <Memory 
-                        bus={cpu.bus} 
-                        pc={cpu.pc} 
-                        sp={cpu.sp}
-                        offset={memoryOffset} 
-                        changeOffset={newOffset => this.setState({memoryOffset: newOffset})}
-                        onByteClick={this.addBreakPoint} />
-                    <TileSet 
-                        gpu={cpu.gpu} 
-                        onClick={() => {}} />
-                    <Background 
-                        gpu={cpu.gpu} 
-                        onClick={this.backgroundClicked} />
+                    {this.memory()}
                 </div>
                 {this.debug()}
                 {this.controls()}
             </div>
         )
+    }
+
+    memory() {
+        const { cpu, memoryOffset } = this.state
+        return (
+            <div>
+                <Memory
+                    bus={cpu.bus}
+                    pc={cpu.pc}
+                    sp={cpu.sp}
+                    offset={memoryOffset}
+                    changeOffset={newOffset => this.setState({ memoryOffset: newOffset })}
+                    onByteClick={this.addBreakPoint} />
+                <TileSet
+                    gpu={cpu.gpu}
+                    onClick={() => { }} />
+                <Background
+                    gpu={cpu.gpu}
+                    onClick={this.backgroundClicked} />
+            </div>
+        )
+
     }
 
     debug(): JSX.Element | null {
@@ -183,13 +193,19 @@ class Internals extends React.Component<Props, State> {
     }
 
     addBreakPoint = (addr: number) => {
-        if (this.state.debug !== undefined) {
-            this.state.debug.breakpoints.push(addr)
+        const { debug } = this.state
+        if (debug !== undefined) {
+            const index = debug.breakpoints.indexOf(addr)
+            if (index >= 0) {
+                debug.breakpoints.splice(index, 1)
+            } else {
+                debug.breakpoints.push(addr)
+            }
             this.setState({debug: this.state.debug})
         } else {
-            const debug = new Debugger()
-            debug.breakpoints.push(addr)
-            this.setState({debug: debug})
+            const newDebug = new Debugger()
+            newDebug.breakpoints.push(addr)
+            this.setState({debug: newDebug})
         }
     }
 
