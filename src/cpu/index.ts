@@ -88,7 +88,6 @@ export class CPU {
     }
 
     step(pc: number = this.pc) {
-        if (pc > 0x100) { throw new Error("Made it out of boot rom") }
         const instructionByte = this.bus.read(pc)
         const instruction = Instruction.fromByte(instructionByte, this._prefix)
         const [nextPC, cycles] = this.execute(instruction)
