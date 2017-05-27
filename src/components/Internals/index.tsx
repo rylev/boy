@@ -4,6 +4,7 @@ import CPU from 'components/CPU'
 import Memory from 'components/Memory'
 import TileSet from 'components/TileSet'
 import Background from 'components/Background'
+import BackgroundModel from 'cpu/Background'
 import { CPU as CPUModel }from 'cpu'
 import Debugger from 'Debugger'
 import './internals.css'
@@ -60,7 +61,14 @@ class Internals extends React.Component<Props, State> {
                         onByteClick={this.addBreakPoint} 
                          />
                     <TileSet gpu={cpu.gpu}/>
-                    <Background gpu={cpu.gpu} onClick={this.backgroundClicked} />
+                    <Background 
+                        gpu={cpu.gpu} 
+                        height={256}
+                        width={256}
+                        getData={BackgroundModel.getImageData}
+                        header={"Background"}
+                        label={"background"}
+                        onClick={this.backgroundClicked} />
                 </div>
                 {this.debug()}
                 {this.controls()}
