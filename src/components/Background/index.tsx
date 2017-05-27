@@ -5,27 +5,65 @@ import GPU, { TileValue, BackgroundTileMap } from 'cpu/GPU'
 import './background.css'
 
 type Props = { gpu: GPU, onClick: () => void }
-type State = { ctx: CanvasRenderingContext2D }
+type State = { ctx?: CanvasRenderingContext2D, isShowing: boolean }
 class Background extends React.Component<Props, State> {
+    constructor (props: Props) {
+        super(props)
+        this.state = { isShowing: false }
+    }
+
     componentDidMount() {
-        const canvas = ReactDOM.findDOMNode(this.refs.background) as HTMLCanvasElement
-        const ctx = canvas.getContext('2d')
-        if (ctx === null) { return }
+        this.drawCanvas()
+    }
+
+    drawCanvas() {
+        const ctx = this.getCtx()
+        if (!ctx) { return }
 
         this.setState({ctx})
-
-        const gpu =this.props.gpu
+        const gpu = this.props.gpu
         this.flush(gpu, ctx)
+    }
+
+    getCtx() {
+        const canvas = ReactDOM.findDOMNode(this.refs.background) as HTMLCanvasElement | null
+        if (canvas === null) { return }
+        return canvas.getContext('2d')
     }
 
     componentWillReceiveProps(newProps: Props) {
         const gpu = newProps.gpu
         const ctx = this.state.ctx
-        this.flush(gpu, ctx)
+        if (ctx) {
+            this.flush(gpu, ctx)
+        }
+    }
+
+    canvas () {
+        if (!this.state.isShowing) { return null }
+        return <canvas 
+            height="256" 
+            width="256" 
+            id="background" 
+            ref="background" 
+            onClick={this.props.onClick} />
     }
 
     render() {
-        return <canvas onClick={this.props.onClick} height="256" width="256" id="background" ref="background" />
+        return (
+            <div>
+                <div onClick={this.toggleVisibility}>Show/Hide</div>
+                {this.canvas()}
+            </div>
+        )
+    }
+
+    toggleVisibility = () => {
+        this.setState({isShowing: !this.state.isShowing}, () => {
+            if (this.state.isShowing) {
+                this.drawCanvas()
+            }
+        })
     }
 
     flush(gpu: GPU, ctx: CanvasRenderingContext2D) {
