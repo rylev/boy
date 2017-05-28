@@ -222,16 +222,47 @@ export class CPU {
                 // - - - -
                 this.registers.de = u16.wrappingAdd(this.registers.de, 1)
                 return [this.pc + 1, 8]
-            case 'SUB A':
+            case 'SUB':
+                // WHEN: instruction.n is not number
                 // 1  4
                 // Z 1 H C
-                this.registers.a = this.sub(this.registers.a)
-                return [this.pc + 1, 4]
-            case 'SUB B':
-                // 1  4
+                // WHEN: instruction.n is number
+                // 2  8
                 // Z 1 H C
-                this.registers.a = this.sub(this.registers.b)
-                return [this.pc + 1, 4]
+                const n = instruction.n
+                switch (n) {
+                    case 'A':
+                        this.registers.a = this.sub(this.registers.a)
+                        break
+                    case 'B':
+                        this.registers.a = this.sub(this.registers.b)
+                        break
+                    case 'C':
+                        this.registers.a = this.sub(this.registers.c)
+                        break
+                    case 'D':
+                        this.registers.a = this.sub(this.registers.d)
+                        break
+                    case 'E':
+                        this.registers.a = this.sub(this.registers.e)
+                        break
+                    case 'H':
+                        this.registers.a = this.sub(this.registers.h)
+                        break
+                    case 'L':
+                        this.registers.a = this.sub(this.registers.l)
+                        break
+                    case '(HL)':
+                        this.registers.a = this.sub(this.bus.read(this.registers.hl))
+                        break
+                    default: 
+                        this.registers.a = this.sub(n)
+                }
+                if (typeof n === 'number') {
+                    return [this.pc + 2, 8]
+                } else {
+                    return [this.pc + 1, 4]
+                }
             case 'ADD A,(HL)':
                 // 1  8
                 // Z 0 H C
@@ -413,6 +444,10 @@ export class CPU {
             default:
                 return assertExhaustive(instruction)
         }
+    }
+
+    notYetImplemented(instruction: Instruction) {
+        throw new Error(`Not yet implemented: ${instruction}`)
     }
 
     add(value: number): number {
