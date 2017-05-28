@@ -23,6 +23,7 @@
     padding: 2px;
     text-align: center;
     cursor: pointer;
+    background: #8bac0f;
 }
 
 .sp {
@@ -31,4 +32,6 @@
     border: solid black 1px;
     border-top: 0;
     cursor: pointer;
+    background: #333d87;
+    color: white;
 }

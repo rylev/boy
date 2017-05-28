@@ -4,13 +4,16 @@
     width: 15px;
     text-align: center;
     margin: 4px;
+    cursor: pointer;
 }
 
 .isPC {
-    background: red;
+    background: #8bac0f;
+    border-radius: 2px;
+    box-shadow: 0 0 1px black;
 }
 .isSP {
-    background: blue;
+    background: #333d87;
 }
 
 .rowAddress {
