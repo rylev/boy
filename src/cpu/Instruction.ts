@@ -214,7 +214,13 @@ export namespace Instruction {
         const entries: [string, Instruction][] = Object.entries(byteToInstructionMap)
         const entry = entries.find(pair => {
             const [key, value] = pair
-            return value == instruction
+            let answer = true
+            Object.values(value).forEach(v => {
+                if (!Object.values(instruction).includes(v)) {
+                    answer = false
+                }
+            }) 
+            return answer
         })
         if (entry == undefined) { throw new Error(`Unexpected instruction: '${instruction.type}'`) }
         return parseInt(entry[0])

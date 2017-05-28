@@ -1,4 +1,3 @@
-
 import { assert } from 'chai'
 import CPU from '../../src/cpu'
 import Instruction from '../../src/cpu/Instruction'
