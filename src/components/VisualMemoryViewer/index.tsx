@@ -47,13 +47,22 @@ class VisualMemoryViewer extends React.Component<Props, State> {
     }
 
     canvas () {
-        if (!this.state.isShowing) { return null }
         return <canvas 
             height={this.props.height}
             width={this.props.width}
             id={this.props.label}
             ref={this.props.label}
             onClick={this.props.onClick} />
+    }
+
+    content () {
+        if (!this.state.isShowing) { return null }
+        return (
+            <div>
+                {this.canvas()}
+                {this.props.children}
+            </div>
+        )
     }
 
     render() {
@@ -63,7 +72,7 @@ class VisualMemoryViewer extends React.Component<Props, State> {
                     <div>{this.props.header}</div> 
                     <div className={`directionArrow ${this.state.isShowing ? "open" : "closed"}`}>▼</div>
                 </div>
-                {this.canvas()}
+                {this.content()}
             </div>
         )
     }

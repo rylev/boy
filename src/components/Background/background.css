@@ -3,3 +3,12 @@
     width: 256px;
     border: 1px solid black
 }
+
+.toggles {
+    display: flex;
+    flex-direction: column;
+}
+
+.toggleItem {
+    display: flex;
+}

@@ -1,7 +1,7 @@
 import GPU, { TileValue, BackgroundTileMap } from 'cpu/GPU'
 
 export namespace Background {
-    export function getImageData(gpu: GPU): ImageData {
+    export function getImageData(gpu: GPU, showTileOutlines: boolean, showViewportOutline: boolean): ImageData {
         if (gpu.backgroundTileMap !== BackgroundTileMap.x9800) { throw Error("We only support tilemap at 0x9800 for now") }
         const background = gpu.background1()
         const tileSet = gpu.tileSet
@@ -37,11 +37,11 @@ export namespace Background {
                         (pixelRowIndex > gpu.scrollY && pixelRowIndex < gpu.scrollY + 144)
                     const onTileBorderX = (pixelRowIndex % 8 === 0)
                     const onTileBorderY = (pixelColumnIndex % 8 === 0)
-                    if (onScreenBorderX || onScreenBorderY) {
+                    if ((onScreenBorderX || onScreenBorderY) && showViewportOutline) {
                         canvasData[index] = 255
                         canvasData[index + 1] = 0
                         canvasData[index + 2] = 0
-                    } else if (onTileBorderX || onTileBorderY) {
+                    } else if ((onTileBorderX || onTileBorderY) && showTileOutlines) {
                         canvasData[index] = 0
                         canvasData[index + 1] = 0
                         canvasData[index + 2] = 255
