@@ -207,7 +207,7 @@ class GPU {
     }
 
     background1(): Uint8Array {
-        return this.vram.slice(0x1800, 0x1bff)
+        return this.vram.slice(0x1800, 0x1c00)
     }
 
     draw() {
