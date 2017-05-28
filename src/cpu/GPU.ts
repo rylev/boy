@@ -57,7 +57,7 @@ class GPU {
     private _mode = GPUMode.HorizontalBlank
     private _canvas = new Uint8Array(GPU.width * GPU.height * 4)
     private _timer = 0
-    private _draw: (data: ImageData) => void
+    onDraw: ((data: ImageData) => void) | undefined
 
     tileSet: TileValue[][][] = new Array(GPU.NUMBER_OF_TILES).fill(0).map(_ => blankTile())
 
@@ -80,10 +80,8 @@ class GPU {
 
     line = 0
 
-    constructor(draw: ((data: ImageData) => void) | undefined) {
-        this._draw = draw || (() => {})
+    constructor() {
         this._canvas = this._canvas.map(_ => Color.White)
-        this.draw()
     }
 
     step(time: number) {
@@ -211,7 +209,7 @@ class GPU {
     }
 
     draw() {
-        this._draw(new ImageData(
+        this.onDraw && this.onDraw(new ImageData(
             Uint8ClampedArray.from(this._canvas),
             GPU.width,
             GPU.height

@@ -1,6 +1,7 @@
 import * as React from 'react'
 
 import CPU from 'components/CPU'
+import Screen from 'components/Screen'
 import Memory from 'components/Memory'
 import Background from 'components/Background'
 import TileSet from 'components/TileSet'
@@ -46,14 +47,14 @@ class Internals extends React.Component<Props, State> {
     render(): JSX.Element {
         const { cpu, memoryOffset } = this.state
         return (
-            <div>
+            <div className="gameboy">
                 {this.error()}
-                <canvas id="screen" height="144" width="160"/>
+                <Screen gpu={cpu.gpu}/>
                 <div className="internals">
                     <CPU cpu={cpu} pcClicked={this.pcClicked} spClicked={this.spClicked}/>
                     {this.memory()}
+                    {this.debug()}
                 </div>
-                {this.debug()}
                 {this.controls()}
             </div>
         )
@@ -231,17 +232,10 @@ class Internals extends React.Component<Props, State> {
 
 
     newCPU(props: Props): CPUModel {
-        const draw = (data: ImageData) => { 
-            const screen = document.getElementById('screen') as HTMLCanvasElement | null
-            if (screen === null) { return }
-            const context = screen.getContext('2d')
-            if (context === null) { return }
-            context.putImageData(data, 0, 0)
-        }
         const onError = (e: Error) => { this.setState({error: e, runningState: RunningState.Stopped}) }
         const onPause = () => { this.setState({runningState: RunningState.Paused})}
         const onMaxClockCycles = () => { this.setState({cpu: cpu})}
-        const cpu = new CPUModel(props.bios, props.rom, { draw, onError, onPause, onMaxClockCycles })
+        const cpu = new CPUModel(props.bios, props.rom, { onError, onPause, onMaxClockCycles })
         return cpu
     }
 }

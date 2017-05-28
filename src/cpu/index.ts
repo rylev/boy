@@ -12,7 +12,6 @@ type Cycles = number
 type CPUCallbacks = {
     onPause?: () => void,
     onMaxClockCycles?: () => void,
-    draw?: (data: ImageData) => void,
     onError?: (error: Error) => void
 }
 
@@ -35,7 +34,7 @@ export class CPU {
     private _onMaxClockCycles: (() => void) | undefined
 
     constructor(bios: Uint8Array | undefined, rom: Uint8Array, callbacks: CPUCallbacks) {
-        this.gpu = new GPU(callbacks.draw)
+        this.gpu = new GPU()
         this.bus = new Bus(bios, rom, this.gpu)
         this.registers = new Registers()
         this.pc = bios ? 0 : CPU.START_ADDR
@@ -102,6 +101,7 @@ export class CPU {
             [nextPC, cycles] = this.execute(instruction)
             this.gpu.step(cycles)
         } catch (e) {
+            console.error(e)
             this._isRunning = false
             this._onError && this._onError(e)
             return

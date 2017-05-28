@@ -33,3 +33,9 @@
     width: 300px;
     margin: 10px;
 }
+
+.gameboy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
