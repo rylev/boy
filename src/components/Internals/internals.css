@@ -1,0 +1,24 @@
+.memory {
+    display: flex;
+}
+
+.visualMemory {
+    width: 300px;
+    margin: 10px;
+}
+
+.internals {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    &.controls {
+        display: flex;
+        justify-content: center;
+    }
+}
+
+.motherboard {
+    display: flex;
+    justify-content: space-around;
+}

@@ -29,6 +29,7 @@ export class CPU {
     private _prefix: boolean = false
     private _isRunning: boolean = false
     private _isPaused: boolean = false
+    private _hasErrored: boolean = false
     private _onPause: (() => void) | undefined
     private _onError: ((error: Error) => void) | undefined
     private _onMaxClockCycles: (() => void) | undefined
@@ -50,6 +51,10 @@ export class CPU {
 
     get isPaused(): boolean {
         return this._isPaused
+    }
+
+    get hasErrored(): boolean {
+        return this._hasErrored
     }
     
     pause () {
@@ -104,6 +109,7 @@ export class CPU {
             console.error(e)
             this._isRunning = false
             this._onError && this._onError(e)
+            this._hasErrored = true
             return
         }
 
