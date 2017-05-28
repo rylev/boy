@@ -49,6 +49,7 @@ class Gameboy extends React.Component<Props, State> {
             <div className="gameboy">
                 {this.error()}
                 <Screen gpu={cpu.gpu}/>
+                {this.controls()}
                 <Internals 
                     cpu={cpu} 
                     step={this.step} 
@@ -57,7 +58,6 @@ class Gameboy extends React.Component<Props, State> {
                     isRunning={this.state.runningState === RunningState.Running}>
                     {this.debug()}
                 </Internals>
-                {this.controls()}
             </div>
         )
     }
@@ -99,15 +99,25 @@ class Gameboy extends React.Component<Props, State> {
     }
 
     runButton(): JSX.Element | null {
-        return <button className="run control" onClick={this.run}>Run</button>
+        return this.controlButton("run", this.run)
     }
 
     resetButton(): JSX.Element | null {
-        return <button className="reset control" onClick={this.reset}>Reset</button>
+        return this.controlButton("reset", this.reset)
     }
 
     stopButton (): JSX.Element {
-        return <button className="stop control" onClick={this.pause}>Stop</button>
+        return this.controlButton("stop", this.pause)
+    }
+
+    controlButton(label: string, onClick: () => void) {
+        return (
+            <div className={`${label} control`} onClick={onClick}>
+                <div className={`${label} controlButton`}></div>
+                <div className="controlLabel">{label.toUpperCase()}</div>
+            </div>
+        )
+
     }
 
     run = () => {

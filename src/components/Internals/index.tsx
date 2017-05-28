@@ -114,11 +114,11 @@ class Internals extends React.Component<Props, State> {
     }
 
     stepFrameButton(): JSX.Element | null {
-        return <button className="stepFrame control" onClick={this.stepFrame}>Step Frame</button>
+        return <button className="stepFrame" onClick={this.stepFrame}>Step Frame</button>
     }
 
     stepButton(): JSX.Element | null {
-        return <button className="step control" onClick={this.step}>Step</button>
+        return <button className="step" onClick={this.step}>Step</button>
     }
 
     step = () => {

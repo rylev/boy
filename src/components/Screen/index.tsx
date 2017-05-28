@@ -2,6 +2,7 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 
 import GPU from 'cpu/GPU'
+import './screen.css'
 
 type Props = {
     gpu: GPU
