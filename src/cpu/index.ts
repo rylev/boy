@@ -222,6 +222,11 @@ export class CPU {
                 // - - - -
                 this.registers.de = u16.wrappingAdd(this.registers.de, 1)
                 return [this.pc + 1, 8]
+            case 'SUB A':
+                // 1  4
+                // Z 1 H C
+                this.registers.a = this.sub(this.registers.a)
+                return [this.pc + 1, 4]
             case 'SUB B':
                 // 1  4
                 // Z 1 H C

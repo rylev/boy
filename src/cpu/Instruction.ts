@@ -28,6 +28,7 @@ type INCB = { type: 'INC B' }
 type INCC = { type: 'INC C' }
 type INCH = { type: 'INC H' }
 type ADDA_HL_ = { type: 'ADD A,(HL)' }
+type SUBA = { type: 'SUB A'}
 type SUBB = { type: 'SUB B'}
 
 type LDAd8 = { type: 'LD A,d8' }
@@ -94,6 +95,7 @@ type ArithmeticInstruction =
     | LDAE
     | LDAH
     | ADDA_HL_
+    | SUBA
     | SUBB
 
 type LoadStoreInstruction = 
@@ -165,6 +167,7 @@ export namespace Instruction {
     export const INCHL: INCHL = { type: 'INC HL' }
     export const INCDE: INCDE = { type: 'INC DE' }
     export const ADDA_HL_: ADDA_HL_ = { type: 'ADD A,(HL)' }
+    export const SUBA: SUBB = { type: 'SUB B' }
     export const SUBB: SUBB = { type: 'SUB B' }
 
     export const LDAd8: LDAd8 = { type: 'LD A,d8' }
@@ -235,6 +238,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x13: Instruction.INCDE,
     0x86: Instruction.ADDA_HL_,
     0x90: Instruction.SUBB,
+    0x97: Instruction.SUBA,
     0x15: Instruction.DECD,
 
     0xc3: Instruction.JPa16,
