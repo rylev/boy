@@ -5,11 +5,21 @@
 }
 
 .header {
+    border-color: #306230;
+    background: #8bac0f;
+    color: white;
+    padding: 5px;
+    border-radius: 3px;
     display: flex;
     justify-content: space-between;
     border: 1px solid;
-    padding: 3px;
     cursor: pointer;
     width: 100%;
     margin: 2px;
+}
+
+.directionArrow {
+    &.closed {
+        transform: rotate(90deg);
+    }
 }

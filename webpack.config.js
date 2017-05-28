@@ -18,7 +18,7 @@ module.exports = {
     module: {
         rules: [
             { test: /\.tsx?$/, use: "awesome-typescript-loader" },
-            { test: /\.css$/,  use: ['style-loader', 'css-loader', {loader: 'postcss-loader', options: {}}] },
+            { test: /\.css$/,  use: ['style-loader', 'css-loader', 'postcss-loader'] },
 
             { enforce: "pre", test: /\.js$/, use: "source-map-loader" }
         ]

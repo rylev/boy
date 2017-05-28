@@ -61,7 +61,7 @@ class VisualMemoryViewer extends React.Component<Props, State> {
             <div className="visualMemoryViewer">
                 <div className="header" onClick={this.toggleVisibility}>
                     <div>{this.props.header}</div> 
-                    <div>▼</div>
+                    <div className={`directionArrow ${this.state.isShowing ? "open" : "closed"}`}>▼</div>
                 </div>
                 {this.canvas()}
             </div>
