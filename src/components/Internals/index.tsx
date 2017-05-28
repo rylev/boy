@@ -18,6 +18,7 @@ type Props = {
     addBreakPoint: (addr: number) => void
 }
 type State = { 
+    showInternals: boolean,
     memoryOffset: number,
 }
 class Internals extends React.Component<Props, State> {
@@ -26,14 +27,30 @@ class Internals extends React.Component<Props, State> {
         const { cpu } = this.props
         this.state = { 
             memoryOffset: calculateMemoryOffset(cpu), 
+            showInternals: false
         }
     }
 
     render(): JSX.Element {
         const { memoryOffset } = this.state
-        const { cpu } = this.props
         return (
             <div className="internals">
+                <div className="header" onClick={this.toggleInternalsVisibility}>
+                    <div>Internals</div> 
+                    <div className={`directionArrow ${this.state.showInternals ? "open" : "closed"}`}>▼</div>
+                </div>
+                {this.content()}
+            </div>
+        )
+    }
+
+    content() {
+        const { showInternals } = this.state
+        if (!showInternals) { return null }
+
+        const { cpu } = this.props
+        return (
+            <div className="content">
                 <div className="motherboard">
                     <CPU cpu={cpu} pcClicked={this.pcClicked} spClicked={this.spClicked}/>
                     {this.memory()}
@@ -66,6 +83,10 @@ class Internals extends React.Component<Props, State> {
                 </div>
             </div>
         )
+    }
+
+    toggleInternalsVisibility = () => {
+        this.setState({showInternals: !this.state.showInternals})
     }
 
     pcClicked = () => {

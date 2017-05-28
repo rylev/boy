@@ -22,14 +22,14 @@ type State = {
     cpu: CPUModel, 
     error?: Error, 
     runningState?: RunningState,
-    debug?: Debugger
+    debug?: Debugger,
 }
 class Gameboy extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props)
         const cpu = this.newCPU(props)
         this.state = { 
-            cpu: cpu, 
+            cpu: cpu
         }
     }
 
