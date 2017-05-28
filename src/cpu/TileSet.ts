@@ -8,7 +8,7 @@ export namespace TileSet {
         const tileWidth = 8
         const tileHeight = 8
 
-        const widthInTiles = 8 
+        const widthInTiles = 24 
         const heightInTiles = Math.trunc(tileSet.length / widthInTiles) 
 
         const rowWidth = tileWidth * widthInTiles * valuesPerPixel

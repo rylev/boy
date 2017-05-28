@@ -17,8 +17,8 @@ class TileSet extends React.Component<Props, State> {
         return (
             <VisualMemoryViewer
                 gpu={this.props.gpu}
-                height={384}
-                width={64}
+                height={128}
+                width={192}
                 getData={TileSetModel.getImageData}
                 header={"TileSet"}
                 label={"tileSet"}
