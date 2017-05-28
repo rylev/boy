@@ -97,14 +97,17 @@ export class CPU {
     }
 
     step(pc: number = this.pc) {
-        const instructionByte = this.bus.read(pc)
-        const instruction = Instruction.fromByte(instructionByte, this._prefix)
-
-
-        let nextPC, cycles
         try {
-            [nextPC, cycles] = this.execute(instruction)
+            const instructionByte = this.bus.read(pc)
+            const instruction = Instruction.fromByte(instructionByte, this._prefix)
+            const [nextPC, cycles] = this.execute(instruction)
+
             this.gpu.step(cycles)
+
+            this.clockTicksInFrame += cycles
+            this.clockTicksInSecond += cycles
+
+            this.pc = nextPC
         } catch (e) {
             console.error(e)
             this._isRunning = false
@@ -113,10 +116,6 @@ export class CPU {
             return
         }
 
-        this.clockTicksInFrame += cycles
-        this.clockTicksInSecond += cycles
-
-        this.pc = nextPC
     }
 
     execute(instruction: Instruction): [Address, Cycles] {
