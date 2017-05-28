@@ -46,11 +46,27 @@
 
 .memoryMove {
     height: 20px;
-    width: 100%;
+    background-color: #9c2859;
+    border-color: black;
+    color: white;
+    padding: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 3px;
+    box-shadow: 0px 0px 5px black;
     &[disabled]{
+        box-shadow: none;
+        cursor: not-allowed;
         border: 1px solid #999999;
-        background-color: #cccccc;
+        background-color: #997282;
         color: #666666;
+    }
+    &:active {
+        box-shadow: none;
+        text-shadow: -1px 1px;
+        color: #666;
     }
 }
 

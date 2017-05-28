@@ -31,11 +31,11 @@ class Memory extends React.Component<Props, State> {
         const moveDownButtonDisabled = normalizedOffset <= 0 
         return (
             <div className="memoryViewer">
-                <button className="memoryMove memoryDown" disabled={moveDownButtonDisabled} onClick={this.moveDown}>▲</button>
+                <div className="memoryMove memoryDown" disabled={moveDownButtonDisabled} onClick={this.moveDown}>▲</div>
                 <div id="memory">
                     {rows}
                 </div>
-                <button className="memoryMove memoryUp" disabled={moveUpButtonDiabled} onClick={this.moveUp}>▼</button>
+                <div className="memoryMove memoryUp" disabled={moveUpButtonDiabled} onClick={this.moveUp}>▼</div>
             </div>
         )
     }
