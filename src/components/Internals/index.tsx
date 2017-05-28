@@ -62,7 +62,7 @@ class Internals extends React.Component<Props, State> {
     memory() {
         const { cpu, memoryOffset } = this.state
         return (
-            <div>
+            <div className="memory">
                 <Memory
                     bus={cpu.bus}
                     pc={cpu.pc}
@@ -70,12 +70,14 @@ class Internals extends React.Component<Props, State> {
                     offset={memoryOffset}
                     changeOffset={newOffset => this.setState({ memoryOffset: newOffset })}
                     onByteClick={this.addBreakPoint} />
-                <TileSet
-                    gpu={cpu.gpu}
-                    onClick={() => { }} />
-                <Background
-                    gpu={cpu.gpu}
-                    onClick={this.backgroundClicked} />
+                <div className="visualMemory">
+                    <TileSet
+                        gpu={cpu.gpu}
+                        onClick={() => { }} />
+                    <Background
+                        gpu={cpu.gpu}
+                        onClick={this.backgroundClicked} />
+                </div>
             </div>
         )
 

@@ -24,3 +24,12 @@
 #screen {
     border: 1px solid black;
 }
+
+.memory {
+    display: flex;
+}
+
+.visualMemory {
+    width: 300px;
+    margin: 10px;
+}

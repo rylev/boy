@@ -2,6 +2,7 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 
 import GPU from 'cpu/GPU'
+import './visualMemoryViewer.css'
 
 type Props = { 
     gpu: GPU, 
@@ -57,8 +58,11 @@ class VisualMemoryViewer extends React.Component<Props, State> {
 
     render() {
         return (
-            <div>
-                <div onClick={this.toggleVisibility}>{this.props.header} Show/Hide</div>
+            <div className="visualMemoryViewer">
+                <div className="header" onClick={this.toggleVisibility}>
+                    <div>{this.props.header}</div> 
+                    <div>▼</div>
+                </div>
                 {this.canvas()}
             </div>
         )

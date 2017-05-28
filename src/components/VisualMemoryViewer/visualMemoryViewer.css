@@ -1,0 +1,15 @@
+.visualMemoryViewer {
+    display: flex;
+    flex-direction: column;
+    align-items: center
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    border: 1px solid;
+    padding: 3px;
+    cursor: pointer;
+    width: 100%;
+    margin: 2px;
+}
