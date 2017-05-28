@@ -216,7 +216,8 @@ class Internals extends React.Component<Props, State> {
             const { runningState } = this.state
             if (runningState !== RunningState.Running) { return }
 
-            let timeDiff = cpu.runFrame(this.state.debug)
+            const timeLapse = cpu.runFrame(this.state.debug)
+            let timeDiff = 16.7 - timeLapse
 
             if (runContinuously) { 
                 if (previousTimeDiff < 0) { timeDiff = timeDiff + previousTimeDiff }
