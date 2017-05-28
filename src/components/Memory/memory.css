@@ -16,6 +16,10 @@
     background: #333d87;
 }
 
+.isBios {
+
+}
+
 .rowAddress {
     display: inline-block;
     font-weight: bold;
@@ -26,14 +30,19 @@
 }
 
 .isHeader {
-    background: green;
+    background: rgba(53, 150, 53, 0.4);
+}
+
+.isBios {
+    background: rgba(150, 53, 136, 0.4);
 }
 
 .memoryRow {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-left: 10px
+    margin-left: 10px;
+    padding: 0px 5px;
 }
 
 #memory {
@@ -59,6 +68,7 @@
     cursor: pointer;
     border-radius: 3px;
     box-shadow: 0px 0px 5px black;
+    user-select: none;
     &[disabled]{
         box-shadow: none;
         cursor: not-allowed;

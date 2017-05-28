@@ -53,10 +53,13 @@ class Memory extends React.Component<Props, State> {
 
     row(chunk: Uint8Array, numberOfBytes: number, index: number): JSX.Element {
         const firstByteAddress = (this.normalizedOffset() * numberOfBytes) + (index * numberOfBytes)
-        const isHeader = firstByteAddress >= 0x0100 && firstByteAddress < 0x014F ? 'isHeader' : ''
         const bytes = Array.from(chunk).map((byte, i) => this.byte(firstByteAddress + i, byte))
+
+        const isHeader = firstByteAddress >= 0x0100 && firstByteAddress < 0x014F ? 'isHeader' : ''
+        const isBios = firstByteAddress < 0x0100 && this.props.bus.biosMapped ? 'isBios' : ''
+
         return (
-            <div className={`memoryRow ${isHeader}`} key={index}>
+            <div className={`memoryRow ${isHeader} ${isBios}`} key={index}>
                 <div className="rowAddress">0x{toHex(firstByteAddress, 3)}: </div>
                 <div className="bytes">{bytes}</div>
             </div>
