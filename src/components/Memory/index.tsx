@@ -13,28 +13,29 @@ type Props = {
     onByteClick: (addr: number) => void
 }
 type State = {}
+const ROW_COUNT = 16
+const OFFSET_COUNT = 8192
+const MAX_OFFSET = OFFSET_COUNT - ROW_COUNT
+
 class Memory extends React.Component<Props, State> {
     constructor (props: Props) {
         super(props)
     }
 
     render (): JSX.Element | null {
-        const { bus } = this.props
-        const options = { size: 8, count: 16, offset: this.props.offset }
+        const { bus, offset } = this.props
+        const normalizedOffset = this.normalizedOffset()
+        const options = { size: 8, count: ROW_COUNT, offset: normalizedOffset }
         const rows = mapChunk(bus, options, (chunk, i) => this.row(chunk, options.size, i))
-        const upButton = this.props.offset > 0 
-            ? <button className="memoryMove memoryDown" onClick={this.moveDown}>▲</button>
-            : <div className="memoryMove"></div>
-        const downButton = this.props.offset < (8192 - options.count)
-            ? <button className="memoryMove memoryUp" onClick={this.moveUp}>▼</button>
-            : <div className="memoryMove"></div>
+        const moveUpButtonDiabled = normalizedOffset >= MAX_OFFSET
+        const moveDownButtonDisabled = normalizedOffset <= 0 
         return (
             <div className="memoryViewer">
-               {upButton} 
+                <button className="memoryMove memoryDown" disabled={moveDownButtonDisabled} onClick={this.moveDown}>▲</button>
                 <div id="memory">
                     {rows}
                 </div>
-               {downButton} 
+                <button className="memoryMove memoryUp" disabled={moveUpButtonDiabled} onClick={this.moveUp}>▼</button>
             </div>
         )
     }
@@ -51,8 +52,7 @@ class Memory extends React.Component<Props, State> {
     }
 
     row(chunk: Uint8Array, numberOfBytes: number, index: number): JSX.Element {
-        const offset = this.props.offset
-        const firstByteAddress = (offset * numberOfBytes) + (index * numberOfBytes)
+        const firstByteAddress = (this.normalizedOffset() * numberOfBytes) + (index * numberOfBytes)
         const isHeader = firstByteAddress >= 0x0100 && firstByteAddress < 0x014F ? 'isHeader' : ''
         const bytes = Array.from(chunk).map((byte, i) => this.byte(firstByteAddress + i, byte))
         return (
@@ -63,22 +63,26 @@ class Memory extends React.Component<Props, State> {
         )
     }
 
+    normalizedOffset() {
+        return Math.max(0, Math.min(this.props.offset, MAX_OFFSET))
+    }
+
     moveDown = () => {
-        this.props.changeOffset(this.props.offset - 1)
+        this.props.changeOffset(this.normalizedOffset() - 1)
     }
 
     moveUp = () => {
-        this.props.changeOffset(this.props.offset + 1)
+        this.props.changeOffset(this.normalizedOffset() + 1)
     }
 }
 
 type ChunkOptions = {size: number, count: number, offset: number}
 function mapChunk<T>(bus: Bus, chunkOptions: ChunkOptions, callback: (slice: Uint8Array, index: number) => T): T[] {
+    const maxStart = (MAX_OFFSET * chunkOptions.size) + (chunkOptions.count * chunkOptions.size) 
     const result: T[] = []
     let index = 0
     while (index < chunkOptions.count) {
         const start = (chunkOptions.offset * chunkOptions.size) + (index * chunkOptions.size) 
-        if (start > 0xffff) { return result }
         const end = start + chunkOptions.size 
         result.push(callback(bus.slice(start, end), index))
         index = index + 1
