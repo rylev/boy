@@ -7,7 +7,7 @@ import Background from 'components/Background'
 import TileSet from 'components/TileSet'
 import { CPU as CPUModel }from 'cpu'
 import Debugger from 'Debugger'
-import './internals.css'
+import './gameboy.css'
 
 const BYTE_SIZE = 8
 enum RunningState {
