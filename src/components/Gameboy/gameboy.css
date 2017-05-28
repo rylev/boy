@@ -1,0 +1,27 @@
+.error {
+    background: red;
+    margin: 20px;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    margin: 10px;
+}
+
+.control {
+    margin: 10px;
+}
+
+#screen {
+    border: 1px solid black;
+}
+
+.gameboy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

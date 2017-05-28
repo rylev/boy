@@ -4,13 +4,16 @@
     width: 15px;
     text-align: center;
     margin: 4px;
+    cursor: pointer;
 }
 
 .isPC {
-    background: red;
+    background: #8bac0f;
+    border-radius: 2px;
+    box-shadow: 0 0 1px black;
 }
 .isSP {
-    background: blue;
+    background: #333d87;
 }
 
 .rowAddress {
@@ -46,11 +49,32 @@
 
 .memoryMove {
     height: 20px;
-    width: 100%;
+    background-color: #9c2859;
+    border-color: black;
+    color: white;
+    padding: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 3px;
+    box-shadow: 0px 0px 5px black;
+    &[disabled]{
+        box-shadow: none;
+        cursor: not-allowed;
+        border: 1px solid #999999;
+        background-color: #997282;
+        color: #666666;
+    }
+    &:active {
+        box-shadow: none;
+        text-shadow: -1px 1px;
+        color: #666;
+    }
 }
 
 .memoryViewer {
-    height: 600px;
+    height: 550px;
     display: flex;
     flex-direction: column;
     justify-content: center;

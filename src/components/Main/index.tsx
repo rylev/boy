@@ -1,6 +1,6 @@
 import * as React from 'react'
 import RomInput  from 'components/RomInput'
-import Internals from 'components/Internals'
+import Gameboy from 'components/Gameboy'
 
 import './main.css'
 
@@ -56,7 +56,7 @@ class Main extends React.Component<Props, State> {
         } else {
             return (
                 <div>
-                    <Internals bios={bios} rom={rom} />
+                    <Gameboy bios={bios} rom={rom} />
                     {this.romLoading()}
                 </div>
             )
