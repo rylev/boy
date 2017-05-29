@@ -2,9 +2,8 @@ import { toHex } from 'lib/hex'
 
 type AllRegistersButF = 'A' | 'B' | 'C' | 'D' | 'E' | 'H' | 'L'
 type JPa16 = { type: 'JP a16' }
-type JRzr8 = { type: 'JR Z,r8' }
-type JRr8 = { type: 'JR R8' }
-type JRnzr8 = { type: 'JR NZ,r8' }
+type Test = 'NZ' | 'NC' | 'Z' | 'C' | true
+type JR = { type: 'JR', test: Test }
 type CALLa16 = { type: 'CALL a16'}
 type RET = { type: 'RET' }
 
@@ -66,9 +65,7 @@ type RLC = { type: 'RL C' }
 
 type JumpInstruction = 
     | JPa16
-    | JRzr8
-    | JRnzr8
-    | JRr8
+    | JR
     | CALLa16
     | RET
 
@@ -140,9 +137,7 @@ export type Instruction =
     | PrefixInstruction
 
 export namespace Instruction {
-    export const JRzr8: JRzr8 = { type: 'JR Z,r8' }
-    export const JRnzr8: JRnzr8 = { type: 'JR NZ,r8' }
-    export const JRr8: JRr8 = { type: 'JR R8' }
+    export const JR = (test: Test ): JR => ({ type: 'JR', test })
     export const JPa16: JPa16 = { type: 'JP a16' }
     export const CALLa16: CALLa16 = { type: 'CALL a16' }
     export const RET: RET = { type: 'RET' }
@@ -168,7 +163,7 @@ export namespace Instruction {
     export const INCHL: INCHL = { type: 'INC HL' }
     export const INCDE: INCDE = { type: 'INC DE' }
     export const ADDA_HL_: ADDA_HL_ = { type: 'ADD A,(HL)' }
-    export function SUB(n: SUBN): SUB { return { type: 'SUB', n }}
+    export const SUB = (n: SUBN): SUB => ({ type: 'SUB', n })
 
     export const LDAd8: LDAd8 = { type: 'LD A,d8' }
     export const LDDd8: LDDd8 = { type: 'LD D,d8' }
@@ -215,11 +210,10 @@ export namespace Instruction {
         const entry = entries.find(pair => {
             const [key, value] = pair
             let answer = true
-            Object.values(value).forEach(v => {
-                if (!Object.values(instruction).includes(v)) {
-                    answer = false
-                }
-            }) 
+            for (let v of Object.values(value)) {
+                answer = Object.values(instruction).includes(v)
+                if (!answer) return answer
+            }
             return answer
         })
         if (entry == undefined) { throw new Error(`Unexpected instruction: '${instruction.type}'`) }
@@ -249,9 +243,9 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x15: Instruction.DECD,
 
     0xc3: Instruction.JPa16,
-    0x28: Instruction.JRzr8,
-    0x20: Instruction.JRnzr8,
-    0x18: Instruction.JRr8,
+    0x28: Instruction.JR('Z'),
+    0x20: Instruction.JR('NZ'),
+    0x18: Instruction.JR(true),
     0xcd: Instruction.CALLa16,
     0xc9: Instruction.RET,
 

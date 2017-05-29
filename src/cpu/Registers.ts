@@ -44,7 +44,7 @@ class Registers {
     }
 }
 
-class FlagRegister {
+export class FlagRegister {
     zero: boolean
     subtract: boolean
     halfCarry: boolean

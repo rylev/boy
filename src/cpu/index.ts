@@ -229,8 +229,7 @@ export class CPU {
                 // WHEN: instruction.n is number
                 // 2  8
                 // Z 1 H C
-                const n = instruction.n
-                switch (n) {
+                switch (instruction.n) {
                     case 'A':
                         this.registers.a = this.sub(this.registers.a)
                         break
@@ -259,9 +258,9 @@ export class CPU {
                         this.registers.a = this.sub(this.readNextByte())
                         break
                     default: 
-                        assertExhaustive(n)
+                        assertExhaustive(instruction.n)
                 }
-                if (n === 'd8') {
+                if (instruction.n === 'd8') {
                     return [this.pc + 2, 8]
                 } else {
                     return [this.pc + 1, 4]
@@ -276,18 +275,23 @@ export class CPU {
                 // 3  16
                 // - - - -
                 return [this.readNextWord(), 16]
-            case 'JR Z,r8':
-                // 2  12/8
+            case 'JR':
+                // 2  12/8 
                 // - - - -
-                return this.conditionalJump(this.registers.f.zero) 
-            case 'JR NZ,r8':
-                // 2  12/8
-                // - - - -
-                return this.conditionalJump(!this.registers.f.zero) 
-            case 'JR R8':
-                // 2  12
-                // - - - -
-                return this.conditionalJump(true)
+                switch (instruction.test) {
+                    case 'Z':
+                        return this.conditionalJump(this.registers.f.zero) 
+                    case 'NZ': 
+                        return this.conditionalJump(!this.registers.f.zero) 
+                    case 'C':
+                        return this.conditionalJump(this.registers.f.carry) 
+                    case 'NC':
+                        return this.conditionalJump(!this.registers.f.carry) 
+                    case true:
+                        return this.conditionalJump(true)
+                    default: 
+                        assertExhaustive(instruction.test)
+                }
             case 'CALL a16':
                 // 3  24
                 // - - - -

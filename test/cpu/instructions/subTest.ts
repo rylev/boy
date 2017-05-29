@@ -1,6 +1,7 @@
 import { assert } from 'chai'
 import CPU from 'cpu'
 import Instruction from 'cpu/Instruction'
+import { createRom } from './instructionsTestHelpers'
 
 describe('Instruction.SUB', () => {
     describe('when n is not d8', () => {
@@ -64,9 +65,3 @@ describe('Instruction.SUB', () => {
         })
     })
 })
-
-function createRom(bytes: number[]): Uint8Array {
-    const pad: number[] = Array(CPU.START_ADDR).fill(0)
-    const rom = pad.concat(bytes)
-    return Uint8Array.from(rom)
-}
