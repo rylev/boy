@@ -1,6 +1,6 @@
 import { assert } from 'chai'
-import CPU from '../../../src/cpu'
-import Instruction from '../../../src/cpu/Instruction'
+import CPU from 'cpu'
+import Instruction from 'cpu/Instruction'
 
 describe('Instruction.SUB', () => {
     describe('when n is not d8', () => {
