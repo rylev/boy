@@ -152,16 +152,45 @@ export class CPU {
                 this.registers.f.halfCarry = false // TODO: Set halfCarry
                 this.registers.f.carry = carry
                 return [this.pc + 1, 8]
-            case 'CP d8':
+            case 'CP':
+                // WHEN: n is d8
                 // 2  8
-                // Z 1 H C
-                this.cp(this.readNextByte())
-                return [this.pc + 2, 8]
-            case 'CP (HL)':
+                // WHEN: n is (HL)
                 // 1  8
+                // OTHERWISE: 
+                // 1  4
                 // Z 1 H C
-                this.cp(this.bus.read(this.registers.hl))
-                return [this.pc + 1, 8]
+                switch (instruction.n) {
+                    case 'A':
+                        this.cp(this.registers.a)
+                        return [this.pc + 1, 4]
+                    case 'B':
+                        this.cp(this.registers.b)
+                        return [this.pc + 1, 4]
+                    case 'C':
+                        this.cp(this.registers.c)
+                        return [this.pc + 1, 4]
+                    case 'D':
+                        this.cp(this.registers.d)
+                        return [this.pc + 1, 4]
+                    case 'E':
+                        this.cp(this.registers.e)
+                        return [this.pc + 1, 4]
+                    case 'H':
+                        this.cp(this.registers.h)
+                        return [this.pc + 1, 4]
+                    case 'L':
+                        this.cp(this.registers.l)
+                        return [this.pc + 1, 4]
+                    case '(HL)':
+                        this.cp(this.bus.read(this.registers.hl))
+                        return [this.pc + 1, 8]
+                    case 'd8':
+                        this.cp(this.readNextByte())
+                        return [this.pc + 2, 8]
+                    default: 
+                        assertExhaustive(instruction.n)
+                }
             case 'XOR A':
                 // 1  4
                 // Z 0 0 0
@@ -222,38 +251,87 @@ export class CPU {
                 // - - - -
                 this.registers.de = u16.wrappingAdd(this.registers.de, 1)
                 return [this.pc + 1, 8]
-            case 'SUB A':
+            case 'SUB':
+                // WHEN: instruction.n is not number
                 // 1  4
                 // Z 1 H C
-                this.registers.a = this.sub(this.registers.a)
-                return [this.pc + 1, 4]
-            case 'SUB B':
-                // 1  4
+                // WHEN: instruction.n is number
+                // 2  8
                 // Z 1 H C
-                this.registers.a = this.sub(this.registers.b)
-                return [this.pc + 1, 4]
+                switch (instruction.n) {
+                    case 'A':
+                        this.registers.a = this.sub(this.registers.a)
+                        break
+                    case 'B':
+                        this.registers.a = this.sub(this.registers.b)
+                        break
+                    case 'C':
+                        this.registers.a = this.sub(this.registers.c)
+                        break
+                    case 'D':
+                        this.registers.a = this.sub(this.registers.d)
+                        break
+                    case 'E':
+                        this.registers.a = this.sub(this.registers.e)
+                        break
+                    case 'H':
+                        this.registers.a = this.sub(this.registers.h)
+                        break
+                    case 'L':
+                        this.registers.a = this.sub(this.registers.l)
+                        break
+                    case '(HL)':
+                        this.registers.a = this.sub(this.bus.read(this.registers.hl))
+                        break
+                    case 'd8': 
+                        this.registers.a = this.sub(this.readNextByte())
+                        break
+                    default: 
+                        assertExhaustive(instruction.n)
+                }
+                if (instruction.n === 'd8') {
+                    return [this.pc + 2, 8]
+                } else {
+                    return [this.pc + 1, 4]
+                }
             case 'ADD A,(HL)':
                 // 1  8
                 // Z 0 H C
                 this.registers.a = this.add(this.bus.read(this.registers.hl))
                 return [this.pc + 1, 4]
 
-            case 'JP a16': 
-                // 3  16
+            case 'JP': 
+                // 3  16/12
                 // - - - -
-                return [this.readNextWord(), 16]
-            case 'JR Z,r8':
-                // 2  12/8
+                switch (instruction.test) {
+                    case 'Z':
+                        return this.conditionalJump(this.registers.f.zero) 
+                    case 'NZ': 
+                        return this.conditionalJump(!this.registers.f.zero) 
+                    case 'C':
+                        return this.conditionalJump(this.registers.f.carry) 
+                    case 'NC':
+                        return this.conditionalJump(!this.registers.f.carry) 
+                    case true:
+                        return this.conditionalJump(true)
+                }
+            case 'JR':
+                // 2  12/8 
                 // - - - -
-                return this.conditionalJump(this.registers.f.zero) 
-            case 'JR NZ,r8':
-                // 2  12/8
-                // - - - -
-                return this.conditionalJump(!this.registers.f.zero) 
-            case 'JR R8':
-                // 2  12
-                // - - - -
-                return this.conditionalJump(true)
+                switch (instruction.test) {
+                    case 'Z':
+                        return this.conditionalJumpRelative(this.registers.f.zero) 
+                    case 'NZ': 
+                        return this.conditionalJumpRelative(!this.registers.f.zero) 
+                    case 'C':
+                        return this.conditionalJumpRelative(this.registers.f.carry) 
+                    case 'NC':
+                        return this.conditionalJumpRelative(!this.registers.f.carry) 
+                    case true:
+                        return this.conditionalJumpRelative(true)
+                    default: 
+                        assertExhaustive(instruction.test)
+                }
             case 'CALL a16':
                 // 3  24
                 // - - - -
@@ -460,6 +538,14 @@ export class CPU {
     }
 
     conditionalJump(condition: boolean): [Address, Cycles] {
+        if (condition) {
+            return [this.readNextWord(), 16]
+        } else {
+            return [this.pc + 3, 12]
+        }
+    }
+
+    conditionalJumpRelative(condition: boolean): [Address, Cycles] {
         if (condition) {
             return [this.pc + 2 + u8.asSigned(this.readNextByte()), 12]
         } else {

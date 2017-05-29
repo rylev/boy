@@ -1,9 +1,9 @@
 import { toHex } from 'lib/hex'
 
-type JPa16 = { type: 'JP a16' }
-type JRzr8 = { type: 'JR Z,r8' }
-type JRr8 = { type: 'JR R8' }
-type JRnzr8 = { type: 'JR NZ,r8' }
+type AllRegistersButF = 'A' | 'B' | 'C' | 'D' | 'E' | 'H' | 'L'
+type JumpTest = 'NZ' | 'NC' | 'Z' | 'C' | true
+type JP = { type: 'JP', test: JumpTest }
+type JR = { type: 'JR', test: JumpTest }
 type CALLa16 = { type: 'CALL a16'}
 type RET = { type: 'RET' }
 
@@ -14,8 +14,10 @@ type PREFIX = { type: 'PREFIX CB' }
 
 type AddHLBC = { type: 'ADD HL,BC' }
 type XORA = { type: 'XOR A' }
-type CPd8 = { type: 'CP d8' }
-type CP_HL_ = { type: 'CP (HL)' }
+
+type CPN = AllRegistersButF | '(HL)' | 'd8'
+type CP = { type: 'CP', n: CPN }
+
 type RLA = { type: 'RLA' }
 type DECA = { type: 'DEC A' }
 type DECB = { type: 'DEC B' }
@@ -28,8 +30,9 @@ type INCB = { type: 'INC B' }
 type INCC = { type: 'INC C' }
 type INCH = { type: 'INC H' }
 type ADDA_HL_ = { type: 'ADD A,(HL)' }
-type SUBA = { type: 'SUB A'}
-type SUBB = { type: 'SUB B'}
+
+type SUBN = AllRegistersButF | '(HL)' | 'd8'
+type SUB = { type: 'SUB', n: SUBN }
 
 type LDAd8 = { type: 'LD A,d8' }
 type LDBd8 = { type: 'LD B,d8' }
@@ -63,10 +66,8 @@ type BIT7H = { type: 'BIT 7,H' }
 type RLC = { type: 'RL C' }
 
 type JumpInstruction = 
-    | JPa16
-    | JRzr8
-    | JRnzr8
-    | JRr8
+    | JP
+    | JR
     | CALLa16
     | RET
 
@@ -79,8 +80,7 @@ type ControlInstruction =
 type ArithmeticInstruction = 
     | AddHLBC 
     | XORA
-    | CPd8
-    | CP_HL_
+    | CP
     | RLA
     | DECA
     | DECB
@@ -95,8 +95,7 @@ type ArithmeticInstruction =
     | LDAE
     | LDAH
     | ADDA_HL_
-    | SUBA
-    | SUBB
+    | SUB
 
 type LoadStoreInstruction = 
     | LDAd8
@@ -139,10 +138,8 @@ export type Instruction =
     | PrefixInstruction
 
 export namespace Instruction {
-    export const JRzr8: JRzr8 = { type: 'JR Z,r8' }
-    export const JRnzr8: JRnzr8 = { type: 'JR NZ,r8' }
-    export const JRr8: JRr8 = { type: 'JR R8' }
-    export const JPa16: JPa16 = { type: 'JP a16' }
+    export const JR = (test: JumpTest ): JR => ({ type: 'JR', test })
+    export const JP = (test: JumpTest): JP => ({ type: 'JP', test })
     export const CALLa16: CALLa16 = { type: 'CALL a16' }
     export const RET: RET = { type: 'RET' }
 
@@ -152,8 +149,7 @@ export namespace Instruction {
     export const PREFIX: PREFIX = { type: 'PREFIX CB' }
 
     export const AddHLBC: AddHLBC = { type: 'ADD HL,BC' }
-    export const CPd8: CPd8 = { type: 'CP d8' }
-    export const CP_HL_: CP_HL_ = { type: 'CP (HL)' }
+    export const CP = (n: CPN): CP => ({ type: 'CP', n })
     export const XORA: XORA = { type: 'XOR A' }
     export const RLA: RLA = { type: 'RLA' }
     export const DECA: DECA = { type: 'DEC A' }
@@ -167,8 +163,7 @@ export namespace Instruction {
     export const INCHL: INCHL = { type: 'INC HL' }
     export const INCDE: INCDE = { type: 'INC DE' }
     export const ADDA_HL_: ADDA_HL_ = { type: 'ADD A,(HL)' }
-    export const SUBA: SUBB = { type: 'SUB B' }
-    export const SUBB: SUBB = { type: 'SUB B' }
+    export const SUB = (n: SUBN): SUB => ({ type: 'SUB', n })
 
     export const LDAd8: LDAd8 = { type: 'LD A,d8' }
     export const LDDd8: LDDd8 = { type: 'LD D,d8' }
@@ -214,7 +209,12 @@ export namespace Instruction {
         const entries: [string, Instruction][] = Object.entries(byteToInstructionMap)
         const entry = entries.find(pair => {
             const [key, value] = pair
-            return value == instruction
+            let answer = true
+            for (let v of Object.values(value)) {
+                answer = Object.values(instruction).includes(v)
+                if (!answer) return answer
+            }
+            return answer
         })
         if (entry == undefined) { throw new Error(`Unexpected instruction: '${instruction.type}'`) }
         return parseInt(entry[0])
@@ -223,8 +223,15 @@ export namespace Instruction {
 
 const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x09: Instruction.AddHLBC,
-    0xfe: Instruction.CPd8,
-    0xbe: Instruction.CP_HL_,
+    0xb8: Instruction.CP('B'),
+    0xb9: Instruction.CP('C'),
+    0xba: Instruction.CP('D'),
+    0xbb: Instruction.CP('E'),
+    0xbc: Instruction.CP('H'),
+    0xbd: Instruction.CP('L'),
+    0xbe: Instruction.CP('(HL)'),
+    0xbf: Instruction.CP('A'),
+    0xfe: Instruction.CP('d8'),
     0xaf: Instruction.XORA,
     0x17: Instruction.RLA,
     0x3d: Instruction.DECA,
@@ -237,14 +244,21 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x23: Instruction.INCHL,
     0x13: Instruction.INCDE,
     0x86: Instruction.ADDA_HL_,
-    0x90: Instruction.SUBB,
-    0x97: Instruction.SUBA,
+    0x97: Instruction.SUB('A'),
+    0x90: Instruction.SUB('B'),
+    0xd6: Instruction.SUB('d8'),
     0x15: Instruction.DECD,
 
-    0xc3: Instruction.JPa16,
-    0x28: Instruction.JRzr8,
-    0x20: Instruction.JRnzr8,
-    0x18: Instruction.JRr8,
+    0xc3: Instruction.JP(true),
+    0xc2: Instruction.JP('NZ'),
+    0xd2: Instruction.JP('NC'),
+    0xca: Instruction.JP('Z'),
+    0xda: Instruction.JP('C'),
+    0x18: Instruction.JR(true),
+    0x28: Instruction.JR('Z'),
+    0x38: Instruction.JR('C'),
+    0x20: Instruction.JR('NZ'),
+    0x30: Instruction.JR('NC'),
     0xcd: Instruction.CALLa16,
     0xc9: Instruction.RET,
 

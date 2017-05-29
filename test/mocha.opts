@@ -1,1 +1,4 @@
 --require ./test/index.js
+-r ts-node/register 
+--recursive 
+test/**/*Test.ts

@@ -4,7 +4,7 @@
   "description": "Gameboy Emulator",
   "main": "index.js",
   "scripts": {
-    "test": "env NODE_PATH=$NODE_PATH:./src mocha -r ts-node/register test/**/*Test.ts"
+    "test": "env NODE_PATH=$NODE_PATH:./src mocha"
   },
   "author": "Ryan Levick",
   "license": "ISC",

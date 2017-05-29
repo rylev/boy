@@ -30,7 +30,7 @@ namespace u8 {
     export function overflowingSub(n1: number, n2: number): [number, boolean] {
         const result = (n1 - n2) % (MAX_U8 + 1)
         if (result < 0) {
-            return [MAX_U8 + result, true]
+            return [MAX_U8 + 1 + result, true]
         } else {
             return [result, false]
         }
