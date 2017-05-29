@@ -152,16 +152,45 @@ export class CPU {
                 this.registers.f.halfCarry = false // TODO: Set halfCarry
                 this.registers.f.carry = carry
                 return [this.pc + 1, 8]
-            case 'CP d8':
+            case 'CP':
+                // WHEN: n is d8
                 // 2  8
-                // Z 1 H C
-                this.cp(this.readNextByte())
-                return [this.pc + 2, 8]
-            case 'CP (HL)':
+                // WHEN: n is (HL)
                 // 1  8
+                // OTHERWISE: 
+                // 1  4
                 // Z 1 H C
-                this.cp(this.bus.read(this.registers.hl))
-                return [this.pc + 1, 8]
+                switch (instruction.n) {
+                    case 'A':
+                        this.cp(this.registers.a)
+                        return [this.pc + 1, 4]
+                    case 'B':
+                        this.cp(this.registers.b)
+                        return [this.pc + 1, 4]
+                    case 'C':
+                        this.cp(this.registers.c)
+                        return [this.pc + 1, 4]
+                    case 'D':
+                        this.cp(this.registers.d)
+                        return [this.pc + 1, 4]
+                    case 'E':
+                        this.cp(this.registers.e)
+                        return [this.pc + 1, 4]
+                    case 'H':
+                        this.cp(this.registers.h)
+                        return [this.pc + 1, 4]
+                    case 'L':
+                        this.cp(this.registers.l)
+                        return [this.pc + 1, 4]
+                    case '(HL)':
+                        this.cp(this.bus.read(this.registers.hl))
+                        return [this.pc + 1, 8]
+                    case 'd8':
+                        this.cp(this.readNextByte())
+                        return [this.pc + 2, 8]
+                    default: 
+                        assertExhaustive(instruction.n)
+                }
             case 'XOR A':
                 // 1  4
                 // Z 0 0 0

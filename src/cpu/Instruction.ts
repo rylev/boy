@@ -14,8 +14,10 @@ type PREFIX = { type: 'PREFIX CB' }
 
 type AddHLBC = { type: 'ADD HL,BC' }
 type XORA = { type: 'XOR A' }
-type CPd8 = { type: 'CP d8' }
-type CP_HL_ = { type: 'CP (HL)' }
+
+type CPN = AllRegistersButF | '(HL)' | 'd8'
+type CP = { type: 'CP', n: CPN }
+
 type RLA = { type: 'RLA' }
 type DECA = { type: 'DEC A' }
 type DECB = { type: 'DEC B' }
@@ -78,8 +80,7 @@ type ControlInstruction =
 type ArithmeticInstruction = 
     | AddHLBC 
     | XORA
-    | CPd8
-    | CP_HL_
+    | CP
     | RLA
     | DECA
     | DECB
@@ -148,8 +149,7 @@ export namespace Instruction {
     export const PREFIX: PREFIX = { type: 'PREFIX CB' }
 
     export const AddHLBC: AddHLBC = { type: 'ADD HL,BC' }
-    export const CPd8: CPd8 = { type: 'CP d8' }
-    export const CP_HL_: CP_HL_ = { type: 'CP (HL)' }
+    export const CP = (n: CPN): CP => ({ type: 'CP', n })
     export const XORA: XORA = { type: 'XOR A' }
     export const RLA: RLA = { type: 'RLA' }
     export const DECA: DECA = { type: 'DEC A' }
@@ -223,8 +223,15 @@ export namespace Instruction {
 
 const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x09: Instruction.AddHLBC,
-    0xfe: Instruction.CPd8,
-    0xbe: Instruction.CP_HL_,
+    0xb8: Instruction.CP('B'),
+    0xb9: Instruction.CP('C'),
+    0xba: Instruction.CP('D'),
+    0xbb: Instruction.CP('E'),
+    0xbc: Instruction.CP('H'),
+    0xbd: Instruction.CP('L'),
+    0xbe: Instruction.CP('(HL)'),
+    0xbf: Instruction.CP('A'),
+    0xfe: Instruction.CP('d8'),
     0xaf: Instruction.XORA,
     0x17: Instruction.RLA,
     0x3d: Instruction.DECA,
