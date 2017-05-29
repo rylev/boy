@@ -476,11 +476,41 @@ export class CPU {
                 // - - - -
                 this.bus.write(this.registers.hl, this.registers.a)
                 return [this.pc + 1, 8]
-            case 'LD A,(DE)':
+            case 'LD A From Indirect':
+                // WHEN: instruction.source is (C)
+                // 2  8
+                // WHEN: instruction.source is (a16)
+                // 3  16
+                // ELSE: 
                 // 1  8
                 // - - - -
-                this.registers.a = this.bus.read(this.registers.de)
-                return [this.pc + 1, 8]
+                switch (instruction.source) {
+                    case '(BC)':
+                        this.registers.a = this.bus.read(this.registers.bc)
+                        return [this.pc + 1, 8]
+                    case '(DE)':
+                        this.registers.a = this.bus.read(this.registers.de)
+                        return [this.pc + 1, 8]
+                    case '(HL)':
+                        this.registers.a = this.bus.read(this.registers.hl)
+                        return [this.pc + 1, 8]
+                    case '(HL+)':
+                        this.registers.a = this.bus.read(this.registers.hl)
+                        this.registers.hl++
+                        return [this.pc + 1, 8]
+                    case '(HL-)':
+                        this.registers.a = this.bus.read(this.registers.hl)
+                        this.registers.hl--
+                        return [this.pc + 1, 8]
+                    case '(C)':
+                        this.registers.a = this.bus.read(0xff00 + this.registers.c)
+                        return [this.pc + 2, 8]
+                    case '(a16)':
+                        this.registers.a = this.bus.read(this.readNextWord())
+                        return [this.pc + 3, 16]
+                    default: 
+                        assertExhaustive(instruction.source)
+                }
             case 'LD C,A':
                 // 1  4
                 // - - - -
