@@ -461,12 +461,52 @@ export class CPU {
                 } else {
                     return [this.pc + 1, 4]
                 }
-            case 'ADD A,(HL)':
+            case 'ADD':
+                // WHEN: instruction.n is (hl)
                 // 1  8
+                // WHEN: instruction.n is d8
+                // 2  8
+                // ELSE: 
+                // 1  4
                 // Z 0 H C
-                this.registers.a = this.add(this.bus.read(this.registers.hl))
-                return [this.pc + 1, 4]
-
+                switch (instruction.n) {
+                    case 'A':
+                        this.registers.a = this.add(this.registers.a)
+                        break
+                    case 'B':
+                        this.registers.a = this.add(this.registers.b)
+                        break
+                    case 'C':
+                        this.registers.a = this.add(this.registers.c)
+                        break
+                    case 'D':
+                        this.registers.a = this.add(this.registers.d)
+                        break
+                    case 'E':
+                        this.registers.a = this.add(this.registers.e)
+                        break
+                    case 'H':
+                        this.registers.a = this.add(this.registers.h)
+                        break
+                    case 'L':
+                        this.registers.a = this.add(this.registers.l)
+                        break
+                    case '(HL)':
+                        this.registers.a = this.add(this.bus.read(this.registers.hl))
+                        break
+                    case 'd8': 
+                        this.registers.a = this.add(this.readNextByte())
+                        break
+                    default: 
+                        assertExhaustive(instruction.n)
+                }
+                if (instruction.n === 'd8') {
+                    return [this.pc + 2, 8]
+                } else if (instruction.n === '(HL)') {
+                    return [this.pc + 1, 8]
+                } else {
+                    return [this.pc + 1, 4]
+                }
             case 'JP': 
                 // 3  16/12
                 // - - - -

@@ -29,7 +29,6 @@ type DECE = { type: 'DEC E' }
 
 type INCTarget = AllRegistersButF | WordRegisters | '(HL)' | 'SP'
 type INC = { type: 'INC', target: INCTarget }
-type ADDA_HL_ = { type: 'ADD A,(HL)' }
 
 type ANDN =  AllRegistersButF | '(HL)' | 'd8'
 type AND = { type: 'AND', n: ANDN }
@@ -37,8 +36,9 @@ type ORN =  ANDN
 type OR = { type: 'OR', n: ORN }
 type XORN =  ANDN
 type XOR = { type: 'XOR', n: XORN }
-
-type SUBN = AllRegistersButF | '(HL)' | 'd8'
+type ADDN = ANDN
+type ADD = { type: 'ADD', n: ADDN }
+type SUBN = ANDN
 type SUB = { type: 'SUB', n: SUBN }
 
 type LD_a16_A = { type: 'LD (a16),A' }
@@ -82,6 +82,7 @@ type ControlInstruction =
 type ArithmeticInstruction = 
     | AND
     | OR
+    | ADD
     | SUB
     | INC
     | AddHL
@@ -93,7 +94,6 @@ type ArithmeticInstruction =
     | DECC
     | DECD
     | DECE
-    | ADDA_HL_
 
 type LoadStoreInstruction = 
     | LD
@@ -144,7 +144,7 @@ export namespace Instruction {
     export const DECD: DECD = { type: 'DEC D' }
     export const DECE: DECE = { type: 'DEC E' }
     export const INC = (target: INCTarget): INC => ({ type: 'INC', target })
-    export const ADDA_HL_: ADDA_HL_ = { type: 'ADD A,(HL)' }
+    export const ADD = (n: ADDN): ADD => ({ type: 'ADD', n })
     export const AND = (n: ANDN): AND => ({ type: 'AND', n })
     export const OR = (n: ORN): OR => ({ type: 'OR', n })
     export const SUB = (n: SUBN): SUB => ({ type: 'SUB', n })
@@ -235,7 +235,16 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x05: Instruction.DECB,
     0x0d: Instruction.DECC,
     0x1d: Instruction.DECE,
-    0x86: Instruction.ADDA_HL_,
+
+    0x80: Instruction.ADD('B'),
+    0x81: Instruction.ADD('C'),
+    0x82: Instruction.ADD('D'),
+    0x83: Instruction.ADD('E'),
+    0x84: Instruction.ADD('H'),
+    0x85: Instruction.ADD('L'),
+    0x86: Instruction.ADD('(HL)'),
+    0x87: Instruction.ADD('A'),
+    0xc6: Instruction.ADD('d8'),
 
     0xa0: Instruction.AND('B'),
     0xa1: Instruction.AND('C'),
