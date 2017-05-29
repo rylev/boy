@@ -31,6 +31,9 @@ type INCC = { type: 'INC C' }
 type INCH = { type: 'INC H' }
 type ADDA_HL_ = { type: 'ADD A,(HL)' }
 
+type ANDN =  AllRegistersButF | '(HL)' | 'd8'
+type AND = { type: 'AND', n: ANDN }
+
 type SUBN = AllRegistersButF | '(HL)' | 'd8'
 type SUB = { type: 'SUB', n: SUBN }
 
@@ -80,6 +83,8 @@ type ControlInstruction =
     | PREFIX
     
 type ArithmeticInstruction = 
+    | AND
+    | SUB
     | AddHLBC 
     | XORA
     | CP
@@ -97,7 +102,6 @@ type ArithmeticInstruction =
     | LDAE
     | LDAH
     | ADDA_HL_
-    | SUB
 
 type LoadStoreInstruction = 
     | LDAd8
@@ -163,6 +167,7 @@ export namespace Instruction {
     export const INCHL: INCHL = { type: 'INC HL' }
     export const INCDE: INCDE = { type: 'INC DE' }
     export const ADDA_HL_: ADDA_HL_ = { type: 'ADD A,(HL)' }
+    export const AND = (n: ANDN): AND => ({ type: 'AND', n })
     export const SUB = (n: SUBN): SUB => ({ type: 'SUB', n })
 
     export const LDAd8: LDAd8 = { type: 'LD A,d8' }
@@ -242,8 +247,23 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x23: Instruction.INCHL,
     0x13: Instruction.INCDE,
     0x86: Instruction.ADDA_HL_,
-    0x97: Instruction.SUB('A'),
+    0xa0: Instruction.AND('B'),
+    0xa1: Instruction.AND('C'),
+    0xa2: Instruction.AND('D'),
+    0xa3: Instruction.AND('E'),
+    0xa4: Instruction.AND('H'),
+    0xa5: Instruction.AND('L'),
+    0xa6: Instruction.AND('(HL)'),
+    0xa7: Instruction.AND('A'),
+    0xe6: Instruction.AND('d8'),
     0x90: Instruction.SUB('B'),
+    0x91: Instruction.SUB('C'),
+    0x92: Instruction.SUB('D'),
+    0x93: Instruction.SUB('E'),
+    0x94: Instruction.SUB('H'),
+    0x95: Instruction.SUB('L'),
+    0x96: Instruction.SUB('(HL)'),
+    0x97: Instruction.SUB('A'),
     0xd6: Instruction.SUB('d8'),
     0x15: Instruction.DECD,
 

@@ -251,12 +251,59 @@ export class CPU {
                 // - - - -
                 this.registers.de = u16.wrappingAdd(this.registers.de, 1)
                 return [this.pc + 1, 8]
-            case 'SUB':
-                // WHEN: instruction.n is not number
-                // 1  4
-                // Z 1 H C
-                // WHEN: instruction.n is number
+            case 'AND':
+                // WHEN: instruction.n is (hl)
+                // 1  8
+                // WHEN: instruction.n is d8
                 // 2  8
+                // ELSE: 
+                // 1  4
+                // Z 0 1 0
+                switch (instruction.n) {
+                    case 'A':
+                        this.registers.a = this.and(this.registers.a)
+                        break
+                    case 'B':
+                        this.registers.a = this.and(this.registers.b)
+                        break
+                    case 'C':
+                        this.registers.a = this.and(this.registers.c)
+                        break
+                    case 'D':
+                        this.registers.a = this.and(this.registers.d)
+                        break
+                    case 'E':
+                        this.registers.a = this.and(this.registers.e)
+                        break
+                    case 'H':
+                        this.registers.a = this.and(this.registers.h)
+                        break
+                    case 'L':
+                        this.registers.a = this.and(this.registers.l)
+                        break
+                    case '(HL)':
+                        this.registers.a = this.and(this.bus.read(this.registers.hl))
+                        break
+                    case 'd8': 
+                        this.registers.a = this.and(this.readNextByte())
+                        break
+                    default: 
+                        assertExhaustive(instruction.n)
+                }
+                if (instruction.n === 'd8') {
+                    return [this.pc + 2, 8]
+                } else if (instruction.n === '(HL)') {
+                    return [this.pc + 1, 8]
+                } else {
+                    return [this.pc + 1, 4]
+                }
+            case 'SUB':
+                // WHEN: instruction.n is (hl)
+                // 1  8
+                // WHEN: instruction.n is d8
+                // 2  8
+                // ELSE: 
+                // 1  4
                 // Z 1 H C
                 switch (instruction.n) {
                     case 'A':
@@ -291,6 +338,8 @@ export class CPU {
                 }
                 if (instruction.n === 'd8') {
                     return [this.pc + 2, 8]
+                } else if (instruction.n === '(HL)') {
+                    return [this.pc + 1, 8]
                 } else {
                     return [this.pc + 1, 4]
                 }
@@ -516,6 +565,15 @@ export class CPU {
         this.registers.f.carry = carry
         this.registers.f.halfCarry = false // TODO: set properly
         return sub
+    }
+
+    and(value: number): number {
+        const newValue = this.registers.a & value
+        this.registers.f.zero = newValue === 0
+        this.registers.f.subtract = false
+        this.registers.f.halfCarry = true
+        this.registers.f.carry = false
+        return newValue
     }
 
     inc(value: number): number {
