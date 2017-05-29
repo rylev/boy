@@ -7,7 +7,7 @@ describe('CPU', () => {
     describe('JP a16', () => {
         it('jumps to the right address', () => {
             const rom = createRom([
-                Instruction.toByte(Instruction.JPa16),
+                Instruction.toByte(Instruction.JP(true)),
                 u16.lsb(CPU.START_ADDR + 6),
                 u16.msb(CPU.START_ADDR + 6),
                 0x01,

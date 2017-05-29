@@ -1,9 +1,9 @@
 import { toHex } from 'lib/hex'
 
 type AllRegistersButF = 'A' | 'B' | 'C' | 'D' | 'E' | 'H' | 'L'
-type JPa16 = { type: 'JP a16' }
-type Test = 'NZ' | 'NC' | 'Z' | 'C' | true
-type JR = { type: 'JR', test: Test }
+type JumpTest = 'NZ' | 'NC' | 'Z' | 'C' | true
+type JP = { type: 'JP', test: JumpTest }
+type JR = { type: 'JR', test: JumpTest }
 type CALLa16 = { type: 'CALL a16'}
 type RET = { type: 'RET' }
 
@@ -64,7 +64,7 @@ type BIT7H = { type: 'BIT 7,H' }
 type RLC = { type: 'RL C' }
 
 type JumpInstruction = 
-    | JPa16
+    | JP
     | JR
     | CALLa16
     | RET
@@ -137,8 +137,8 @@ export type Instruction =
     | PrefixInstruction
 
 export namespace Instruction {
-    export const JR = (test: Test ): JR => ({ type: 'JR', test })
-    export const JPa16: JPa16 = { type: 'JP a16' }
+    export const JR = (test: JumpTest ): JR => ({ type: 'JR', test })
+    export const JP = (test: JumpTest): JP => ({ type: 'JP', test })
     export const CALLa16: CALLa16 = { type: 'CALL a16' }
     export const RET: RET = { type: 'RET' }
 
@@ -242,10 +242,16 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xd6: Instruction.SUB('d8'),
     0x15: Instruction.DECD,
 
-    0xc3: Instruction.JPa16,
-    0x28: Instruction.JR('Z'),
-    0x20: Instruction.JR('NZ'),
+    0xc3: Instruction.JP(true),
+    0xc2: Instruction.JP('NZ'),
+    0xd2: Instruction.JP('NC'),
+    0xca: Instruction.JP('Z'),
+    0xda: Instruction.JP('C'),
     0x18: Instruction.JR(true),
+    0x28: Instruction.JR('Z'),
+    0x38: Instruction.JR('C'),
+    0x20: Instruction.JR('NZ'),
+    0x30: Instruction.JR('NC'),
     0xcd: Instruction.CALLa16,
     0xc9: Instruction.RET,
 

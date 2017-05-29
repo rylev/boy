@@ -271,12 +271,8 @@ export class CPU {
                 this.registers.a = this.add(this.bus.read(this.registers.hl))
                 return [this.pc + 1, 4]
 
-            case 'JP a16': 
-                // 3  16
-                // - - - -
-                return [this.readNextWord(), 16]
-            case 'JR':
-                // 2  12/8 
+            case 'JP': 
+                // 3  16/12
                 // - - - -
                 switch (instruction.test) {
                     case 'Z':
@@ -289,6 +285,21 @@ export class CPU {
                         return this.conditionalJump(!this.registers.f.carry) 
                     case true:
                         return this.conditionalJump(true)
+                }
+            case 'JR':
+                // 2  12/8 
+                // - - - -
+                switch (instruction.test) {
+                    case 'Z':
+                        return this.conditionalJumpRelative(this.registers.f.zero) 
+                    case 'NZ': 
+                        return this.conditionalJumpRelative(!this.registers.f.zero) 
+                    case 'C':
+                        return this.conditionalJumpRelative(this.registers.f.carry) 
+                    case 'NC':
+                        return this.conditionalJumpRelative(!this.registers.f.carry) 
+                    case true:
+                        return this.conditionalJumpRelative(true)
                     default: 
                         assertExhaustive(instruction.test)
                 }
@@ -502,6 +513,14 @@ export class CPU {
     }
 
     conditionalJump(condition: boolean): [Address, Cycles] {
+        if (condition) {
+            return [this.readNextWord(), 16]
+        } else {
+            return [this.pc + 3, 12]
+        }
+    }
+
+    conditionalJumpRelative(condition: boolean): [Address, Cycles] {
         if (condition) {
             return [this.pc + 2 + u8.asSigned(this.readNextByte()), 12]
         } else {
