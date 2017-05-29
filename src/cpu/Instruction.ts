@@ -37,18 +37,15 @@ type AND = { type: 'AND', n: ANDN }
 type SUBN = AllRegistersButF | '(HL)' | 'd8'
 type SUB = { type: 'SUB', n: SUBN }
 
-type LDAd8 = { type: 'LD A,d8' }
-type LDBd8 = { type: 'LD B,d8' }
-type LDCd8 = { type: 'LD C,d8' }
-type LDDd8 = { type: 'LD D,d8' }
-type LDEd8 = { type: 'LD E,d8' }
-type LDLd8 = { type: 'LD L,d8' }
 type LD_a16_A = { type: 'LD (a16),A' }
 type LDHA_a8_ = { type: 'LDH A,(a8)' }
 type LDH_a8_A = { type: 'LDH (a8),A' }
 
-type LDAIndirectSource = '(BC)' | '(DE)' | '(HL)' | '(HL-)' | '(HL+)' | '(a16)' | '(C)'
+type LDAIndirectSource = '(BC)' | '(DE)' | '(HL-)' | '(HL+)' | '(a16)' | '(C)'
 type LDAFromIndirect = { type: 'LD A From Indirect', source: LDAIndirectSource }
+
+type LDSource = AllRegistersButF | '(HL)' | 'd8'
+type LD = { type: 'LD', source: LDSource, target: AllRegistersButF }
 
 type WordTarget = WordRegisters | 'SP'
 type LDWord = { type: 'LD Word', target: WordTarget }
@@ -57,13 +54,6 @@ type LD_HLD_A = { type: 'LD (HL-),A' }
 type LD_HLI_A = { type: 'LD (HL+),A' }
 type LD_C_A = { type: 'LD (C),A' }
 type LD_HL_A = { type: 'LD (HL),A' }
-type LDCA = { type: 'LD C,A' }
-type LDHA = { type: 'LD H,A' }
-type LDDA = { type: 'LD D,A' }
-type LDAE = { type: 'LD A,E' }
-type LDAL = { type: 'LD A,L' }
-type LDAB = { type: 'LD A,B' }
-type LDAH = { type: 'LD A,H' }
 
 type PUSHBC = { type: 'PUSH BC' }
 type POPBC = { type: 'POP BC' }
@@ -96,31 +86,19 @@ type ArithmeticInstruction =
     | DECC
     | DECD
     | DECE
-    | LDAE
-    | LDAH
     | ADDA_HL_
 
 type LoadStoreInstruction = 
-    | LDAd8
-    | LDLd8
-    | LDDd8
-    | LDEd8
+    | LD
+    | LDWord
+    | LDAFromIndirect
     | LD_a16_A
     | LDH_a8_A
     | LDHA_a8_
-    | LDWord
-    | LDAFromIndirect
     | LD_HLD_A
-    | LDCd8
     | LD_C_A
     | LD_HL_A
-    | LDCA
-    | LDBd8
-    | LDHA
-    | LDDA
-    | LDAB
     | LD_HLI_A
-    | LDAL
 
 type StackInstruction = 
     | PUSHBC
@@ -163,28 +141,16 @@ export namespace Instruction {
     export const AND = (n: ANDN): AND => ({ type: 'AND', n })
     export const SUB = (n: SUBN): SUB => ({ type: 'SUB', n })
 
+    export const LD = (target: AllRegistersButF, source: LDSource): LD => ({ type: 'LD', target, source })
     export const LDWord = (target: WordTarget): LDWord => ({ type: 'LD Word', target })
     export const LDAFromIndirect = (source: LDAIndirectSource): LDAFromIndirect => ({ type: 'LD A From Indirect', source })
-    export const LDAd8: LDAd8 = { type: 'LD A,d8' }
-    export const LDDd8: LDDd8 = { type: 'LD D,d8' }
-    export const LDEd8: LDEd8 = { type: 'LD E,d8' }
-    export const LDLd8: LDLd8 = { type: 'LD L,d8' }
     export const LD_a16_A: LD_a16_A = { type: 'LD (a16),A' }
     export const LDH_a8_A: LDH_a8_A = { type: 'LDH (a8),A' }
     export const LD_HLD_A: LD_HLD_A = { type: 'LD (HL-),A' }
     export const LD_HLI_A: LD_HLI_A = { type: 'LD (HL+),A' }
-    export const LDCd8: LDCd8 = { type: 'LD C,d8' }
     export const LD_C_A: LD_C_A = { type: 'LD (C),A' }
-    export const LDCA: LDCA = { type: 'LD C,A' }
     export const LDHLA: LD_HL_A = { type: 'LD (HL),A' }
-    export const LDBd8: LDBd8 = { type: 'LD B,d8' }
-    export const LDAB: LDAB = { type: 'LD A,B' }
-    export const LDAE: LDAE = { type: 'LD A,E' }
-    export const LDAH: LDAH = { type: 'LD A,H' }
-    export const LDDA: LDDA = { type: 'LD D,A' }
-    export const LDHA: LDHA = { type: 'LD H,A' }
     export const LDHA_a8_: LDHA_a8_ = { type: 'LDH A,(a8)' }
-    export const LDAL: LDAL = { type: 'LD A,L' }
 
     export const PUSHBC: PUSHBC = { type: 'PUSH BC' }
     export const POPBC: POPBC = { type: 'POP BC' }
@@ -206,8 +172,8 @@ export namespace Instruction {
         const entry = entries.find(pair => {
             const [key, value] = pair
             let answer = true
-            for (let v of Object.values(value)) {
-                answer = Object.values(instruction).includes(v)
+            for (let k of Object.keys(value)) {
+                answer = (value as any)[k] === (instruction as any)[k]
                 if (!answer) return answer
             }
             return answer
@@ -288,9 +254,6 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xcd: Instruction.CALLa16,
     0xc9: Instruction.RET,
 
-    0x3e: Instruction.LDAd8,
-    0x16: Instruction.LDDd8,
-    0x2e: Instruction.LDLd8,
     0xea: Instruction.LD_a16_A,
 
     0xf2: Instruction.LDAFromIndirect('(C)'),
@@ -298,7 +261,6 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x1a: Instruction.LDAFromIndirect('(DE)'),
     0x2a: Instruction.LDAFromIndirect('(HL+)'),
     0x3a: Instruction.LDAFromIndirect('(HL-)'),
-    0x7e: Instruction.LDAFromIndirect('(HL)'),
     0xfa: Instruction.LDAFromIndirect('(a16)'),
 
     0x01: Instruction.LDWord('BC'),
@@ -306,22 +268,83 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x21: Instruction.LDWord('HL'),
     0x31: Instruction.LDWord('SP'),
 
+    0x40: Instruction.LD('B', 'B'),
+    0x41: Instruction.LD('B', 'C'),
+    0x42: Instruction.LD('B', 'D'),
+    0x43: Instruction.LD('B', 'E'),
+    0x44: Instruction.LD('B', 'H'),
+    0x45: Instruction.LD('B', 'L'),
+    0x46: Instruction.LD('B', '(HL)'),
+    0x47: Instruction.LD('B', 'A'),
+
+    0x48: Instruction.LD('C', 'B'),
+    0x49: Instruction.LD('C', 'C'),
+    0x4a: Instruction.LD('C', 'D'),
+    0x4b: Instruction.LD('C', 'E'),
+    0x4c: Instruction.LD('C', 'H'),
+    0x4d: Instruction.LD('C', 'L'),
+    0x4e: Instruction.LD('C', '(HL)'),
+    0x4f: Instruction.LD('C', 'A'),
+
+    0x50: Instruction.LD('D', 'B'),
+    0x51: Instruction.LD('D', 'C'),
+    0x52: Instruction.LD('D', 'D'),
+    0x53: Instruction.LD('D', 'E'),
+    0x54: Instruction.LD('D', 'H'),
+    0x55: Instruction.LD('D', 'L'),
+    0x56: Instruction.LD('D', '(HL)'),
+    0x57: Instruction.LD('D', 'A'),
+
+    0x58: Instruction.LD('E', 'B'),
+    0x59: Instruction.LD('E', 'C'),
+    0x5a: Instruction.LD('E', 'D'),
+    0x5b: Instruction.LD('E', 'E'),
+    0x5c: Instruction.LD('E', 'H'),
+    0x5d: Instruction.LD('E', 'L'),
+    0x5e: Instruction.LD('E', '(HL)'),
+    0x5f: Instruction.LD('E', 'A'),
+
+    0x60: Instruction.LD('H', 'B'),
+    0x61: Instruction.LD('H', 'C'),
+    0x62: Instruction.LD('H', 'D'),
+    0x63: Instruction.LD('H', 'E'),
+    0x64: Instruction.LD('H', 'H'),
+    0x65: Instruction.LD('H', 'L'),
+    0x66: Instruction.LD('H', '(HL)'),
+    0x67: Instruction.LD('H', 'A'),
+
+    0x68: Instruction.LD('L', 'B'),
+    0x69: Instruction.LD('L', 'C'),
+    0x6a: Instruction.LD('L', 'D'),
+    0x6b: Instruction.LD('L', 'E'),
+    0x6c: Instruction.LD('L', 'H'),
+    0x6d: Instruction.LD('L', 'L'),
+    0x6e: Instruction.LD('L', '(HL)'),
+    0x6f: Instruction.LD('L', 'A'),
+
+    0x78: Instruction.LD('A', 'B'),
+    0x79: Instruction.LD('A', 'C'),
+    0x7a: Instruction.LD('A', 'D'),
+    0x7b: Instruction.LD('A', 'E'),
+    0x7c: Instruction.LD('A', 'H'),
+    0x7d: Instruction.LD('A', 'L'),
+    0x7e: Instruction.LD('A', '(HL)'),
+    0x7f: Instruction.LD('A', 'A'),
+
+    0x3e: Instruction.LD('A', 'd8'),
+    0x06: Instruction.LD('B', 'd8'),
+    0x0e: Instruction.LD('C', 'd8'),
+    0x16: Instruction.LD('D', 'd8'),
+    0x1e: Instruction.LD('E', 'd8'),
+    0x26: Instruction.LD('H', 'd8'),
+    0x2e: Instruction.LD('L', 'd8'),
+
     0xe0: Instruction.LDH_a8_A,
     0x32: Instruction.LD_HLD_A,
     0x22: Instruction.LD_HLI_A,
-    0x0e: Instruction.LDCd8,
     0xe2: Instruction.LD_C_A,
     0x77: Instruction.LDHLA,
-    0x4f: Instruction.LDCA,
-    0x06: Instruction.LDBd8,
-    0x1e: Instruction.LDEd8,
-    0x7b: Instruction.LDAE,
-    0x67: Instruction.LDHA,
-    0x57: Instruction.LDDA,
     0xf0: Instruction.LDHA_a8_,
-    0x7c: Instruction.LDAH,
-    0x7d: Instruction.LDAL,
-    0x78: Instruction.LDAB,
 
     0xc5: Instruction.PUSHBC,
     0xc1: Instruction.POPBC,

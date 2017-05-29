@@ -416,26 +416,95 @@ export class CPU {
                 const ret = this.pop()
                 return [ret, 16]
 
-            case 'LD A,d8':
+            case 'LD':
+                // WHEN: source is d8
                 // 2  8
+                // WHEN: source is (HL)
+                // 1  8
+                // ELSE: 
+                // 1  4
                 // - - - -
-                this.registers.a = this.readNextByte()
-                return [this.pc + 2, 8]
-            case 'LD D,d8':
-                // 2  8
-                // - - - -
-                this.registers.d = this.readNextByte()
-                return [this.pc + 2, 8]
-            case 'LD E,d8':
-                // 2  8
-                // - - - -
-                this.registers.e = this.readNextByte()
-                return [this.pc + 2, 8]
-            case 'LD L,d8':
-                // 2  8
-                // - - - -
-                this.registers.l = this.readNextByte()
-                return [this.pc + 2, 8]
+                let source;
+                let nextPC
+                let cycles
+                switch (instruction.source) {
+                    case 'A':
+                        source = this.registers.a
+                        nextPC = this.pc + 1
+                        cycles = 4
+                        break
+                    case 'B':
+                        source = this.registers.b
+                        nextPC = this.pc + 1
+                        cycles = 4
+                        break
+                    case 'C':
+                        source = this.registers.c
+                        nextPC = this.pc + 1
+                        cycles = 4
+                        break
+                    case 'D':
+                        source = this.registers.d
+                        nextPC = this.pc + 1
+                        cycles = 4
+                        break
+                    case 'E':
+                        source = this.registers.e
+                        nextPC = this.pc + 1
+                        cycles = 4
+                        break
+                    case 'H':
+                        source = this.registers.h
+                        nextPC = this.pc + 1
+                        cycles = 4
+                        break
+                    case 'L':
+                        source = this.registers.l
+                        nextPC = this.pc + 1
+                        cycles = 4
+                        break
+                    case '(HL)':
+                        source = this.bus.read(this.registers.hl)
+                        nextPC = this.pc + 1
+                        cycles = 8
+                        break
+                    case 'd8':
+                        source = this.readNextByte()
+                        nextPC = this.pc + 2
+                        cycles = 8
+                        break
+                    default:
+                        source = 0
+                        nextPC = 0
+                        cycles = 0
+                        assertExhaustive(instruction)
+                }
+                switch (instruction.target) {
+                    case 'A':
+                        this.registers.a = source
+                        break
+                    case 'B':
+                        this.registers.b = source
+                        break
+                    case 'C':
+                        this.registers.c = source
+                        break
+                    case 'D':
+                        this.registers.d = source
+                        break
+                    case 'E':
+                        this.registers.e = source
+                        break
+                    case 'H':
+                        this.registers.h = source
+                        break
+                    case 'L':
+                        this.registers.l = source
+                        break
+                    default:
+                        assertExhaustive(instruction)
+                }
+                return [nextPC, cycles]
             case 'LD (a16),A':
                 // 3  16
                 // - - - -
@@ -485,11 +554,6 @@ export class CPU {
                 this.bus.write(this.registers.hl, this.registers.a)
                 this.registers.hl = this.registers.hl - 1
                 return [this.pc + 1, 8]
-            case 'LD C,d8':
-                // 2  8
-                // - - - -
-                this.registers.c = this.readNextByte()
-                return [this.pc + 2, 8]
             case 'LD (C),A':
                 // 1  8
                 // - - - -
@@ -515,9 +579,6 @@ export class CPU {
                     case '(DE)':
                         this.registers.a = this.bus.read(this.registers.de)
                         return [this.pc + 1, 8]
-                    case '(HL)':
-                        this.registers.a = this.bus.read(this.registers.hl)
-                        return [this.pc + 1, 8]
                     case '(HL+)':
                         this.registers.a = this.bus.read(this.registers.hl)
                         this.registers.hl++
@@ -533,48 +594,8 @@ export class CPU {
                         this.registers.a = this.bus.read(this.readNextWord())
                         return [this.pc + 3, 16]
                     default: 
-                        assertExhaustive(instruction.source)
+                        assertExhaustive(instruction)
                 }
-            case 'LD C,A':
-                // 1  4
-                // - - - -
-                this.registers.c = this.registers.a
-                return [this.pc + 1, 4]
-            case 'LD B,d8':
-                // 2  8
-                // - - - -
-                this.registers.b = this.readNextByte()
-                return [this.pc + 2, 8]
-            case 'LD A,B':
-                // 1  4
-                // - - - -
-                this.registers.a = this.registers.b
-                return [this.pc + 1, 4]
-            case 'LD A,E':
-                // 1  4
-                // - - - -
-                this.registers.a = this.registers.e
-                return [this.pc + 1, 4]
-            case 'LD A,L':
-                // 1  4
-                // - - - -
-                this.registers.a = this.registers.l
-                return [this.pc + 1, 4]
-            case 'LD A,H':
-                // 1  4
-                // - - - -
-                this.registers.a = this.registers.h
-                return [this.pc + 1, 4]
-            case 'LD H,A':
-                // 1  4
-                // - - - -
-                this.registers.h = this.registers.a
-                return [this.pc + 1, 4]
-            case 'LD D,A':
-                // 1  4
-                // - - - -
-                this.registers.d = this.registers.a
-                return [this.pc + 1, 4]
 
             case 'PUSH BC':
                 // 1  16
