@@ -16,7 +16,6 @@ type PREFIX = { type: 'PREFIX CB' }
 
 type AddHLSource = 'BC' | 'DE' | 'HL' | 'SP'
 type AddHL = { type: 'ADD HL', source: AddHLSource }
-type XORA = { type: 'XOR A' }
 
 type CPN = AllRegistersButF | '(HL)' | 'd8'
 type CP = { type: 'CP', n: CPN }
@@ -36,6 +35,8 @@ type ANDN =  AllRegistersButF | '(HL)' | 'd8'
 type AND = { type: 'AND', n: ANDN }
 type ORN =  ANDN
 type OR = { type: 'OR', n: ORN }
+type XORN =  ANDN
+type XOR = { type: 'XOR', n: XORN }
 
 type SUBN = AllRegistersButF | '(HL)' | 'd8'
 type SUB = { type: 'SUB', n: SUBN }
@@ -84,7 +85,7 @@ type ArithmeticInstruction =
     | SUB
     | INC
     | AddHL
-    | XORA
+    | XOR
     | CP
     | RLA
     | DECA
@@ -135,7 +136,7 @@ export namespace Instruction {
 
     export const AddHL = (source: AddHLSource): AddHL => ({ type: 'ADD HL', source })
     export const CP = (n: CPN): CP => ({ type: 'CP', n })
-    export const XORA: XORA = { type: 'XOR A' }
+    export const XOR = (n: XORN): XOR => ({ type: 'XOR', n })
     export const RLA: RLA = { type: 'RLA' }
     export const DECA: DECA = { type: 'DEC A' }
     export const DECB: DECB = { type: 'DEC B' }
@@ -219,7 +220,16 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x2c: Instruction.INC('L'),
     0x3c: Instruction.INC('A'),
 
-    0xaf: Instruction.XORA,
+    0xa8: Instruction.XOR('B'),
+    0xa9: Instruction.XOR('C'),
+    0xaa: Instruction.XOR('D'),
+    0xab: Instruction.XOR('E'),
+    0xac: Instruction.XOR('H'),
+    0xad: Instruction.XOR('L'),
+    0xae: Instruction.XOR('(HL)'),
+    0xaf: Instruction.XOR('A'),
+    0xee: Instruction.XOR('d8'),
+
     0x17: Instruction.RLA,
     0x3d: Instruction.DECA,
     0x05: Instruction.DECB,

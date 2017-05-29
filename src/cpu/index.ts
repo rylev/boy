@@ -205,11 +205,45 @@ export class CPU {
                     default: 
                         assertExhaustive(instruction.n)
                 }
-            case 'XOR A':
+            case 'XOR':
+                // WHEN: n is d8
+                // 2  8
+                // WHEN: n is (HL)
+                // 1  8
+                // OTHERWISE: 
                 // 1  4
                 // Z 0 0 0
-                this.xor(this.registers.a)
-                return [this.pc + 1, 4]
+                switch (instruction.n) {
+                    case 'A':
+                        this.xor(this.registers.a)
+                        return [this.pc + 1, 4]
+                    case 'B':
+                        this.xor(this.registers.b)
+                        return [this.pc + 1, 4]
+                    case 'C':
+                        this.xor(this.registers.c)
+                        return [this.pc + 1, 4]
+                    case 'D':
+                        this.xor(this.registers.d)
+                        return [this.pc + 1, 4]
+                    case 'E':
+                        this.xor(this.registers.e)
+                        return [this.pc + 1, 4]
+                    case 'H':
+                        this.xor(this.registers.h)
+                        return [this.pc + 1, 4]
+                    case 'L':
+                        this.xor(this.registers.l)
+                        return [this.pc + 1, 4]
+                    case '(HL)':
+                        this.xor(this.bus.read(this.registers.hl))
+                        return [this.pc + 1, 8]
+                    case 'd8':
+                        this.xor(this.readNextByte())
+                        return [this.pc + 2, 8]
+                    default: 
+                        assertExhaustive(instruction.n)
+                }
             case 'RLA':
                 // 1  4
                 // 0 0 0 C
