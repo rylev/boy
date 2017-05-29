@@ -447,6 +447,9 @@ export class CPU {
                         return this.conditionalJump(!this.registers.f.carry) 
                     case true:
                         return this.conditionalJump(true)
+                    default: 
+                        assertExhaustive(instruction.test)
+                        return [0, 0]
                 }
             case 'JR':
                 // 2  12/8 
@@ -464,12 +467,34 @@ export class CPU {
                         return this.conditionalJumpRelative(true)
                     default: 
                         assertExhaustive(instruction.test)
+                        return [0, 0]
                 }
-            case 'CALL a16':
-                // 3  24
+            case 'CALL':
+                // 3  24/12
                 // - - - -
-                this.push(this.pc + 3)
-                return [this.readNextWord(), 24]
+                let condition 
+                switch (instruction.test) {
+                    case 'Z':
+                        condition = this.registers.f.zero
+                        break
+                    case 'C':
+                        condition = this.registers.f.carry
+                        break
+                    case 'NZ':
+                        condition = !this.registers.f.zero
+                        break
+                    case 'NC':
+                        condition = !this.registers.f.carry
+                        break
+                    case true:
+                        condition = true
+                        break
+                    default: 
+                        condition = true
+                        assertExhaustive(instruction.test)
+
+                }
+                return this.call(condition)
             case 'RET':
                 // 1  16
                 // - - - -
@@ -800,6 +825,15 @@ export class CPU {
             return [this.pc + 2 + u8.asSigned(this.readNextByte()), 12]
         } else {
             return [this.pc + 2, 8]
+        }
+    }
+
+    call(condition: boolean): [Address, Cycles] {
+        if (condition) {
+            this.push(this.pc + 3)
+            return [this.readNextWord(), 24]
+        } else {
+            return [this.pc + 3, 12]
         }
     }
 

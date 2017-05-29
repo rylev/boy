@@ -3,10 +3,10 @@ import CPU from 'cpu'
 import Instruction from 'cpu/Instruction'
 import { createRom } from './instructionsTestHelpers'
 
-describe('Instruction.JP', () => {
+describe('Instruction.CALL', () => {
     describe('when test is Z', () => {
         const rom = createRom([
-            Instruction.toByte(Instruction.JP('Z')),
+            Instruction.toByte(Instruction.CALL('Z')),
             0x07,
             0x01,
             Instruction.toByte(Instruction.Halt),
@@ -36,7 +36,7 @@ describe('Instruction.JP', () => {
     describe('when test is true', () => {
         it('jumps', () => {
             const rom = createRom([
-                Instruction.toByte(Instruction.JP(true)),
+                Instruction.toByte(Instruction.CALL(true)),
                 0x07,
                 0x01,
                 Instruction.toByte(Instruction.Halt),

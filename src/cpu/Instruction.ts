@@ -6,7 +6,7 @@ type WordRegisters = 'BC' | 'DE' | 'HL'
 type JumpTest = 'NZ' | 'NC' | 'Z' | 'C' | true
 type JP = { type: 'JP', test: JumpTest }
 type JR = { type: 'JR', test: JumpTest }
-type CALLa16 = { type: 'CALL a16'}
+type CALL = { type: 'CALL', test: JumpTest }
 type RET = { type: 'RET' }
 
 type Halt = { type: 'HALT' }
@@ -69,7 +69,7 @@ type RLC = { type: 'RL C' }
 type JumpInstruction = 
     | JP
     | JR
-    | CALLa16
+    | CALL
     | RET
 
 type ControlInstruction = 
@@ -125,7 +125,7 @@ export type Instruction =
 export namespace Instruction {
     export const JR = (test: JumpTest ): JR => ({ type: 'JR', test })
     export const JP = (test: JumpTest): JP => ({ type: 'JP', test })
-    export const CALLa16: CALLa16 = { type: 'CALL a16' }
+    export const CALL = (test: JumpTest): CALL => ({ type: 'CALL', test })
     export const RET: RET = { type: 'RET' }
 
     export const Halt: Halt = { type: 'HALT' }
@@ -271,7 +271,11 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x20: Instruction.JR('NZ'),
     0x30: Instruction.JR('NC'),
 
-    0xcd: Instruction.CALLa16,
+    0xc4: Instruction.CALL('NZ'),
+    0xd4: Instruction.CALL('NC'),
+    0xcc: Instruction.CALL('Z'),
+    0xdc: Instruction.CALL('C'),
+    0xcd: Instruction.CALL(true),
     0xc9: Instruction.RET,
 
     0xea: Instruction.LD_a16_A,
