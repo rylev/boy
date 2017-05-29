@@ -56,9 +56,10 @@ type LD_HLI_A = { type: 'LD (HL+),A' }
 type LD_C_A = { type: 'LD (C),A' }
 type LD_HL_A = { type: 'LD (HL),A' }
 
-type PushSource = 'AF' | 'BC' | 'DE' | 'HL'
-type PUSH = { type: 'PUSH', source: PushSource }
-type POPBC = { type: 'POP BC' }
+type PUSHSource = 'AF' | 'BC' | 'DE' | 'HL'
+type PUSH = { type: 'PUSH', source: PUSHSource }
+type POPTarget = PUSHSource
+type POP = { type: 'POP', target: POPTarget }
 
 type BIT7H = { type: 'BIT 7,H' }
 type RLC = { type: 'RL C' }
@@ -104,7 +105,7 @@ type LoadStoreInstruction =
 
 type StackInstruction = 
     | PUSH
-    | POPBC
+    | POP
 
 type PrefixInstruction = 
     | BIT7H
@@ -154,8 +155,8 @@ export namespace Instruction {
     export const LDHLA: LD_HL_A = { type: 'LD (HL),A' }
     export const LDHA_a8_: LDHA_a8_ = { type: 'LDH A,(a8)' }
 
-    export const PUSH = (source: PushSource): PUSH => ({ type: 'PUSH', source })
-    export const POPBC: POPBC = { type: 'POP BC' }
+    export const PUSH = (source: PUSHSource): PUSH => ({ type: 'PUSH', source })
+    export const POP = (target: POPTarget): POP => ({ type: 'POP', target })
 
     export const BIT7H: BIT7H = { type: 'BIT 7,H' }
     export const RLC: RLC = { type: 'RL C' }
@@ -355,7 +356,10 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xd5: Instruction.PUSH('DE'),
     0xe5: Instruction.PUSH('HL'),
     0xf5: Instruction.PUSH('AF'),
-    0xc1: Instruction.POPBC,
+    0xc1: Instruction.POP('BC'),
+    0xd1: Instruction.POP('DE'),
+    0xe1: Instruction.POP('HL'),
+    0xf1: Instruction.POP('AF'),
 
     0xcb: Instruction.PREFIX,
     0x76: Instruction.Halt,

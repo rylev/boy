@@ -629,10 +629,29 @@ export class CPU {
                         break
                 }
                 return [this.pc + 1, 16]
-            case 'POP BC':
+            case 'POP':
                 // 1  12
+                // WHEN: target is AF 
+                // Z N H C
+                // ELSE:
                 // - - - -
-                this.registers.bc = this.pop()
+                const popResult = this.pop()
+                switch (instruction.target) {
+                    case 'AF':
+                        this.registers.af = popResult
+                        break
+                    case 'BC':
+                        this.registers.bc = popResult
+                        break
+                    case 'DE':
+                        this.registers.de = popResult
+                        break
+                    case 'HL':
+                        this.registers.hl = popResult
+                        break
+                    default: 
+                        assertExhaustive(instruction)
+                }
                 return [this.pc +1, 12]
             
             case 'BIT 7,H':

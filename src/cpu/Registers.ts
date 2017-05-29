@@ -22,6 +22,10 @@ class Registers {
     get af(): number {
         return (this.a << 8) + this.f.toByte()
     }
+    set af(value: number) {
+        this.a = (value & 0xFF00) >> 8
+        this.f.fromByte(value & 0XFF)
+    }
 
     get bc(): number {
         return (this.b << 8) + this.c
@@ -68,6 +72,13 @@ export class FlagRegister {
             ((this.halfCarry ? 1 : 0) << 5) |
             ((this.carry ? 1 : 0) << 4) 
         )
+    }
+
+    fromByte(byte: number) {
+        this.zero = byte >> 7 !== 0
+        this.subtract = byte >> 6 !== 0
+        this.halfCarry = byte >> 5 !== 0
+        this.carry = byte >> 4 !== 0
     }
 
 }
