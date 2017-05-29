@@ -378,15 +378,27 @@ export class CPU {
                 // - - - -
                 this.registers.a = this.bus.read(0xff00 + this.readNextByte()) // TODO: wrap
                 return [this.pc + 2, 12]
-            case 'LD SP,d16':
+            case 'LD Word':
                 // 3  12
                 // - - - -
-                this.sp = this.readNextWord()
-                return [this.pc + 3, 12]
-            case 'LD HL,d16':
-                // 3  12
-                // - - - -
-                this.registers.hl = this.readNextWord()
+                const word = this.readNextWord()
+                switch (instruction.target) {
+                    case 'BC':
+                        this.registers.bc = word
+                        break
+                    case 'DE':
+                        this.registers.de = word
+                        break
+                    case 'HL':
+                        this.registers.hl = word
+                        break
+                    case 'SP':
+                        this.sp = word
+                        break
+                    default:
+                        assertExhaustive(instruction.target)
+
+                }
                 return [this.pc + 3, 12]
             case 'LD (HL+),A':
                 // 1  8
@@ -415,11 +427,6 @@ export class CPU {
                 // - - - -
                 this.bus.write(this.registers.hl, this.registers.a)
                 return [this.pc + 1, 8]
-            case 'LD DE,d16':
-                // 3  12
-                // - - - -
-                this.registers.de = this.readNextWord()
-                return [this.pc + 3, 12]
             case 'LD A,(DE)':
                 // 1  8
                 // - - - -

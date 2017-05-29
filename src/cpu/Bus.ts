@@ -49,13 +49,15 @@ class Bus {
             value = this._bios[addr]
         } else if (addr < 0x8000) {
             value = this._rom[addr]
-        }  else if (addr >= GPU.VRAM_BEGIN && addr <= GPU.VRAM_END) {
+        } else if (addr >= GPU.VRAM_BEGIN && addr <= GPU.VRAM_END) {
             value = this._gpu.vram[addr - GPU.VRAM_BEGIN]
-        }  else if (addr >= 0xA000 && addr <= 0xbfff) {
+        } else if (addr >= 0xa000 && addr <= 0xbfff) {
             value = undefined // TODO: define
-        }  else if (addr >= 0xff00 && addr <= 0xff7f) {
+        } else if (addr >= 0xc000 && addr <= 0xdfff) {
+            value = this._workingRam[addr - 0xc000]
+        } else if (addr >= 0xff00 && addr <= 0xff7f) {
             value = this.readIO(addr)
-        }  else if (addr >= 0xff80 && addr <= 0xffff) {
+        } else if (addr >= 0xff80 && addr <= 0xffff) {
             value = this._zeroPagedRam[addr - 0xff80]
         }
         if (value === undefined) { throw new Error(`No value at address 0x${toHex(addr)}`)}
@@ -70,6 +72,8 @@ class Bus {
             this._rom[addr] = value
         } else if (addr >= GPU.VRAM_BEGIN && addr <= GPU.VRAM_END) {
             this._gpu.writeVram(addr - GPU.VRAM_BEGIN, value)
+        } else if (addr >= 0xc000 && addr <= 0xdfff) {
+            this._workingRam[addr - 0xc000] = value
         } else if (addr >= 0xff00 && addr <= 0xff7f) {
             this.writeIO(addr, value)
         } else if (addr >= 0xff80 && addr <= 0xffff) {
@@ -135,8 +139,16 @@ class Bus {
                 this._gpu.objectDisplayEnable = ((value >> 1) & 0b1) === 1 
                 this._gpu.backgroundDisplayEnabled = (value & 0b1) === 1 
                 return
+
+            case 0xff41:
+
+                console.warn(`Writing 0x${value} to 0xff41. TODO: implement LCD stat reg`)
+                return
             case 0xff42:
                 this._gpu.scrollY = value
+                return
+            case 0xff43:
+                this._gpu.scrollX = value
                 return
             case 0xff47:
                 function bitsToColor(bits: number): Color {
@@ -157,7 +169,7 @@ class Bus {
                 console.warn(`Writing to 0x${toHex(addr)}. TODO: unmap bootrom`)
                 return
             default:
-                throw new Error(`Writting to unrecognized IO address 0x${toHex(addr)}`)
+                throw new Error(`Writting 0x${toHex(value)} to unrecognized IO address 0x${toHex(addr)}`)
         }
     }
 
