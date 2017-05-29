@@ -143,14 +143,28 @@ export class CPU {
                 this._prefix = true
                 return [this.pc + 1, 4]
 
-            case 'ADD HL,BC':
+            case 'ADD HL':
                 // 1  8
                 // - 0 H C
-                const [result, carry] = u16.overflowingAdd(this.registers.hl, this.registers.bc)
-                this.registers.hl = result
-                this.registers.f.subtract = false
-                this.registers.f.halfCarry = false // TODO: Set halfCarry
-                this.registers.f.carry = carry
+                let value
+                switch (instruction.source) {
+                    case 'BC':
+                        value = this.registers.bc
+                        break
+                    case 'DE':
+                        value = this.registers.de
+                        break
+                    case 'HL':
+                        value = this.registers.hl
+                        break
+                    case 'SP':
+                        value = this.sp
+                        break
+                    default: 
+                        value = 0
+                        assertExhaustive(instruction)
+                }
+                this.addHL(value)
                 return [this.pc + 1, 8]
             case 'CP':
                 // WHEN: n is d8
@@ -644,6 +658,15 @@ export class CPU {
         this.registers.f.carry = carry
         this.registers.f.halfCarry = false // TODO: set properly
         return add
+    }
+
+    addHL(value: number) {
+        const [result, carry] = u16.overflowingAdd(this.registers.hl, value)
+        this.registers.f.subtract = false
+        this.registers.f.halfCarry = false // TODO: Set halfCarry
+        this.registers.f.carry = carry
+
+        this.registers.hl = result
     }
 
     sub(value: number): number {

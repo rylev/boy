@@ -14,7 +14,8 @@ type DI = { type: 'DI' }
 type NOP = { type: 'NOP' }
 type PREFIX = { type: 'PREFIX CB' }
 
-type AddHLBC = { type: 'ADD HL,BC' }
+type AddHLSource = 'BC' | 'DE' | 'HL' | 'SP'
+type AddHL = { type: 'ADD HL', source: AddHLSource }
 type XORA = { type: 'XOR A' }
 
 type CPN = AllRegistersButF | '(HL)' | 'd8'
@@ -78,7 +79,7 @@ type ArithmeticInstruction =
     | AND
     | SUB
     | INC
-    | AddHLBC 
+    | AddHL
     | XORA
     | CP
     | RLA
@@ -128,7 +129,7 @@ export namespace Instruction {
     export const NOP: NOP = { type: 'NOP' }
     export const PREFIX: PREFIX = { type: 'PREFIX CB' }
 
-    export const AddHLBC: AddHLBC = { type: 'ADD HL,BC' }
+    export const AddHL = (source: AddHLSource): AddHL => ({ type: 'ADD HL', source })
     export const CP = (n: CPN): CP => ({ type: 'CP', n })
     export const XORA: XORA = { type: 'XOR A' }
     export const RLA: RLA = { type: 'RLA' }
@@ -185,7 +186,10 @@ export namespace Instruction {
 }
 
 const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
-    0x09: Instruction.AddHLBC,
+    0x09: Instruction.AddHL('BC'),
+    0x19: Instruction.AddHL('DE'),
+    0x29: Instruction.AddHL('HL'),
+    0x39: Instruction.AddHL('SP'),
 
     0xb8: Instruction.CP('B'),
     0xb9: Instruction.CP('C'),
