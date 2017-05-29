@@ -34,6 +34,8 @@ type ADDA_HL_ = { type: 'ADD A,(HL)' }
 
 type ANDN =  AllRegistersButF | '(HL)' | 'd8'
 type AND = { type: 'AND', n: ANDN }
+type ORN =  ANDN
+type OR = { type: 'OR', n: ORN }
 
 type SUBN = AllRegistersButF | '(HL)' | 'd8'
 type SUB = { type: 'SUB', n: SUBN }
@@ -78,6 +80,7 @@ type ControlInstruction =
     
 type ArithmeticInstruction = 
     | AND
+    | OR
     | SUB
     | INC
     | AddHL
@@ -142,6 +145,7 @@ export namespace Instruction {
     export const INC = (target: INCTarget): INC => ({ type: 'INC', target })
     export const ADDA_HL_: ADDA_HL_ = { type: 'ADD A,(HL)' }
     export const AND = (n: ANDN): AND => ({ type: 'AND', n })
+    export const OR = (n: ORN): OR => ({ type: 'OR', n })
     export const SUB = (n: SUBN): SUB => ({ type: 'SUB', n })
 
     export const LD = (target: AllRegistersButF, source: LDSource): LD => ({ type: 'LD', target, source })
@@ -232,6 +236,16 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xa6: Instruction.AND('(HL)'),
     0xa7: Instruction.AND('A'),
     0xe6: Instruction.AND('d8'),
+
+    0xb0: Instruction.OR('B'),
+    0xb1: Instruction.OR('C'),
+    0xb2: Instruction.OR('D'),
+    0xb3: Instruction.OR('E'),
+    0xb4: Instruction.OR('H'),
+    0xb5: Instruction.OR('L'),
+    0xb6: Instruction.OR('(HL)'),
+    0xb7: Instruction.OR('A'),
+    0xf6: Instruction.OR('d8'),
 
     0x90: Instruction.SUB('B'),
     0x91: Instruction.SUB('C'),

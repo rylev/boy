@@ -115,6 +115,12 @@ class Bus {
 
     writeIO(addr: number, value: number) {
         switch (addr) {
+            case 0xff07:
+                console.warn(`Writing 0x${toHex(value)} to timer regsiter. Ignoring...`)
+                return
+            case 0xff0f:
+                console.warn(`Writing 0x${toHex(value)} to interrupt register. Ignoring...`)
+                return
             case 0xff11:
                 // http://bgb.bircd.org/pandocs.htm#soundoverview
                 // TODO: Channel 1 Sound length/Wave pattern

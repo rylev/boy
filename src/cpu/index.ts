@@ -335,6 +335,52 @@ export class CPU {
                 } else {
                     return [this.pc + 1, 4]
                 }
+            case 'OR':
+                // WHEN: n is (hl)
+                // 1  8
+                // WHEN: n is d8
+                // 2  8
+                // ELSE: 
+                // 1  4
+                // Z 0 0 0
+                switch (instruction.n) {
+                    case 'A':
+                        this.registers.a = this.or(this.registers.a)
+                        break
+                    case 'B':
+                        this.registers.a = this.or(this.registers.b)
+                        break
+                    case 'C':
+                        this.registers.a = this.or(this.registers.c)
+                        break
+                    case 'D':
+                        this.registers.a = this.or(this.registers.d)
+                        break
+                    case 'E':
+                        this.registers.a = this.or(this.registers.e)
+                        break
+                    case 'H':
+                        this.registers.a = this.or(this.registers.h)
+                        break
+                    case 'L':
+                        this.registers.a = this.or(this.registers.l)
+                        break
+                    case '(HL)':
+                        this.registers.a = this.or(this.bus.read(this.registers.hl))
+                        break
+                    case 'd8': 
+                        this.registers.a = this.or(this.readNextByte())
+                        break
+                    default: 
+                        assertExhaustive(instruction.n)
+                }
+                if (instruction.n === 'd8') {
+                    return [this.pc + 2, 8]
+                } else if (instruction.n === '(HL)') {
+                    return [this.pc + 1, 8]
+                } else {
+                    return [this.pc + 1, 4]
+                }
             case 'SUB':
                 // WHEN: instruction.n is (hl)
                 // 1  8
@@ -702,6 +748,15 @@ export class CPU {
         this.registers.f.zero = newValue === 0
         this.registers.f.subtract = false
         this.registers.f.halfCarry = true
+        this.registers.f.carry = false
+        return newValue
+    }
+
+    or(value: number): number {
+        const newValue = this.registers.a | value
+        this.registers.f.zero = newValue === 0
+        this.registers.f.subtract = false
+        this.registers.f.halfCarry = false
         this.registers.f.carry = false
         return newValue
     }
