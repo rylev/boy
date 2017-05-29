@@ -226,31 +226,55 @@ export class CPU {
                 // Z 1 H -
                 this.registers.e = this.dec(this.registers.e)
                 return [this.pc + 1, 4]
-            case 'INC HL':
+            case 'INC':
+                // WHEN: target is 16 bit register
                 // 1  8
                 // - - - -
-                this.registers.hl = u16.wrappingAdd(this.registers.hl, 1)
-                return [this.pc + 1, 8]
-            case 'INC B':
+                // WHEN: target is (HL)
+                // 1  12
+                // ELSE: 
                 // 1  4
                 // Z 0 H -
-                this.registers.b = this.inc(this.registers.b)
-                return [this.pc + 1, 4]
-            case 'INC C':
-                // 1  4
-                // Z 0 H -
-                this.registers.c = this.inc(this.registers.c)
-                return [this.pc + 1, 4]
-            case 'INC H':
-                // 1  4
-                // Z 0 H -
-                this.registers.h = this.inc(this.registers.h)
-                return [this.pc + 1, 4]
-            case 'INC DE':
-                // 1  8
-                // - - - -
-                this.registers.de = u16.wrappingAdd(this.registers.de, 1)
-                return [this.pc + 1, 8]
+                switch (instruction.target) {
+                    case 'A':
+                        this.registers.a = this.inc(this.registers.a)
+                        return [this.pc + 1, 4]
+                    case 'B':
+                        this.registers.b = this.inc(this.registers.b)
+                        return [this.pc + 1, 4]
+                    case 'C':
+                        this.registers.c = this.inc(this.registers.c)
+                        return [this.pc + 1, 4]
+                    case 'D':
+                        this.registers.d = this.inc(this.registers.d)
+                        return [this.pc + 1, 4]
+                    case 'E':
+                        this.registers.e = this.inc(this.registers.e)
+                        return [this.pc + 1, 4]
+                    case 'H':
+                        this.registers.h = this.inc(this.registers.h)
+                        return [this.pc + 1, 4]
+                    case 'L':
+                        this.registers.l = this.inc(this.registers.l)
+                        return [this.pc + 1, 4]
+                    case 'BC':
+                        this.registers.bc = u16.wrappingAdd(this.registers.bc, 1)
+                        return [this.pc + 1, 8]
+                    case 'DE':
+                        this.registers.de = u16.wrappingAdd(this.registers.de, 1)
+                        return [this.pc + 1, 8]
+                    case 'HL':
+                        this.registers.hl = u16.wrappingAdd(this.registers.hl, 1)
+                        return [this.pc + 1, 8]
+                    case 'SP':
+                        this.sp = u16.wrappingAdd(this.sp, 1)
+                        return [this.pc + 1, 8]
+                    case '(HL)':
+                        this.bus.write(this.registers.hl, this.inc(this.bus.read(this.registers.hl)))
+                        return [this.pc + 1, 12]
+                    default:
+                        assertExhaustive(instruction)
+                }
             case 'AND':
                 // WHEN: instruction.n is (hl)
                 // 1  8
@@ -445,7 +469,7 @@ export class CPU {
                         this.sp = word
                         break
                     default:
-                        assertExhaustive(instruction.target)
+                        assertExhaustive(instruction)
 
                 }
                 return [this.pc + 3, 12]

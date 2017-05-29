@@ -1,6 +1,8 @@
 import { toHex } from 'lib/hex'
 
 type AllRegistersButF = 'A' | 'B' | 'C' | 'D' | 'E' | 'H' | 'L'
+type WordRegisters = 'BC' | 'DE' | 'HL'
+
 type JumpTest = 'NZ' | 'NC' | 'Z' | 'C' | true
 type JP = { type: 'JP', test: JumpTest }
 type JR = { type: 'JR', test: JumpTest }
@@ -24,11 +26,9 @@ type DECB = { type: 'DEC B' }
 type DECC = { type: 'DEC C' }
 type DECD = { type: 'DEC D' }
 type DECE = { type: 'DEC E' }
-type INCHL = { type: 'INC HL' }
-type INCDE = { type: 'INC DE' }
-type INCB = { type: 'INC B' }
-type INCC = { type: 'INC C' }
-type INCH = { type: 'INC H' }
+
+type INCTarget = AllRegistersButF | WordRegisters | '(HL)' | 'SP'
+type INC = { type: 'INC', target: INCTarget }
 type ADDA_HL_ = { type: 'ADD A,(HL)' }
 
 type ANDN =  AllRegistersButF | '(HL)' | 'd8'
@@ -50,7 +50,6 @@ type LDH_a8_A = { type: 'LDH (a8),A' }
 type LDAIndirectSource = '(BC)' | '(DE)' | '(HL)' | '(HL-)' | '(HL+)' | '(a16)' | '(C)'
 type LDAFromIndirect = { type: 'LD A From Indirect', source: LDAIndirectSource }
 
-type WordRegisters = 'BC' | 'DE' | 'HL'
 type WordTarget = WordRegisters | 'SP'
 type LDWord = { type: 'LD Word', target: WordTarget }
 
@@ -87,6 +86,7 @@ type ControlInstruction =
 type ArithmeticInstruction = 
     | AND
     | SUB
+    | INC
     | AddHLBC 
     | XORA
     | CP
@@ -96,11 +96,6 @@ type ArithmeticInstruction =
     | DECC
     | DECD
     | DECE
-    | INCB
-    | INCC
-    | INCH
-    | INCHL
-    | INCDE
     | LDAE
     | LDAH
     | ADDA_HL_
@@ -163,11 +158,7 @@ export namespace Instruction {
     export const DECC: DECC = { type: 'DEC C' }
     export const DECD: DECD = { type: 'DEC D' }
     export const DECE: DECE = { type: 'DEC E' }
-    export const INCB: INCB = { type: 'INC B' }
-    export const INCC: INCC = { type: 'INC C' }
-    export const INCH: INCH = { type: 'INC H' }
-    export const INCHL: INCHL = { type: 'INC HL' }
-    export const INCDE: INCDE = { type: 'INC DE' }
+    export const INC = (target: INCTarget): INC => ({ type: 'INC', target })
     export const ADDA_HL_: ADDA_HL_ = { type: 'ADD A,(HL)' }
     export const AND = (n: ANDN): AND => ({ type: 'AND', n })
     export const SUB = (n: SUBN): SUB => ({ type: 'SUB', n })
@@ -228,6 +219,7 @@ export namespace Instruction {
 
 const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x09: Instruction.AddHLBC,
+
     0xb8: Instruction.CP('B'),
     0xb9: Instruction.CP('C'),
     0xba: Instruction.CP('D'),
@@ -237,18 +229,28 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xbe: Instruction.CP('(HL)'),
     0xbf: Instruction.CP('A'),
     0xfe: Instruction.CP('d8'),
+
+    0x03: Instruction.INC('BC'),
+    0x13: Instruction.INC('DE'),
+    0x23: Instruction.INC('HL'),
+    0x33: Instruction.INC('SP'),
+    0x04: Instruction.INC('B'),
+    0x14: Instruction.INC('D'),
+    0x24: Instruction.INC('H'),
+    0x34: Instruction.INC('(HL)'),
+    0x0c: Instruction.INC('C'),
+    0x1c: Instruction.INC('E'),
+    0x2c: Instruction.INC('L'),
+    0x3c: Instruction.INC('A'),
+
     0xaf: Instruction.XORA,
     0x17: Instruction.RLA,
     0x3d: Instruction.DECA,
-    0x04: Instruction.INCB,
-    0x0c: Instruction.INCC,
-    0x24: Instruction.INCH,
     0x05: Instruction.DECB,
     0x0d: Instruction.DECC,
     0x1d: Instruction.DECE,
-    0x23: Instruction.INCHL,
-    0x13: Instruction.INCDE,
     0x86: Instruction.ADDA_HL_,
+
     0xa0: Instruction.AND('B'),
     0xa1: Instruction.AND('C'),
     0xa2: Instruction.AND('D'),
@@ -258,6 +260,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xa6: Instruction.AND('(HL)'),
     0xa7: Instruction.AND('A'),
     0xe6: Instruction.AND('d8'),
+
     0x90: Instruction.SUB('B'),
     0x91: Instruction.SUB('C'),
     0x92: Instruction.SUB('D'),
@@ -267,6 +270,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x96: Instruction.SUB('(HL)'),
     0x97: Instruction.SUB('A'),
     0xd6: Instruction.SUB('d8'),
+
     0x15: Instruction.DECD,
 
     0xc3: Instruction.JP(true),
@@ -274,11 +278,13 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xd2: Instruction.JP('NC'),
     0xca: Instruction.JP('Z'),
     0xda: Instruction.JP('C'),
+
     0x18: Instruction.JR(true),
     0x28: Instruction.JR('Z'),
     0x38: Instruction.JR('C'),
     0x20: Instruction.JR('NZ'),
     0x30: Instruction.JR('NC'),
+
     0xcd: Instruction.CALLa16,
     0xc9: Instruction.RET,
 
@@ -286,6 +292,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x16: Instruction.LDDd8,
     0x2e: Instruction.LDLd8,
     0xea: Instruction.LD_a16_A,
+
     0xf2: Instruction.LDAFromIndirect('(C)'),
     0x0a: Instruction.LDAFromIndirect('(BC)'),
     0x1a: Instruction.LDAFromIndirect('(DE)'),
@@ -293,10 +300,12 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x3a: Instruction.LDAFromIndirect('(HL-)'),
     0x7e: Instruction.LDAFromIndirect('(HL)'),
     0xfa: Instruction.LDAFromIndirect('(a16)'),
+
     0x01: Instruction.LDWord('BC'),
     0x11: Instruction.LDWord('DE'),
     0x21: Instruction.LDWord('HL'),
     0x31: Instruction.LDWord('SP'),
+
     0xe0: Instruction.LDH_a8_A,
     0x32: Instruction.LD_HLD_A,
     0x22: Instruction.LD_HLI_A,
