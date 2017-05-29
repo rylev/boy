@@ -1,6 +1,6 @@
 import u8 from 'lib/u8'
 
-enum GPUMode {
+export enum GPUMode {
     HorizontalBlank,
     VerticalBlank,
     OAMAccess,
@@ -79,6 +79,8 @@ class GPU {
     scrollY: number = 0
 
     line = 0
+
+    get mode(): GPUMode { return this._mode }
 
     constructor() {
         this._canvas = this._canvas.map(_ => Color.White)

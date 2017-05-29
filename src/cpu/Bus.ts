@@ -1,5 +1,5 @@
 import { toHex } from 'lib/hex'
-import GPU, { Color, WindowTileMap, BackgroundTileMap, BackgroundAndWindowTileMap, ObjectSize } from './GPU'
+import GPU, { Color, WindowTileMap, BackgroundTileMap, BackgroundAndWindowTileMap, ObjectSize, GPUMode } from './GPU'
 
 class Bus {
     private _biosMapped: boolean
@@ -85,8 +85,13 @@ class Bus {
 
     readIO(addr: number): number {
         switch (addr) {
+            case 0xff41:
+                console.warn("Reading lcd status register 0xff41. TODO: implement interrupt status")
+                return this._gpu.mode
             case 0xff42:
                 return this._gpu.scrollY
+            case 0xff43:
+                return this._gpu.scrollX
             case 0xff44: 
                 return this._gpu.line
             case 0xff47:
