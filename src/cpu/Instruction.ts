@@ -30,7 +30,7 @@ type INCC = { type: 'INC C' }
 type INCH = { type: 'INC H' }
 type ADDA_HL_ = { type: 'ADD A,(HL)' }
 
-type SUBN = AllRegistersButF | '(HL)' | number
+type SUBN = AllRegistersButF | '(HL)' | 'd8'
 type SUB = { type: 'SUB', n: SUBN }
 
 type LDAd8 = { type: 'LD A,d8' }
@@ -245,6 +245,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x86: Instruction.ADDA_HL_,
     0x97: Instruction.SUB('A'),
     0x90: Instruction.SUB('B'),
+    0xd6: Instruction.SUB('d8'),
     0x15: Instruction.DECD,
 
     0xc3: Instruction.JPa16,

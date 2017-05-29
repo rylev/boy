@@ -255,10 +255,13 @@ export class CPU {
                     case '(HL)':
                         this.registers.a = this.sub(this.bus.read(this.registers.hl))
                         break
+                    case 'd8': 
+                        this.registers.a = this.sub(this.readNextByte())
+                        break
                     default: 
-                        this.registers.a = this.sub(n)
+                        assertExhaustive(n)
                 }
-                if (typeof n === 'number') {
+                if (n === 'd8') {
                     return [this.pc + 2, 8]
                 } else {
                     return [this.pc + 1, 4]
