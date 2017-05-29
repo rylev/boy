@@ -597,10 +597,23 @@ export class CPU {
                         assertExhaustive(instruction)
                 }
 
-            case 'PUSH BC':
+            case 'PUSH':
                 // 1  16
                 // - - - -
-                this.push(this.registers.bc)
+                switch (instruction.source) {
+                    case 'AF':
+                        this.push(this.registers.af)
+                        break
+                    case 'BC':
+                        this.push(this.registers.bc)
+                        break
+                    case 'DE':
+                        this.push(this.registers.de)
+                        break
+                    case 'HL':
+                        this.push(this.registers.hl)
+                        break
+                }
                 return [this.pc + 1, 16]
             case 'POP BC':
                 // 1  12

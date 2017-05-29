@@ -19,6 +19,10 @@ class Registers {
         this.l = 0
     }
 
+    get af(): number {
+        return (this.a << 8) + this.f.toByte()
+    }
+
     get bc(): number {
         return (this.b << 8) + this.c
     }
