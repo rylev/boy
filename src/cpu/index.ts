@@ -493,10 +493,6 @@ export class CPU {
         }
     }
 
-    notYetImplemented(instruction: Instruction) {
-        throw new Error(`Not yet implemented: ${instruction}`)
-    }
-
     add(value: number): number {
         const [add, carry] = u8.overflowingAdd(this.registers.a, value)
         this.registers.f.zero = add === 0
