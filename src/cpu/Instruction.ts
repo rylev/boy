@@ -57,6 +57,8 @@ type LDSource = AllRegistersButF | '(HL)' | 'd8'
 type LDTarget = AllRegistersButF  
 type LD = { type: 'LD', source: LDSource, target: LDTarget }
 
+type LDSPHL = { type: 'LD SP,HL' }
+
 type WordTarget = WordRegisters | 'SP'
 type LDWord = { type: 'LD Word', target: WordTarget }
 
@@ -113,6 +115,7 @@ type LoadStoreInstruction =
     | LDH_a8_A
     | LDHA_a8_
     | LDHLSPn
+    | LDSPHL
 
 type StackInstruction = 
     | PUSH
@@ -166,6 +169,7 @@ export namespace Instruction {
     export const LDHA_a8_: LDHA_a8_ = { type: 'LDH A,(a8)' }
     export const LDH_a8_A: LDH_a8_A = { type: 'LDH (a8),A' }
     export const LDHLSPn: LDHLSPn = { type: 'LDHL SP,n' }
+    export const LDSPHL: LDSPHL = { type: 'LD SP,HL' }
 
     export const PUSH = (source: PUSHSource): PUSH => ({ type: 'PUSH', source })
     export const POP = (target: POPTarget): POP => ({ type: 'POP', target })
@@ -351,6 +355,8 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x11: Instruction.LDWord('DE'),
     0x21: Instruction.LDWord('HL'),
     0x31: Instruction.LDWord('SP'),
+
+    0xf9: Instruction.LDSPHL,
 
     0x40: Instruction.LD('B', 'B'),
     0x41: Instruction.LD('B', 'C'),

@@ -891,6 +891,11 @@ export class CPU {
                 this.registers.f.halfCarry = false // TODO: set properly
                 this.registers.f.carry = spnCarry
                 return [this.pc + 2, 12]
+            case 'LD SP,HL':
+                // 1  8
+                // - - - -
+                this.sp = this.registers.hl
+                return [this.pc + 1, 8]
             case 'LD A From Indirect':
                 // WHEN: instruction.source is (C)
                 // 2  8
