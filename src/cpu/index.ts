@@ -1153,7 +1153,45 @@ export class CPU {
                 } else {
                     return [this.pc + 1, 4]
                 }
-
+            case 'RLC':
+                // WHEN: n is (HL)
+                // 2  16
+                // ELSE:
+                // 2  8
+                // Z 0 0 0
+                switch (instruction.n) {
+                    case 'A':
+                        this.registers.a = this.rlc(this.registers.a)
+                        break
+                    case 'B':
+                        this.registers.b = this.rlc(this.registers.b)
+                        break
+                    case 'C':
+                        this.registers.c = this.rlc(this.registers.c)
+                        break
+                    case 'D':
+                        this.registers.d = this.rlc(this.registers.d)
+                        break
+                    case 'E':
+                        this.registers.e = this.rlc(this.registers.e)
+                        break
+                    case 'H':
+                        this.registers.h = this.rlc(this.registers.h)
+                        break
+                    case 'L':
+                        this.registers.l = this.rlc(this.registers.l)
+                        break
+                    case '(HL)':
+                        this.bus.write(this.registers.hl, this.rlc(this.bus.read(this.registers.hl)))
+                        break
+                    default: 
+                        assertExhaustive(instruction)
+                }
+                if (instruction.n === '(HL)') {
+                    return [this.pc + 1, 8]
+                } else {
+                    return [this.pc + 1, 4]
+                }
             default:
                 return assertExhaustive(instruction)
         }
@@ -1232,6 +1270,16 @@ export class CPU {
         this.registers.f.subtract = false
         this.registers.f.halfCarry = false
         this.registers.f.carry = false
+        return newValue
+    }
+
+    rlc(value: number): number {
+        const carry = (value & 0x80) >> 7
+        const newValue = (value << 1) & 0xff
+        this.registers.f.zero = newValue === 0
+        this.registers.f.subtract = false
+        this.registers.f.halfCarry = false
+        this.registers.f.carry = carry === 1
         return newValue
     }
 

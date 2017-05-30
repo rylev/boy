@@ -81,6 +81,8 @@ type RRN = SRLN
 type RR = { type: 'RR', n: RRN }
 type SWAPN = SRLN
 type SWAP = { type: 'SWAP', n: SWAPN }
+type RLCarryN = SRLN
+type RLCarry = { type: 'RLC', n: RLCarryN }
 
 type JumpInstruction = 
     | JP
@@ -132,6 +134,7 @@ type PrefixInstruction =
     | SRL
     | RR
     | SWAP
+    | RLCarry
 
 export type Instruction =
     | JumpInstruction
@@ -186,6 +189,7 @@ export namespace Instruction {
     export const SRL = (n: SRLN): SRL => ({ type: 'SRL', n })
     export const RR = (n: RRN): RR => ({ type: 'RR', n })
     export const SWAP = (n: SWAPN): SWAP => ({ type: 'SWAP', n })
+    export const RLCarry = (n: RLCarryN): RLCarry => ({ type: 'RLC', n })
 
     export function fromByte(byte: number, prefix: boolean): Instruction {
         const instruction = prefix ? byteToPrefixInstructionMap[byte] : byteToInstructionMap[byte]
@@ -477,6 +481,15 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
 }
 
 const byteToPrefixInstructionMap: { [index: number]: Instruction | undefined } = {
+    0x00: Instruction.RLCarry('B'),
+    0x01: Instruction.RLCarry('C'),
+    0x02: Instruction.RLCarry('D'),
+    0x03: Instruction.RLCarry('E'),
+    0x04: Instruction.RLCarry('H'),
+    0x05: Instruction.RLCarry('L'),
+    0x06: Instruction.RLCarry('(HL)'),
+    0x07: Instruction.RLCarry('A'),
+
     0x7c: Instruction.BIT7H,
     0x11: Instruction.RLC,
 
