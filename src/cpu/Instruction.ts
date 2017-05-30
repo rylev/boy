@@ -61,6 +61,7 @@ type LDWord = { type: 'LD Word', target: WordTarget }
 type LD_HLD_A = { type: 'LD (HL-),A' }
 type LD_HLI_A = { type: 'LD (HL+),A' }
 type LD_C_A = { type: 'LD (C),A' }
+type LDHLSPn = { type: 'LDHL SP,n' }
 
 type PUSHSource = 'AF' | 'BC' | 'DE' | 'HL'
 type PUSH = { type: 'PUSH', source: PUSHSource }
@@ -115,6 +116,7 @@ type LoadStoreInstruction =
     | LD_HLD_A
     | LD_C_A
     | LD_HLI_A
+    | LDHLSPn
 
 type StackInstruction = 
     | PUSH
@@ -170,6 +172,7 @@ export namespace Instruction {
     export const LD_HLI_A: LD_HLI_A = { type: 'LD (HL+),A' }
     export const LD_C_A: LD_C_A = { type: 'LD (C),A' }
     export const LDHA_a8_: LDHA_a8_ = { type: 'LDH A,(a8)' }
+    export const LDHLSPn: LDHLSPn = { type: 'LDHL SP,n' }
 
     export const PUSH = (source: PUSHSource): PUSH => ({ type: 'PUSH', source })
     export const POP = (target: POPTarget): POP => ({ type: 'POP', target })
@@ -430,6 +433,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x26: Instruction.LD('H', 'd8'),
     0x2e: Instruction.LD('L', 'd8'),
 
+    0xf8: Instruction.LDHLSPn,
     0xe0: Instruction.LDH_a8_A,
     0x32: Instruction.LD_HLD_A,
     0x22: Instruction.LD_HLI_A,
@@ -481,7 +485,6 @@ const byteToPrefixInstructionMap: { [index: number]: Instruction | undefined } =
     0x35: Instruction.SWAP('L'),
     0x36: Instruction.SWAP('(HL)'),
     0x37: Instruction.SWAP('A'),
-
 }
 
 export default Instruction

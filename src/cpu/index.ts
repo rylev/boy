@@ -871,6 +871,16 @@ export class CPU {
                 // - - - -
                 this.bus.write(0xff00 + this.registers.c, this.registers.a)
                 return [this.pc + 1, 8]
+            case 'LDHL SP,n':
+                // 2  12
+                // 0 0 H C
+                const [spnResult, spnCarry] = u16.overflowingAdd(this.sp, u8.asSigned(this.readNextByte()))
+                this.registers.hl = spnResult
+                this.registers.f.zero = false
+                this.registers.f.subtract = false
+                this.registers.f.halfCarry = false // TODO: set properly
+                this.registers.f.carry = spnCarry
+                return [this.pc + 2, 12]
             case 'LD A From Indirect':
                 // WHEN: instruction.source is (C)
                 // 2  8
