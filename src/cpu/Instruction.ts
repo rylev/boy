@@ -84,6 +84,8 @@ type SRA = { type: 'SRA', n: PrefixInstructionN }
 
 type BitPosition = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
 type BIT = { type: 'BIT', n: PrefixInstructionN, bitPosition: BitPosition }
+type RES = { type: 'RES', n: PrefixInstructionN, bitPosition: BitPosition }
+type SET = { type: 'SET', n: PrefixInstructionN, bitPosition: BitPosition }
 
 type JumpInstruction = 
     | JP
@@ -139,6 +141,8 @@ type PrefixInstruction =
     | RRCarry
     | SLA
     | SRA
+    | RES 
+    | SET
 
 export type Instruction =
     | JumpInstruction
@@ -189,6 +193,8 @@ export namespace Instruction {
     export const POP = (target: POPTarget): POP => ({ type: 'POP', target })
 
     export const BIT = (n: PrefixInstructionN, bitPosition: BitPosition): BIT => ({ type: 'BIT', n, bitPosition })
+    export const RES = (n: PrefixInstructionN, bitPosition: BitPosition): RES => ({ type: 'RES', n, bitPosition })
+    export const SET = (n: PrefixInstructionN, bitPosition: BitPosition): SET => ({ type: 'SET', n, bitPosition })
     export const SRL = (n: PrefixInstructionN): SRL => ({ type: 'SRL', n })
     export const RR = (n: PrefixInstructionN): RR => ({ type: 'RR', n })
     export const RL = (n: PrefixInstructionN): RL => ({ type: 'RL', n })
@@ -630,6 +636,143 @@ const byteToPrefixInstructionMap: { [index: number]: Instruction | undefined } =
     0x7e: Instruction.BIT('(HL)', 7),
     0x7f: Instruction.BIT('A', 7),
 
+    0x80: Instruction.RES('B', 0),
+    0x81: Instruction.RES('C', 0),
+    0x82: Instruction.RES('D', 0),
+    0x83: Instruction.RES('E', 0),
+    0x84: Instruction.RES('H', 0),
+    0x85: Instruction.RES('L', 0),
+    0x86: Instruction.RES('(HL)', 0),
+    0x87: Instruction.RES('A', 0),
+    0x88: Instruction.RES('B', 1),
+    0x89: Instruction.RES('C', 1),
+    0x8a: Instruction.RES('D', 1),
+    0x8b: Instruction.RES('E', 1),
+    0x8c: Instruction.RES('H', 1),
+    0x8d: Instruction.RES('L', 1),
+    0x8e: Instruction.RES('(HL)', 1),
+    0x8f: Instruction.RES('A', 1),
+
+    0x90: Instruction.RES('B', 2),
+    0x91: Instruction.RES('C', 2),
+    0x92: Instruction.RES('D', 2),
+    0x93: Instruction.RES('E', 2),
+    0x94: Instruction.RES('H', 2),
+    0x95: Instruction.RES('L', 2),
+    0x96: Instruction.RES('(HL)', 2),
+    0x97: Instruction.RES('A', 2),
+    0x98: Instruction.RES('B', 3),
+    0x99: Instruction.RES('C', 3),
+    0x9a: Instruction.RES('D', 3),
+    0x9b: Instruction.RES('E', 3),
+    0x9c: Instruction.RES('H', 3),
+    0x9d: Instruction.RES('L', 3),
+    0x9e: Instruction.RES('(HL)', 3),
+    0x9f: Instruction.RES('A', 3),
+
+
+    0xa0: Instruction.RES('B', 4),
+    0xa1: Instruction.RES('C', 4),
+    0xa2: Instruction.RES('D', 4),
+    0xa3: Instruction.RES('E', 4),
+    0xa4: Instruction.RES('H', 4),
+    0xa5: Instruction.RES('L', 4),
+    0xa6: Instruction.RES('(HL)', 4),
+    0xa7: Instruction.RES('A', 4),
+    0xa8: Instruction.RES('B', 5),
+    0xa9: Instruction.RES('C', 5),
+    0xaa: Instruction.RES('D', 5),
+    0xab: Instruction.RES('E', 5),
+    0xac: Instruction.RES('H', 5),
+    0xad: Instruction.RES('L', 5),
+    0xae: Instruction.RES('(HL)', 5),
+    0xaf: Instruction.RES('A', 5),
+
+
+    0xb0: Instruction.RES('B', 6),
+    0xb1: Instruction.RES('C', 6),
+    0xb2: Instruction.RES('D', 6),
+    0xb3: Instruction.RES('E', 6),
+    0xb4: Instruction.RES('H', 6),
+    0xb5: Instruction.RES('L', 6),
+    0xb6: Instruction.RES('(HL)', 6),
+    0xb7: Instruction.RES('A', 6),
+    0xb8: Instruction.RES('B', 7),
+    0xb9: Instruction.RES('C', 7),
+    0xba: Instruction.RES('D', 7),
+    0xbb: Instruction.RES('E', 7),
+    0xbc: Instruction.RES('H', 7),
+    0xbd: Instruction.RES('L', 7),
+    0xbe: Instruction.RES('(HL)', 7),
+    0xbf: Instruction.RES('A', 7),
+
+    0xc0: Instruction.SET('B', 0),
+    0xc1: Instruction.SET('C', 0),
+    0xc2: Instruction.SET('D', 0),
+    0xc3: Instruction.SET('E', 0),
+    0xc4: Instruction.SET('H', 0),
+    0xc5: Instruction.SET('L', 0),
+    0xc6: Instruction.SET('(HL)', 0),
+    0xc7: Instruction.SET('A', 0),
+    0xc8: Instruction.SET('B', 1),
+    0xc9: Instruction.SET('C', 1),
+    0xca: Instruction.SET('D', 1),
+    0xcb: Instruction.SET('E', 1),
+    0xcc: Instruction.SET('H', 1),
+    0xcd: Instruction.SET('L', 1),
+    0xce: Instruction.SET('(HL)', 1),
+    0xcf: Instruction.SET('A', 1),
+
+    0xd0: Instruction.SET('B', 2),
+    0xd1: Instruction.SET('C', 2),
+    0xd2: Instruction.SET('D', 2),
+    0xd3: Instruction.SET('E', 2),
+    0xd4: Instruction.SET('H', 2),
+    0xd5: Instruction.SET('L', 2),
+    0xd6: Instruction.SET('(HL)', 2),
+    0xd7: Instruction.SET('A', 2),
+    0xd8: Instruction.SET('B', 3),
+    0xd9: Instruction.SET('C', 3),
+    0xda: Instruction.SET('D', 3),
+    0xdb: Instruction.SET('E', 3),
+    0xdc: Instruction.SET('H', 3),
+    0xdd: Instruction.SET('L', 3),
+    0xde: Instruction.SET('(HL)', 3),
+    0xdf: Instruction.SET('A', 3),
+
+    0xe0: Instruction.SET('B', 4),
+    0xe1: Instruction.SET('C', 4),
+    0xe2: Instruction.SET('D', 4),
+    0xe3: Instruction.SET('E', 4),
+    0xe4: Instruction.SET('H', 4),
+    0xe5: Instruction.SET('L', 4),
+    0xe6: Instruction.SET('(HL)', 4),
+    0xe7: Instruction.SET('A', 4),
+    0xe8: Instruction.SET('B', 5),
+    0xe9: Instruction.SET('C', 5),
+    0xea: Instruction.SET('D', 5),
+    0xeb: Instruction.SET('E', 5),
+    0xec: Instruction.SET('H', 5),
+    0xed: Instruction.SET('L', 5),
+    0xee: Instruction.SET('(HL)', 5),
+    0xef: Instruction.SET('A', 5),
+
+    0xf0: Instruction.SET('B', 6),
+    0xf1: Instruction.SET('C', 6),
+    0xf2: Instruction.SET('D', 6),
+    0xf3: Instruction.SET('E', 6),
+    0xf4: Instruction.SET('H', 6),
+    0xf5: Instruction.SET('L', 6),
+    0xf6: Instruction.SET('(HL)', 6),
+    0xf7: Instruction.SET('A', 6),
+    0xf8: Instruction.SET('B', 7),
+    0xf9: Instruction.SET('C', 7),
+    0xfa: Instruction.SET('D', 7),
+    0xfb: Instruction.SET('E', 7),
+    0xfc: Instruction.SET('H', 7),
+    0xfd: Instruction.SET('L', 7),
+    0xfe: Instruction.SET('(HL)', 7),
+    0xff: Instruction.SET('A', 7),
 }
 
 export default Instruction

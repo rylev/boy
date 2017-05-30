@@ -1089,6 +1089,20 @@ export class CPU {
                 // 2  8
                 // Z 0 0 0
                 return this.cpInstruction(instruction.n, (value: number) => this.bitTest(value, instruction.bitPosition), false)
+            case 'RES':
+                // WHEN: n is (HL)
+                // 2  16
+                // ELSE:
+                // 2  8
+                // Z 0 0 0
+                return this.cpInstruction(instruction.n, (value: number) => this.res(value, instruction.bitPosition))
+            case 'SET':
+                // WHEN: n is (HL)
+                // 2  16
+                // ELSE:
+                // 2  8
+                // Z 0 0 0
+                return this.cpInstruction(instruction.n, (value: number) => this.set(value, instruction.bitPosition))
             default:
                 return assertExhaustive(instruction)
         }
@@ -1318,6 +1332,16 @@ export class CPU {
         this.registers.f.zero = result == 0
         this.registers.f.subtract = false
         this.registers.f.halfCarry = true
+        return result
+    }
+
+    res(value: number, bitPlace: number) {
+        const result = value & (~(1 << bitPlace) & 0xff)
+        return result
+    }
+
+    set(value: number, bitPlace: number) {
+        const result = value | ((1 << bitPlace) & 0xff)
         return result
     }
 
