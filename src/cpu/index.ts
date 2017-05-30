@@ -39,7 +39,7 @@ export class CPU {
         this.bus = new Bus(bios, rom, this.gpu)
         this.registers = new Registers()
         this.pc = bios ? 0 : CPU.START_ADDR
-        this.sp = 0 
+        this.sp = bios ? 0 : 0xfffe
         this._onError = callbacks.onError
         this._onMaxClockCycles = callbacks.onMaxClockCycles
         this._onPause = callbacks.onPause

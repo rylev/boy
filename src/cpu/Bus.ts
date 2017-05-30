@@ -89,6 +89,15 @@ class Bus {
 
     readIO(addr: number): number {
         switch (addr) {
+            case 0xff40:
+                return ((this._gpu.lcdDisplayEnabled ? 1 : 0) << 8) |
+                       ((this._gpu.windowTileMap === WindowTileMap.x9c00 ? 1 : 0) << 7) |
+                       ((this._gpu.windowDisplayEnabled ? 1 : 0) << 6) |
+                       ((this._gpu.backgroundAndWindowTileMap === BackgroundAndWindowTileMap.x8000 ? 1 : 0) << 5) |
+                       ((this._gpu.backgroundTileMap === BackgroundTileMap.x9c00 ? 1 : 0) << 4) |
+                       ((this._gpu.objectSize === ObjectSize.os16x16 ? 1 : 0) << 3) |
+                       ((this._gpu.objectDisplayEnable ? 1 : 0) << 2) |
+                       (this._gpu.backgroundDisplayEnabled ? 1 : 0)
             case 0xff41:
                 console.warn("Reading lcd status register 0xff41. TODO: implement interrupt status")
                 return this._gpu.mode
