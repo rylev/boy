@@ -40,6 +40,8 @@ type ADDCN = ANDN
 type ADDC = { type: 'ADDC', n: ADDCN }
 type SUBN = ANDN
 type SUB = { type: 'SUB', n: SUBN }
+type SUBCN = ANDN
+type SUBC = { type: 'SUBC', n: SUBCN }
 type RRA = { type: 'RRA' }
 
 type LDHA_a8_ = { type: 'LDH A,(a8)' }
@@ -99,6 +101,7 @@ type ArithmeticInstruction =
     | ADD
     | ADDC
     | SUB
+    | SUBC
     | INC
     | AddHL
     | XOR
@@ -158,9 +161,10 @@ export namespace Instruction {
     export const DEC = (target: DECTarget): DEC => ({ type: 'DEC', target })
     export const ADD = (n: ADDN): ADD => ({ type: 'ADD', n })
     export const ADDC = (n: ADDCN): ADDC => ({ type: 'ADDC', n })
+    export const SUB = (n: SUBN): SUB => ({ type: 'SUB', n })
+    export const SUBC = (n: SUBCN): SUBC => ({ type: 'SUBC', n })
     export const AND = (n: ANDN): AND => ({ type: 'AND', n })
     export const OR = (n: ORN): OR => ({ type: 'OR', n })
-    export const SUB = (n: SUBN): SUB => ({ type: 'SUB', n })
     export const RRA: RRA = { type: 'RRA' }
 
     export const LD = (target: AllRegistersButF, source: LDSource): LD => ({ type: 'LD', target, source })
@@ -311,6 +315,16 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x96: Instruction.SUB('(HL)'),
     0x97: Instruction.SUB('A'),
     0xd6: Instruction.SUB('d8'),
+
+    0x98: Instruction.SUBC('B'),
+    0x99: Instruction.SUBC('C'),
+    0x9a: Instruction.SUBC('D'),
+    0x9b: Instruction.SUBC('E'),
+    0x9c: Instruction.SUBC('H'),
+    0x9d: Instruction.SUBC('L'),
+    0x9e: Instruction.SUBC('(HL)'),
+    0x9f: Instruction.SUBC('A'),
+    0xde: Instruction.SUBC('d8'),
 
     0x1f: Instruction.RRA,
 
