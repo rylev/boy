@@ -773,11 +773,6 @@ export class CPU {
                         assertExhaustive(instruction)
                 }
                 return [nextPC, cycles]
-            case 'LD (a16),A':
-                // 3  16
-                // - - - -
-                this.bus.write(this.readNextWord(), this.registers.a)
-                return [this.pc + 3, 16]
             case 'LDH (a8),A':
                 // 2  12
                 // - - - -
@@ -854,23 +849,38 @@ export class CPU {
                 } else {
                     return [this.pc + 1, 8]
                 }
-            case 'LD (HL+),A':
+            case 'LD A To Indirect':
+                // WHEN: instruction.source is (C)
+                // 2  8
+                // WHEN: instruction.source is (a16)
+                // 3  16
+                // ELSE: 
                 // 1  8
                 // - - - -
-                this.bus.write(this.registers.hl, this.registers.a)
-                this.registers.hl = u16.wrappingAdd(this.registers.hl, 1)
-                return [this.pc + 1, 8]
-            case 'LD (HL-),A':
-                // 1  8
-                // - - - -
-                this.bus.write(this.registers.hl, this.registers.a)
-                this.registers.hl = this.registers.hl - 1
-                return [this.pc + 1, 8]
-            case 'LD (C),A':
-                // 1  8
-                // - - - -
-                this.bus.write(0xff00 + this.registers.c, this.registers.a)
-                return [this.pc + 1, 8]
+                switch (instruction.target) {
+                    case '(BC)':
+                        this.bus.write(this.registers.bc, this.registers.a)
+                        return [this.pc + 1, 8]
+                    case '(DE)':
+                        this.bus.write(this.registers.de, this.registers.a)
+                        return [this.pc + 1, 8]
+                    case '(HL+)':
+                        this.bus.write(this.registers.hl, this.registers.a)
+                        this.registers.hl++
+                        return [this.pc + 1, 8]
+                    case '(HL-)':
+                        this.bus.write(this.registers.hl, this.registers.a)
+                        this.registers.hl--
+                        return [this.pc + 1, 8]
+                    case '(C)':
+                        this.bus.write(0xff00 + this.registers.c, this.registers.a)
+                        return [this.pc + 2, 8]
+                    case '(a16)':
+                        this.bus.write(this.readNextWord(), this.registers.a)
+                        return [this.pc + 3, 16]
+                    default: 
+                        assertExhaustive(instruction)
+                }
             case 'LDHL SP,n':
                 // 2  12
                 // 0 0 H C
