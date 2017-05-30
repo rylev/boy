@@ -1035,6 +1035,45 @@ export class CPU {
                 } else {
                     return [this.pc + 1, 4]
                 }
+            case 'SWAP':
+                // WHEN: n is (HL)
+                // 2  16
+                // ELSE:
+                // 2  8
+                // Z 0 0 0
+                switch (instruction.n) {
+                    case 'A':
+                        this.registers.a = this.swap(this.registers.a)
+                        break
+                    case 'B':
+                        this.registers.b = this.swap(this.registers.b)
+                        break
+                    case 'C':
+                        this.registers.c = this.swap(this.registers.c)
+                        break
+                    case 'D':
+                        this.registers.d = this.swap(this.registers.d)
+                        break
+                    case 'E':
+                        this.registers.e = this.swap(this.registers.e)
+                        break
+                    case 'H':
+                        this.registers.h = this.swap(this.registers.h)
+                        break
+                    case 'L':
+                        this.registers.l = this.swap(this.registers.l)
+                        break
+                    case '(HL)':
+                        this.bus.write(this.registers.hl, this.swap(this.bus.read(this.registers.hl)))
+                        break
+                    default: 
+                        assertExhaustive(instruction)
+                }
+                if (instruction.n === '(HL)') {
+                    return [this.pc + 1, 8]
+                } else {
+                    return [this.pc + 1, 4]
+                }
 
             default:
                 return assertExhaustive(instruction)
@@ -1104,6 +1143,15 @@ export class CPU {
         this.registers.f.subtract = false
         this.registers.f.halfCarry = false
         this.registers.f.carry = carry === 1
+        return newValue
+    }
+
+    swap(value: number): number {
+        const newValue = ((value & 0xf) << 4) | ((value & 0xf0) >> 4)
+        this.registers.f.zero = newValue === 0
+        this.registers.f.subtract = false
+        this.registers.f.halfCarry = false
+        this.registers.f.carry = false
         return newValue
     }
 
