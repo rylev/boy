@@ -872,6 +872,45 @@ export class CPU {
                 } else {
                     return [this.pc + 1, 4]
                 }
+            case 'RR':
+                // WHEN: n is (HL)
+                // 2  16
+                // ELSE:
+                // 2  8
+                // Z 0 0 C
+                switch (instruction.n) {
+                    case 'A':
+                        this.registers.a = this.rr(this.registers.a)
+                        break
+                    case 'B':
+                        this.registers.b = this.rr(this.registers.b)
+                        break
+                    case 'C':
+                        this.registers.c = this.rr(this.registers.c)
+                        break
+                    case 'D':
+                        this.registers.d = this.rr(this.registers.d)
+                        break
+                    case 'E':
+                        this.registers.e = this.rr(this.registers.e)
+                        break
+                    case 'H':
+                        this.registers.h = this.rr(this.registers.h)
+                        break
+                    case 'L':
+                        this.registers.l = this.rr(this.registers.l)
+                        break
+                    case '(HL)':
+                        this.bus.write(this.registers.hl, this.rr(this.bus.read(this.registers.hl)))
+                        break
+                    default: 
+                        assertExhaustive(instruction)
+                }
+                if (instruction.n === '(HL)') {
+                    return [this.pc + 1, 8]
+                } else {
+                    return [this.pc + 1, 4]
+                }
 
             default:
                 return assertExhaustive(instruction)
@@ -926,6 +965,16 @@ export class CPU {
     srl(value: number): number {
         const carry = value & 0b1
         const newValue = value >> 1
+        this.registers.f.zero = newValue === 0
+        this.registers.f.subtract = false
+        this.registers.f.halfCarry = false
+        this.registers.f.carry = carry === 1
+        return newValue
+    }
+
+    rr(value: number): number {
+        const carry = value & 0b1
+        const newValue = (value >> 1) | (this.registers.f.carry ? 1 : 0) << 7
         this.registers.f.zero = newValue === 0
         this.registers.f.subtract = false
         this.registers.f.halfCarry = false

@@ -38,9 +38,6 @@ type ADD = { type: 'ADD', n: ADDN }
 type SUBN = ANDN
 type SUB = { type: 'SUB', n: SUBN }
 
-type SRLN = AllRegistersButF | '(HL)'
-type SRL = { type: 'SRL', n: SRLN }
-
 type LD_a16_A = { type: 'LD (a16),A' }
 type LDHA_a8_ = { type: 'LDH A,(a8)' }
 type LDH_a8_A = { type: 'LDH (a8),A' }
@@ -66,6 +63,11 @@ type POP = { type: 'POP', target: POPTarget }
 
 type BIT7H = { type: 'BIT 7,H' }
 type RLC = { type: 'RL C' }
+
+type SRLN = AllRegistersButF | '(HL)'
+type SRL = { type: 'SRL', n: SRLN }
+type RRN = SRLN
+type RR = { type: 'RR', n: RRN }
 
 type JumpInstruction = 
     | JP
@@ -111,6 +113,7 @@ type PrefixInstruction =
     | BIT7H
     | RLC
     | SRL
+    | RR
 
 export type Instruction =
     | JumpInstruction
@@ -159,6 +162,7 @@ export namespace Instruction {
     export const BIT7H: BIT7H = { type: 'BIT 7,H' }
     export const RLC: RLC = { type: 'RL C' }
     export const SRL = (n: SRLN): SRL => ({ type: 'SRL', n })
+    export const RR = (n: RRN): RR => ({ type: 'RR', n })
 
     export function fromByte(byte: number, prefix: boolean): Instruction {
         const instruction = prefix ? byteToPrefixInstructionMap[byte] : byteToInstructionMap[byte]
@@ -416,6 +420,15 @@ const byteToPrefixInstructionMap: { [index: number]: Instruction | undefined } =
     0x3d: Instruction.SRL('L'),
     0x3e: Instruction.SRL('(HL)'),
     0x3f: Instruction.SRL('A'),
+
+    0x18: Instruction.RR('B'),
+    0x19: Instruction.RR('C'),
+    0x1a: Instruction.RR('D'),
+    0x1b: Instruction.RR('E'),
+    0x1c: Instruction.RR('H'),
+    0x1d: Instruction.RR('L'),
+    0x1e: Instruction.RR('(HL)'),
+    0x1f: Instruction.RR('A'),
 }
 
 export default Instruction
