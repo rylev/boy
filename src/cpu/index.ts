@@ -598,6 +598,10 @@ export class CPU {
                         assertExhaustive(instruction.test)
                         return [0, 0]
                 }
+            case 'JP Indirect':
+                // 1  4
+                // - - - -
+                return [this.registers.hl, 4]
             case 'JR':
                 // 2  12/8 
                 // - - - -

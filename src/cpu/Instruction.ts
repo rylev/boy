@@ -5,6 +5,7 @@ type WordRegisters = 'BC' | 'DE' | 'HL'
 
 type JumpTest = 'NZ' | 'NC' | 'Z' | 'C' | true
 type JP = { type: 'JP', test: JumpTest }
+type JPIndirect = { type: 'JP Indirect' }
 type JR = { type: 'JR', test: JumpTest }
 type CALL = { type: 'CALL', test: JumpTest }
 type RET = { type: 'RET', test: JumpTest }
@@ -76,6 +77,7 @@ type RR = { type: 'RR', n: RRN }
 
 type JumpInstruction = 
     | JP
+    | JPIndirect
     | JR
     | CALL
     | RET
@@ -133,6 +135,7 @@ export type Instruction =
 export namespace Instruction {
     export const JR = (test: JumpTest ): JR => ({ type: 'JR', test })
     export const JP = (test: JumpTest): JP => ({ type: 'JP', test })
+    export const JPIndirect: JPIndirect = { type: 'JP Indirect'}
     export const CALL = (test: JumpTest): CALL => ({ type: 'CALL', test })
     export const RET = (test: JumpTest): RET => ({ type: 'RET', test })
 
@@ -309,6 +312,8 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xd2: Instruction.JP('NC'),
     0xca: Instruction.JP('Z'),
     0xda: Instruction.JP('C'),
+
+    0xe9: Instruction.JPIndirect,
 
     0x18: Instruction.JR(true),
     0x28: Instruction.JR('Z'),
