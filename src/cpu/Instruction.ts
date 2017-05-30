@@ -424,6 +424,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x74: Instruction.LDToIndirect('H'),
     0x75: Instruction.LDToIndirect('L'),
     0x77: Instruction.LDToIndirect('A'),
+    0x36: Instruction.LDToIndirect('d8'),
 
     0x78: Instruction.LD('A', 'B'),
     0x79: Instruction.LD('A', 'C'),

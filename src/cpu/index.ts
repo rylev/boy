@@ -1218,24 +1218,30 @@ export class CPU {
         if (condition) {
             return [this.readNextWord(), 16]
         } else {
-            return [this.pc + 3, 12]
+            return [u16.wrappingAdd(this.pc, 3), 12]
         }
     }
 
     conditionalJumpRelative(condition: boolean): [Address, Cycles] {
         if (condition) {
-            return [this.pc + 2 + u8.asSigned(this.readNextByte()), 12]
+            const nextStep = u16.wrappingAdd(this.pc, 2)
+            const offset = u8.asSigned(this.readNextByte())
+            if (offset >= 0) {
+                return [u16.wrappingAdd(nextStep, offset), 12]
+            } else {
+                return [u16.wrappingSub(nextStep, Math.abs(offset)), 12]
+            }
         } else {
-            return [this.pc + 2, 8]
+            return [u16.wrappingAdd(this.pc, 2), 8]
         }
     }
 
     call(condition: boolean): [Address, Cycles] {
         if (condition) {
-            this.push(this.pc + 3)
+            this.push(u16.wrappingAdd(this.pc, 3))
             return [this.readNextWord(), 24]
         } else {
-            return [this.pc + 3, 12]
+            return [u16.wrappingAdd(this.pc, 3), 12]
         }
     }
 
