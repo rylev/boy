@@ -73,16 +73,14 @@ type POPTarget = PUSHSource
 type POP = { type: 'POP', target: POPTarget }
 
 type BIT7H = { type: 'BIT 7,H' }
-type RLC = { type: 'RL C' }
 
-type SRLN = AllRegistersButF | '(HL)'
-type SRL = { type: 'SRL', n: SRLN }
-type RRN = SRLN
-type RR = { type: 'RR', n: RRN }
-type SWAPN = SRLN
-type SWAP = { type: 'SWAP', n: SWAPN }
-type RLCarryN = SRLN
-type RLCarry = { type: 'RLC', n: RLCarryN }
+type PrefixInstructionN = AllRegistersButF | '(HL)'
+type SRL = { type: 'SRL', n: PrefixInstructionN }
+type RR = { type: 'RR', n: PrefixInstructionN }
+type RL = { type: 'RL', n: PrefixInstructionN }
+type SWAP = { type: 'SWAP', n: PrefixInstructionN }
+type RLCarry = { type: 'RLC', n: PrefixInstructionN }
+type RRCarry = { type: 'RRC', n: PrefixInstructionN }
 
 type JumpInstruction = 
     | JP
@@ -130,11 +128,12 @@ type StackInstruction =
 
 type PrefixInstruction = 
     | BIT7H
-    | RLC
     | SRL
     | RR
+    | RL
     | SWAP
     | RLCarry
+    | RRCarry
 
 export type Instruction =
     | JumpInstruction
@@ -185,11 +184,12 @@ export namespace Instruction {
     export const POP = (target: POPTarget): POP => ({ type: 'POP', target })
 
     export const BIT7H: BIT7H = { type: 'BIT 7,H' }
-    export const RLC: RLC = { type: 'RL C' }
-    export const SRL = (n: SRLN): SRL => ({ type: 'SRL', n })
-    export const RR = (n: RRN): RR => ({ type: 'RR', n })
-    export const SWAP = (n: SWAPN): SWAP => ({ type: 'SWAP', n })
-    export const RLCarry = (n: RLCarryN): RLCarry => ({ type: 'RLC', n })
+    export const SRL = (n: PrefixInstructionN): SRL => ({ type: 'SRL', n })
+    export const RR = (n: PrefixInstructionN): RR => ({ type: 'RR', n })
+    export const RL = (n: PrefixInstructionN): RL => ({ type: 'RL', n })
+    export const SWAP = (n: PrefixInstructionN): SWAP => ({ type: 'SWAP', n })
+    export const RLCarry = (n: PrefixInstructionN): RLCarry => ({ type: 'RLC', n })
+    export const RRCarry = (n: PrefixInstructionN): RRCarry => ({ type: 'RRC', n })
 
     export function fromByte(byte: number, prefix: boolean): Instruction {
         const instruction = prefix ? byteToPrefixInstructionMap[byte] : byteToInstructionMap[byte]
@@ -490,8 +490,25 @@ const byteToPrefixInstructionMap: { [index: number]: Instruction | undefined } =
     0x06: Instruction.RLCarry('(HL)'),
     0x07: Instruction.RLCarry('A'),
 
+    0x08: Instruction.RRCarry('B'),
+    0x09: Instruction.RRCarry('C'),
+    0x0a: Instruction.RRCarry('D'),
+    0x0b: Instruction.RRCarry('E'),
+    0x0c: Instruction.RRCarry('H'),
+    0x0d: Instruction.RRCarry('L'),
+    0x0e: Instruction.RRCarry('(HL)'),
+    0x0f: Instruction.RRCarry('A'),
+
+    0x10: Instruction.RL('B'),
+    0x11: Instruction.RL('C'),
+    0x12: Instruction.RL('D'),
+    0x13: Instruction.RL('E'),
+    0x14: Instruction.RL('H'),
+    0x15: Instruction.RL('L'),
+    0x16: Instruction.RL('(HL)'),
+    0x17: Instruction.RL('A'),
+
     0x7c: Instruction.BIT7H,
-    0x11: Instruction.RLC,
 
     0x38: Instruction.SRL('B'),
     0x39: Instruction.SRL('C'),

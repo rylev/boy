@@ -1031,169 +1031,86 @@ export class CPU {
                 // Z 0 1 -
                 this.bitTest(this.registers.h, 7)
                 return [this.pc + 1, 4]
-            case 'RL C':
-                // 1  4
-                // Z 0 0 C
-                this.registers.c = this.rotateLeft(this.registers.c, true)
-                return [this.pc + 1, 4]
             case 'SRL':
                 // WHEN: n is (HL)
                 // 2  16
                 // ELSE:
                 // 2  8
                 // Z 0 0 C
-                switch (instruction.n) {
-                    case 'A':
-                        this.registers.a = this.srl(this.registers.a)
-                        break
-                    case 'B':
-                        this.registers.b = this.srl(this.registers.b)
-                        break
-                    case 'C':
-                        this.registers.c = this.srl(this.registers.c)
-                        break
-                    case 'D':
-                        this.registers.d = this.srl(this.registers.d)
-                        break
-                    case 'E':
-                        this.registers.e = this.srl(this.registers.e)
-                        break
-                    case 'H':
-                        this.registers.h = this.srl(this.registers.h)
-                        break
-                    case 'L':
-                        this.registers.l = this.srl(this.registers.l)
-                        break
-                    case '(HL)':
-                        this.bus.write(this.registers.hl, this.srl(this.bus.read(this.registers.hl)))
-                        break
-                    default: 
-                        assertExhaustive(instruction)
-                }
-                if (instruction.n === '(HL)') {
-                    return [this.pc + 1, 8]
-                } else {
-                    return [this.pc + 1, 4]
-                }
+                return this.cpInstruction(instruction.n, this.srl)
             case 'RR':
                 // WHEN: n is (HL)
                 // 2  16
                 // ELSE:
                 // 2  8
                 // Z 0 0 C
-                switch (instruction.n) {
-                    case 'A':
-                        this.registers.a = this.rr(this.registers.a)
-                        break
-                    case 'B':
-                        this.registers.b = this.rr(this.registers.b)
-                        break
-                    case 'C':
-                        this.registers.c = this.rr(this.registers.c)
-                        break
-                    case 'D':
-                        this.registers.d = this.rr(this.registers.d)
-                        break
-                    case 'E':
-                        this.registers.e = this.rr(this.registers.e)
-                        break
-                    case 'H':
-                        this.registers.h = this.rr(this.registers.h)
-                        break
-                    case 'L':
-                        this.registers.l = this.rr(this.registers.l)
-                        break
-                    case '(HL)':
-                        this.bus.write(this.registers.hl, this.rr(this.bus.read(this.registers.hl)))
-                        break
-                    default: 
-                        assertExhaustive(instruction)
-                }
-                if (instruction.n === '(HL)') {
-                    return [this.pc + 1, 8]
-                } else {
-                    return [this.pc + 1, 4]
-                }
+                return this.cpInstruction(instruction.n, this.rr)
             case 'SWAP':
                 // WHEN: n is (HL)
                 // 2  16
                 // ELSE:
                 // 2  8
                 // Z 0 0 0
-                switch (instruction.n) {
-                    case 'A':
-                        this.registers.a = this.swap(this.registers.a)
-                        break
-                    case 'B':
-                        this.registers.b = this.swap(this.registers.b)
-                        break
-                    case 'C':
-                        this.registers.c = this.swap(this.registers.c)
-                        break
-                    case 'D':
-                        this.registers.d = this.swap(this.registers.d)
-                        break
-                    case 'E':
-                        this.registers.e = this.swap(this.registers.e)
-                        break
-                    case 'H':
-                        this.registers.h = this.swap(this.registers.h)
-                        break
-                    case 'L':
-                        this.registers.l = this.swap(this.registers.l)
-                        break
-                    case '(HL)':
-                        this.bus.write(this.registers.hl, this.swap(this.bus.read(this.registers.hl)))
-                        break
-                    default: 
-                        assertExhaustive(instruction)
-                }
-                if (instruction.n === '(HL)') {
-                    return [this.pc + 1, 8]
-                } else {
-                    return [this.pc + 1, 4]
-                }
+                return this.cpInstruction(instruction.n, this.swap)
             case 'RLC':
                 // WHEN: n is (HL)
                 // 2  16
                 // ELSE:
                 // 2  8
                 // Z 0 0 0
-                switch (instruction.n) {
-                    case 'A':
-                        this.registers.a = this.rlc(this.registers.a)
-                        break
-                    case 'B':
-                        this.registers.b = this.rlc(this.registers.b)
-                        break
-                    case 'C':
-                        this.registers.c = this.rlc(this.registers.c)
-                        break
-                    case 'D':
-                        this.registers.d = this.rlc(this.registers.d)
-                        break
-                    case 'E':
-                        this.registers.e = this.rlc(this.registers.e)
-                        break
-                    case 'H':
-                        this.registers.h = this.rlc(this.registers.h)
-                        break
-                    case 'L':
-                        this.registers.l = this.rlc(this.registers.l)
-                        break
-                    case '(HL)':
-                        this.bus.write(this.registers.hl, this.rlc(this.bus.read(this.registers.hl)))
-                        break
-                    default: 
-                        assertExhaustive(instruction)
-                }
-                if (instruction.n === '(HL)') {
-                    return [this.pc + 1, 8]
-                } else {
-                    return [this.pc + 1, 4]
-                }
+                return this.cpInstruction(instruction.n, this.rlc)
+            case 'RRC':
+                // WHEN: n is (HL)
+                // 2  16
+                // ELSE:
+                // 2  8
+                // Z 0 0 0
+                return this.cpInstruction(instruction.n, this.rrc)
+            case 'RL':
+                // WHEN: n is (HL)
+                // 2  16
+                // ELSE:
+                // 2  8
+                // Z 0 0 0
+                return this.cpInstruction(instruction.n, (value: number) => this.rotateLeft(value, true))
             default:
                 return assertExhaustive(instruction)
+        }
+    }
+
+    cpInstruction(n: 'A' | 'B' | 'C' | 'D' | 'E' | 'H' | 'L' | '(HL)', processor: (value: number) => number): [number, number] {
+        switch (n) {
+            case 'A':
+                this.registers.a = this.rrc(this.registers.a)
+                break
+            case 'B':
+                this.registers.b = this.rrc(this.registers.b)
+                break
+            case 'C':
+                this.registers.c = this.rrc(this.registers.c)
+                break
+            case 'D':
+                this.registers.d = this.rrc(this.registers.d)
+                break
+            case 'E':
+                this.registers.e = this.rrc(this.registers.e)
+                break
+            case 'H':
+                this.registers.h = this.rrc(this.registers.h)
+                break
+            case 'L':
+                this.registers.l = this.rrc(this.registers.l)
+                break
+            case '(HL)':
+                this.bus.write(this.registers.hl, this.rrc(this.bus.read(this.registers.hl)))
+                break
+            default:
+                assertExhaustive(n)
+        }
+        if (n === '(HL)') {
+            return [this.pc + 1, 8]
+        } else {
+            return [this.pc + 1, 4]
         }
     }
 
@@ -1276,6 +1193,16 @@ export class CPU {
     rlc(value: number): number {
         const carry = (value & 0x80) >> 7
         const newValue = (value << 1) & 0xff
+        this.registers.f.zero = newValue === 0
+        this.registers.f.subtract = false
+        this.registers.f.halfCarry = false
+        this.registers.f.carry = carry === 1
+        return newValue
+    }
+
+    rrc(value: number): number {
+        const carry = value & 0b1 
+        const newValue = value >> 1
         this.registers.f.zero = newValue === 0
         this.registers.f.subtract = false
         this.registers.f.halfCarry = false
