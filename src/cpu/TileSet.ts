@@ -31,7 +31,7 @@ export namespace TileSet {
                         canvasData[index + 1] = 0
                         canvasData[index + 2] = 255
                     } else {
-                        const color = gpu.valueToColor(pixel)
+                        const color = gpu.valueToBgColor(pixel)
                         canvasData[index] = color
                         canvasData[index + 1] = color
                         canvasData[index + 2] = color

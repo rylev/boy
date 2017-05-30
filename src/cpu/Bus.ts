@@ -74,6 +74,10 @@ class Bus {
             this._gpu.writeVram(addr - GPU.VRAM_BEGIN, value)
         } else if (addr >= 0xc000 && addr <= 0xdfff) {
             this._workingRam[addr - 0xc000] = value
+        } else if (addr >= 0xfe00 && addr <= 0xfe9f) {
+            console.warn("Writing to OAM. but ignoring")
+        } else if (addr >= 0xfea0 && addr <= 0xfeff) {
+            // Unused
         } else if (addr >= 0xff00 && addr <= 0xff7f) {
             this.writeIO(addr, value)
         } else if (addr >= 0xff80 && addr <= 0xffff) {
@@ -103,10 +107,10 @@ class Bus {
                         case Color.White: return 0b00
                     }
                 }
-                return (colorToBits(this._gpu.color3) << 6) | 
-                       (colorToBits(this._gpu.color2) << 4) | 
-                       (colorToBits(this._gpu.color1) << 2) | 
-                       colorToBits(this._gpu.color0)
+                return (colorToBits(this._gpu.bgcolor3) << 6) | 
+                       (colorToBits(this._gpu.bgcolor2) << 4) | 
+                       (colorToBits(this._gpu.bgcolor1) << 2) | 
+                       colorToBits(this._gpu.bgcolor0)
             default:
                 throw new Error(`Reading unrecognized IO address 0x${toHex(addr)}`)
 
@@ -127,8 +131,10 @@ class Bus {
             case 0xff0f:
                 console.warn(`Writing 0x${toHex(value)} to interrupt register. Ignoring...`)
                 return
-            case 0xff11:
+            case 0xff10:
                 // http://bgb.bircd.org/pandocs.htm#soundoverview
+                // Channel 1 Sweep registe
+            case 0xff11:
                 // TODO: Channel 1 Sound length/Wave pattern
             case 0xff12:
                 // TODO: Channel 1 Volume Envelope
@@ -136,6 +142,16 @@ class Bus {
                 // Channel 1 Frequency lo
             case 0xff14:
                 // Channel 1 Frequency hi
+            case 0xff17:
+                // Channel 2 Volume Envelope
+            case 0xff19:
+                // Channel 2 Frequency hi data
+            case 0xff1a:
+                // Channel 3 Sound on/off
+            case 0xff21: 
+                // Channel 4 Volume Envelope
+            case 0xff23:
+                // Channel 4 Counter/consecutive
             case 0xff24:
                 // TODO: Channel control / ON-OFF / Volume
             case 0xff25:
@@ -168,22 +184,26 @@ class Bus {
                 this._gpu.scrollX = value
                 return
             case 0xff47:
-                function bitsToColor(bits: number): Color {
-                    switch (bits) {
-                        case 0: return Color.White
-                        case 1: return Color.LightGray
-                        case 2: return Color.DarkGray
-                        case 3: return Color.Black
-                        default: throw new Error("Should not be possible")
-                    }
-                }
-                this._gpu.color3 = bitsToColor(value >> 6)
-                this._gpu.color2 = bitsToColor((value >> 4) & 0b11)
-                this._gpu.color1 = bitsToColor((value >> 2) & 0b11)
-                this._gpu.color0 = bitsToColor(value & 0b11)
+                this._gpu.bgcolor3 = bitsToColor(value >> 6)
+                this._gpu.bgcolor2 = bitsToColor((value >> 4) & 0b11)
+                this._gpu.bgcolor1 = bitsToColor((value >> 2) & 0b11)
+                this._gpu.bgcolor0 = bitsToColor(value & 0b11)
+                return
+            case 0xff48:
+                this._gpu.obj0color3 = bitsToColor(value >> 6)
+                this._gpu.obj0color2 = bitsToColor((value >> 4) & 0b11)
+                this._gpu.obj0color1 = bitsToColor((value >> 2) & 0b11)
+                return
+            case 0xff49:
+                this._gpu.obj1color3 = bitsToColor(value >> 6)
+                this._gpu.obj1color2 = bitsToColor((value >> 4) & 0b11)
+                this._gpu.obj1color1 = bitsToColor((value >> 2) & 0b11)
                 return
             case 0xff50:
                 this._biosMapped = false
+                return
+            case 0xff7f: 
+                console.warn(`Wrote 0x${toHex(value)} to 0xff7f. Ignoring`)
                 return
             default:
                 throw new Error(`Writting 0x${toHex(value)} to unrecognized IO address 0x${toHex(addr)}`)
@@ -192,6 +212,15 @@ class Bus {
 
     unmapBios() {
         this._biosMapped = false
+    }
+}
+function bitsToColor(bits: number): Color {
+    switch (bits) {
+        case 0: return Color.White
+        case 1: return Color.LightGray
+        case 2: return Color.DarkGray
+        case 3: return Color.Black
+        default: throw new Error("Should not be possible")
     }
 }
 

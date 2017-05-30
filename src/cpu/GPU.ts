@@ -70,10 +70,18 @@ class GPU {
     backgroundAndWindowTileMap: BackgroundAndWindowTileMap = BackgroundAndWindowTileMap.x8000
     objectSize: ObjectSize = ObjectSize.os8x8
     objectDisplayEnable: boolean = true
-    color0 = Color.White
-    color1 = Color.LightGray
-    color2 = Color.DarkGray
-    color3 = Color.Black
+    bgcolor0 = Color.White
+    bgcolor1 = Color.LightGray
+    bgcolor2 = Color.DarkGray
+    bgcolor3 = Color.Black
+
+    obj0color1 = Color.LightGray
+    obj0color2 = Color.DarkGray
+    obj0color3 = Color.Black
+
+    obj1color1 = Color.LightGray
+    obj1color2 = Color.DarkGray
+    obj1color3 = Color.Black
 
     scrollX: number = 0
     scrollY: number = 0
@@ -178,7 +186,7 @@ class GPU {
 
         for (var i = 0; i < 160; i++) {
             const value = this.tileSet[tileIndex][yOffset][xOffset]
-            const color = this.valueToColor(value)
+            const color = this.valueToBgColor(value)
             this._canvas[canvasOffset] = color
             this._canvas[canvasOffset + 1] = color
             this._canvas[canvasOffset + 2] = color
@@ -197,12 +205,12 @@ class GPU {
         }
     }
 
-    valueToColor(value: TileValue) {
+    valueToBgColor(value: TileValue) {
         switch (value) {
-            case TileValue.Zero: return this.color0
-            case TileValue.One: return this.color1
-            case TileValue.Two: return this.color2
-            case TileValue.Three: return this.color3
+            case TileValue.Zero: return this.bgcolor0
+            case TileValue.One: return this.bgcolor1
+            case TileValue.Two: return this.bgcolor2
+            case TileValue.Three: return this.bgcolor3
         }
     }
 
