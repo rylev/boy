@@ -24,9 +24,9 @@ export enum BackgroundTileMap {
     x9c00 = 0x9c00
 }
 
-export enum BackgroundAndWindowTileMap {
-    x8000,
-    x8800,
+export enum BackgroundAndWindowDataSelect {
+    x8000 = 0x8000,
+    x8800 = 0x8800,
 }
 
 export enum ObjectSize {
@@ -67,7 +67,7 @@ class GPU {
     backgroundDisplayEnabled: boolean = true
     windowTileMap: WindowTileMap = WindowTileMap.x9800
     backgroundTileMap: BackgroundTileMap = BackgroundTileMap.x9800
-    backgroundAndWindowTileMap: BackgroundAndWindowTileMap = BackgroundAndWindowTileMap.x8000
+    backgroundAndWindowDataSelect: BackgroundAndWindowDataSelect = BackgroundAndWindowDataSelect.x8000
     objectSize: ObjectSize = ObjectSize.os8x8
     objectDisplayEnable: boolean = true
     bgcolor0 = Color.White
@@ -215,6 +215,7 @@ class GPU {
     }
 
     background1(): Uint8Array {
+        if (this.backgroundTileMap !== BackgroundTileMap.x9800) throw ":-("
         return this.vram.slice(0x1800, 0x1c00)
     }
 

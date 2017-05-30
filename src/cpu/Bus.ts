@@ -1,5 +1,5 @@
 import { toHex } from 'lib/hex'
-import GPU, { Color, WindowTileMap, BackgroundTileMap, BackgroundAndWindowTileMap, ObjectSize, GPUMode } from './GPU'
+import GPU, { Color, WindowTileMap, BackgroundTileMap, BackgroundAndWindowDataSelect, ObjectSize, GPUMode } from './GPU'
 
 class Bus {
     private _biosMapped: boolean
@@ -93,7 +93,7 @@ class Bus {
                 return ((this._gpu.lcdDisplayEnabled ? 1 : 0) << 8) |
                        ((this._gpu.windowTileMap === WindowTileMap.x9c00 ? 1 : 0) << 7) |
                        ((this._gpu.windowDisplayEnabled ? 1 : 0) << 6) |
-                       ((this._gpu.backgroundAndWindowTileMap === BackgroundAndWindowTileMap.x8000 ? 1 : 0) << 5) |
+                       ((this._gpu.backgroundAndWindowDataSelect === BackgroundAndWindowDataSelect.x8000 ? 1 : 0) << 5) |
                        ((this._gpu.backgroundTileMap === BackgroundTileMap.x9c00 ? 1 : 0) << 4) |
                        ((this._gpu.objectSize === ObjectSize.os16x16 ? 1 : 0) << 3) |
                        ((this._gpu.objectDisplayEnable ? 1 : 0) << 2) |
@@ -173,9 +173,9 @@ class Bus {
                 this._gpu.lcdDisplayEnabled = (value >> 7) === 1
                 this._gpu.windowTileMap = ((value >> 6) & 0b1) === 0 ? WindowTileMap.x9800 : WindowTileMap.x9c00
                 this._gpu.windowDisplayEnabled = ((value >> 5) & 0b1) === 1 
-                this._gpu.backgroundAndWindowTileMap = ((value >> 4) & 0b1) === 0 
-                    ? BackgroundAndWindowTileMap.x8800 
-                    : BackgroundAndWindowTileMap.x8000
+                this._gpu.backgroundAndWindowDataSelect = ((value >> 4) & 0b1) === 0 
+                    ? BackgroundAndWindowDataSelect.x8800 
+                    : BackgroundAndWindowDataSelect.x8000
                 this._gpu.backgroundTileMap = ((value >> 3) & 0b1) === 0 ? BackgroundTileMap.x9800 : BackgroundTileMap.x9c00
                 this._gpu.objectSize = ((value >> 2) & 0b1) === 0 ? ObjectSize.os8x8 : ObjectSize.os16x16
                 this._gpu.objectDisplayEnable = ((value >> 1) & 0b1) === 1 
