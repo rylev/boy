@@ -339,6 +339,7 @@ export class CPU {
                         this.registers.hl = u16.wrappingAdd(this.registers.hl, 1)
                         return [this.pc + 1, 8]
                     case 'SP':
+
                         this.sp = u16.wrappingAdd(this.sp, 1)
                         return [this.pc + 1, 8]
                     case '(HL)':
@@ -881,6 +882,13 @@ export class CPU {
                     default: 
                         assertExhaustive(instruction)
                 }
+            case 'LD (a16),SP':
+                // 3  20
+                // - - - -
+                const address = this.readNextWord()
+                this.bus.write(address, u16.lsb(this.sp))
+                this.bus.write(address, u16.msb(this.sp))
+                return [this.pc + 3, 20]
             case 'LDHL SP,n':
                 // 2  12
                 // 0 0 H C
@@ -1260,21 +1268,21 @@ export class CPU {
     }
 
     push(value: number) {
-        this.sp -= 1 // TODO: Wrapping
+        this.sp = u16.wrappingSub(this.sp, 1) 
         const msb = u16.msb(value)  
         this.bus.write(this.sp, msb)
 
-        this.sp -= 1
+        this.sp = u16.wrappingSub(this.sp, 1) 
         const lsb = u16.lsb(value)  
         this.bus.write(this.sp, lsb)
     }
 
     pop(): number {
         const lsb = this.bus.read(this.sp)
-        this.sp += 1 // TODO: Wrapping
+        this.sp = u16.wrappingAdd(this.sp, 1) 
 
         const msb = this.bus.read(this.sp)
-        this.sp += 1
+        this.sp = u16.wrappingAdd(this.sp, 1) 
 
         const value = (msb << 8) | lsb
         return value

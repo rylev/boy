@@ -183,7 +183,7 @@ class Bus {
                 this._gpu.color0 = bitsToColor(value & 0b11)
                 return
             case 0xff50:
-                console.warn(`Writing to 0x${toHex(addr)}. TODO: unmap bootrom`)
+                this._biosMapped = false
                 return
             default:
                 throw new Error(`Writting 0x${toHex(value)} to unrecognized IO address 0x${toHex(addr)}`)

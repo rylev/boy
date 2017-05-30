@@ -52,6 +52,7 @@ type LDAToIndirect = { type: 'LD A To Indirect', target: LDAIndirectTarget }
 
 type LDIndirectSource = AllRegistersButF | 'd8'
 type LDToIndirect = { type: 'LD To Indirect', source: LDIndirectSource }
+type LDToIndirectFromSP = { type: 'LD (a16),SP' }
 
 type LDSource = AllRegistersButF | '(HL)' | 'd8'
 type LDTarget = AllRegistersButF  
@@ -112,6 +113,7 @@ type LoadStoreInstruction =
     | LDAFromIndirect
     | LDAToIndirect
     | LDToIndirect
+    | LDToIndirectFromSP
     | LDH_a8_A
     | LDHA_a8_
     | LDHLSPn
@@ -166,6 +168,7 @@ export namespace Instruction {
     export const LDAFromIndirect = (source: LDAIndirectSource): LDAFromIndirect => ({ type: 'LD A From Indirect', source })
     export const LDAToIndirect = (target: LDAIndirectTarget): LDAToIndirect => ({ type: 'LD A To Indirect', target })
     export const LDToIndirect = (source: LDIndirectSource): LDToIndirect => ({ type: 'LD To Indirect', source })
+    export const LDToIndirectFromSP: LDToIndirectFromSP = { type: 'LD (a16),SP'}
     export const LDHA_a8_: LDHA_a8_ = { type: 'LDH A,(a8)' }
     export const LDH_a8_A: LDH_a8_A = { type: 'LDH (a8),A' }
     export const LDHLSPn: LDHLSPn = { type: 'LDHL SP,n' }
@@ -350,6 +353,8 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x22: Instruction.LDAToIndirect('(HL+)'),
     0x32: Instruction.LDAToIndirect('(HL-)'),
     0xea: Instruction.LDAToIndirect('(a16)'),
+
+    0x08: Instruction.LDToIndirectFromSP,
 
     0x01: Instruction.LDWord('BC'),
     0x11: Instruction.LDWord('DE'),
