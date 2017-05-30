@@ -249,6 +249,11 @@ export class CPU {
                 // 0 0 0 C
                 this.registers.a = this.rotateLeft(this.registers.a, false)
                 return [this.pc + 1, 4]
+            case 'DAA':
+                // 1  4
+                // Z - 0 C
+                this.registers.a = this.decimalAdjust(this.registers.a)
+                return [this.pc + 1, 4]
             case 'DEC':
                 // WHEN: target is 16 bit register
                 // 1  8
@@ -1385,6 +1390,32 @@ export class CPU {
         this.sp = u16.wrappingAdd(this.sp, 1) 
 
         const value = (msb << 8) | lsb
+        return value
+    }
+
+    decimalAdjust(value: number): number {
+        if (this.registers.f.subtract) {
+            if (this.registers.f.halfCarry || (value & 0xf) > 9) {
+                value = value + 0x6
+            }
+            if (this.registers.f.carry || value > 0x9f) {
+                value = value + 0x60
+            }
+        } else {
+            if (this.registers.f.halfCarry) {
+                value = (value - 0x6) & 0xff
+            }
+
+            if (this.registers.f.carry) {
+                value = value - 0x60
+            }
+        }
+
+        this.registers.f.carry = value > 0xff
+
+        value = value & 0xff
+        this.registers.f.zero = value === 0
+        this.registers.f.halfCarry = false
         return value
     }
 }
