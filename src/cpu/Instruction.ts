@@ -7,7 +7,7 @@ type JumpTest = 'NZ' | 'NC' | 'Z' | 'C' | true
 type JP = { type: 'JP', test: JumpTest }
 type JR = { type: 'JR', test: JumpTest }
 type CALL = { type: 'CALL', test: JumpTest }
-type RET = { type: 'RET' }
+type RET = { type: 'RET', test: JumpTest }
 
 type Halt = { type: 'HALT' }
 type DI = { type: 'DI' }
@@ -134,7 +134,7 @@ export namespace Instruction {
     export const JR = (test: JumpTest ): JR => ({ type: 'JR', test })
     export const JP = (test: JumpTest): JP => ({ type: 'JP', test })
     export const CALL = (test: JumpTest): CALL => ({ type: 'CALL', test })
-    export const RET: RET = { type: 'RET' }
+    export const RET = (test: JumpTest): RET => ({ type: 'RET', test })
 
     export const Halt: Halt = { type: 'HALT' }
     export const DI: DI = { type: 'DI' }
@@ -321,7 +321,12 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xcc: Instruction.CALL('Z'),
     0xdc: Instruction.CALL('C'),
     0xcd: Instruction.CALL(true),
-    0xc9: Instruction.RET,
+
+    0xc0: Instruction.RET('NZ'),
+    0xd0: Instruction.RET('NC'),
+    0xc8: Instruction.RET('Z'),
+    0xd8: Instruction.RET('C'),
+    0xc9: Instruction.RET(true),
 
     0xea: Instruction.LD_a16_A,
 

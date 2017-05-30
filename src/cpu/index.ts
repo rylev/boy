@@ -643,11 +643,43 @@ export class CPU {
                 }
                 return this.call(condition)
             case 'RET':
+                // WHEN: condition is constant true
                 // 1  16
+                // ELSE:
+                // 1  20/8
                 // - - - -
-                const ret = this.pop()
-                return [ret, 16]
+                let retCondition 
+                switch (instruction.test) {
+                    case 'Z':
+                        retCondition = this.registers.f.zero
+                        break
+                    case 'C':
+                        retCondition = this.registers.f.carry
+                        break
+                    case 'NZ':
+                        retCondition = !this.registers.f.zero
+                        break
+                    case 'NC':
+                        retCondition = !this.registers.f.carry
+                        break
+                    case true:
+                        retCondition = true
+                        break
+                    default: 
+                        retCondition = true
+                        assertExhaustive(instruction.test)
 
+                }
+                let retPC
+                let retCycles
+                if (retCondition) {
+                    retPC = this.pop()
+                    retCycles = instruction.test === true ? 16 : 20
+                } else  {
+                    retPC = this.pc + 1
+                    retCycles = 8
+                }
+                return [retPC, retCycles]
             case 'LD':
                 // WHEN: source is d8
                 // 2  8
