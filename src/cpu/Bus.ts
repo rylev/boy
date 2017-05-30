@@ -115,6 +115,12 @@ class Bus {
 
     writeIO(addr: number, value: number) {
         switch (addr) {
+            case 0xff01:
+                console.warn(`Writing 0x${toHex(value)} to serial transfer regsiter. Ignoring...`)
+                return
+            case 0xff02:
+                console.warn(`Writing 0x${toHex(value)} to serial transfer control regsiter. Ignoring...`)
+                return
             case 0xff07:
                 console.warn(`Writing 0x${toHex(value)} to timer regsiter. Ignoring...`)
                 return

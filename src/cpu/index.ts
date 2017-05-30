@@ -531,6 +531,52 @@ export class CPU {
                 } else {
                     return [this.pc + 1, 4]
                 }
+            case 'ADDC':
+                // WHEN: instruction.n is (hl)
+                // 1  8
+                // WHEN: instruction.n is d8
+                // 2  8
+                // ELSE: 
+                // 1  4
+                // Z 0 H C
+                switch (instruction.n) {
+                    case 'A':
+                        this.registers.a = this.add(this.registers.a, true)
+                        break
+                    case 'B':
+                        this.registers.a = this.add(this.registers.b, true)
+                        break
+                    case 'C':
+                        this.registers.a = this.add(this.registers.c, true)
+                        break
+                    case 'D':
+                        this.registers.a = this.add(this.registers.d, true)
+                        break
+                    case 'E':
+                        this.registers.a = this.add(this.registers.e, true)
+                        break
+                    case 'H':
+                        this.registers.a = this.add(this.registers.h, true)
+                        break
+                    case 'L':
+                        this.registers.a = this.add(this.registers.l, true)
+                        break
+                    case '(HL)':
+                        this.registers.a = this.add(this.bus.read(this.registers.hl), true)
+                        break
+                    case 'd8': 
+                        this.registers.a = this.add(this.readNextByte(), true)
+                        break
+                    default: 
+                        assertExhaustive(instruction)
+                }
+                if (instruction.n === 'd8') {
+                    return [this.pc + 2, 8]
+                } else if (instruction.n === '(HL)') {
+                    return [this.pc + 1, 8]
+                } else {
+                    return [this.pc + 1, 4]
+                }
             case 'RRA':
                 this.registers.a = this.rr(this.registers.a, false)
                 return [this.pc + 1, 4]
@@ -959,13 +1005,14 @@ export class CPU {
         }
     }
 
-    add(value: number): number {
-        const [add, carry] = u8.overflowingAdd(this.registers.a, value)
-        this.registers.f.zero = add === 0
+    add(value: number, addCarry: boolean = false): number {
+        let [add, carry] = u8.overflowingAdd(this.registers.a, value)
+        const [add2, carry2] = u8.overflowingAdd(add, addCarry && this.registers.f.carry ? 1 : 0)
+        this.registers.f.zero = add2 === 0
         this.registers.f.subtract = false
-        this.registers.f.carry = carry
+        this.registers.f.carry = carry || carry2
         this.registers.f.halfCarry = false // TODO: set properly
-        return add
+        return add2
     }
 
     addHL(value: number) {

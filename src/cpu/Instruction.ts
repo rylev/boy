@@ -35,6 +35,8 @@ type XORN =  ANDN
 type XOR = { type: 'XOR', n: XORN }
 type ADDN = ANDN
 type ADD = { type: 'ADD', n: ADDN }
+type ADDCN = ANDN
+type ADDC = { type: 'ADDC', n: ADDCN }
 type SUBN = ANDN
 type SUB = { type: 'SUB', n: SUBN }
 type RRA = { type: 'RRA' }
@@ -88,6 +90,7 @@ type ArithmeticInstruction =
     | AND
     | OR
     | ADD
+    | ADDC
     | SUB
     | INC
     | AddHL
@@ -145,6 +148,7 @@ export namespace Instruction {
     export const INC = (target: INCTarget): INC => ({ type: 'INC', target })
     export const DEC = (target: DECTarget): DEC => ({ type: 'DEC', target })
     export const ADD = (n: ADDN): ADD => ({ type: 'ADD', n })
+    export const ADDC = (n: ADDCN): ADDC => ({ type: 'ADDC', n })
     export const AND = (n: ANDN): AND => ({ type: 'AND', n })
     export const OR = (n: ORN): OR => ({ type: 'OR', n })
     export const SUB = (n: SUBN): SUB => ({ type: 'SUB', n })
@@ -257,6 +261,16 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x86: Instruction.ADD('(HL)'),
     0x87: Instruction.ADD('A'),
     0xc6: Instruction.ADD('d8'),
+
+    0x88: Instruction.ADDC('B'),
+    0x89: Instruction.ADDC('C'),
+    0x8a: Instruction.ADDC('D'),
+    0x8b: Instruction.ADDC('E'),
+    0x8c: Instruction.ADDC('H'),
+    0x8d: Instruction.ADDC('L'),
+    0x8e: Instruction.ADDC('(HL)'),
+    0x8f: Instruction.ADDC('A'),
+    0xce: Instruction.ADDC('d8'),
 
     0xa0: Instruction.AND('B'),
     0xa1: Instruction.AND('C'),
