@@ -45,9 +45,12 @@ type LDH_a8_A = { type: 'LDH (a8),A' }
 
 type LDAIndirectSource = '(BC)' | '(DE)' | '(HL-)' | '(HL+)' | '(a16)' | '(C)'
 type LDAFromIndirect = { type: 'LD A From Indirect', source: LDAIndirectSource }
+type LDIndirectSource = AllRegistersButF | 'd8'
+type LDToIndirect = { type: 'LD To Indirect', source: LDIndirectSource }
 
 type LDSource = AllRegistersButF | '(HL)' | 'd8'
-type LD = { type: 'LD', source: LDSource, target: AllRegistersButF }
+type LDTarget = AllRegistersButF  
+type LD = { type: 'LD', source: LDSource, target: LDTarget }
 
 type WordTarget = WordRegisters | 'SP'
 type LDWord = { type: 'LD Word', target: WordTarget }
@@ -55,7 +58,6 @@ type LDWord = { type: 'LD Word', target: WordTarget }
 type LD_HLD_A = { type: 'LD (HL-),A' }
 type LD_HLI_A = { type: 'LD (HL+),A' }
 type LD_C_A = { type: 'LD (C),A' }
-type LD_HL_A = { type: 'LD (HL),A' }
 
 type PUSHSource = 'AF' | 'BC' | 'DE' | 'HL'
 type PUSH = { type: 'PUSH', source: PUSHSource }
@@ -99,12 +101,12 @@ type LoadStoreInstruction =
     | LD
     | LDWord
     | LDAFromIndirect
+    | LDToIndirect
     | LD_a16_A
     | LDH_a8_A
     | LDHA_a8_
     | LD_HLD_A
     | LD_C_A
-    | LD_HL_A
     | LD_HLI_A
 
 type StackInstruction = 
@@ -151,12 +153,12 @@ export namespace Instruction {
     export const LD = (target: AllRegistersButF, source: LDSource): LD => ({ type: 'LD', target, source })
     export const LDWord = (target: WordTarget): LDWord => ({ type: 'LD Word', target })
     export const LDAFromIndirect = (source: LDAIndirectSource): LDAFromIndirect => ({ type: 'LD A From Indirect', source })
+    export const LDToIndirect = (source: LDIndirectSource): LDToIndirect => ({ type: 'LD To Indirect', source })
     export const LD_a16_A: LD_a16_A = { type: 'LD (a16),A' }
     export const LDH_a8_A: LDH_a8_A = { type: 'LDH (a8),A' }
     export const LD_HLD_A: LD_HLD_A = { type: 'LD (HL-),A' }
     export const LD_HLI_A: LD_HLI_A = { type: 'LD (HL+),A' }
     export const LD_C_A: LD_C_A = { type: 'LD (C),A' }
-    export const LDHLA: LD_HL_A = { type: 'LD (HL),A' }
     export const LDHA_a8_: LDHA_a8_ = { type: 'LDH A,(a8)' }
 
     export const PUSH = (source: PUSHSource): PUSH => ({ type: 'PUSH', source })
@@ -375,6 +377,14 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x6e: Instruction.LD('L', '(HL)'),
     0x6f: Instruction.LD('L', 'A'),
 
+    0x70: Instruction.LDToIndirect('B'),
+    0x71: Instruction.LDToIndirect('C'),
+    0x72: Instruction.LDToIndirect('D'),
+    0x73: Instruction.LDToIndirect('E'),
+    0x74: Instruction.LDToIndirect('H'),
+    0x75: Instruction.LDToIndirect('L'),
+    0x77: Instruction.LDToIndirect('A'),
+
     0x78: Instruction.LD('A', 'B'),
     0x79: Instruction.LD('A', 'C'),
     0x7a: Instruction.LD('A', 'D'),
@@ -396,7 +406,6 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x32: Instruction.LD_HLD_A,
     0x22: Instruction.LD_HLI_A,
     0xe2: Instruction.LD_C_A,
-    0x77: Instruction.LDHLA,
     0xf0: Instruction.LDHA_a8_,
 
     0xc5: Instruction.PUSH('BC'),

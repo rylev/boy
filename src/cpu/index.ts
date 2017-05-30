@@ -728,6 +728,50 @@ export class CPU {
 
                 }
                 return [this.pc + 3, 12]
+            case 'LD To Indirect':
+                // WHEN: source is d8
+                // 2  12
+                // ELSE
+                // 1  8
+                // - - - -
+                let ldToIndirectSource
+                switch (instruction.source) {
+                    case 'A':
+                        ldToIndirectSource = this.registers.a
+                        break
+                    case 'B':
+                        ldToIndirectSource = this.registers.b
+                        break
+                    case 'C':
+                        ldToIndirectSource = this.registers.c
+                        break
+                    case 'D':
+                        ldToIndirectSource = this.registers.d
+                        break
+                    case 'E':
+                        ldToIndirectSource = this.registers.e
+                        break
+                    case 'H':
+                        ldToIndirectSource = this.registers.h
+                        break
+                    case 'L':
+                        ldToIndirectSource = this.registers.l
+                        break
+                    case 'd8':
+                        ldToIndirectSource = this.readNextByte()
+                        break
+                    default:
+                        ldToIndirectSource = 0
+                        assertExhaustive(instruction)
+                    
+                    this.bus.write(this.registers.hl, ldToIndirectSource)
+                }
+
+                if (instruction.source === 'd8') {
+                    return [this.pc + 2, 12]
+                } else {
+                    return [this.pc + 1, 8]
+                }
             case 'LD (HL+),A':
                 // 1  8
                 // - - - -
@@ -744,11 +788,6 @@ export class CPU {
                 // 1  8
                 // - - - -
                 this.bus.write(0xff00 + this.registers.c, this.registers.a)
-                return [this.pc + 1, 8]
-            case 'LD (HL),A':
-                // 1  8
-                // - - - -
-                this.bus.write(this.registers.hl, this.registers.a)
                 return [this.pc + 1, 8]
             case 'LD A From Indirect':
                 // WHEN: instruction.source is (C)
