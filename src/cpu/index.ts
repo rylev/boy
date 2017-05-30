@@ -1026,11 +1026,6 @@ export class CPU {
                 }
                 return [this.pc +1, 12]
             
-            case 'BIT 7,H':
-                // 1  4
-                // Z 0 1 -
-                this.bitTest(this.registers.h, 7)
-                return [this.pc + 1, 4]
             case 'SRL':
                 // WHEN: n is (HL)
                 // 2  16
@@ -1087,36 +1082,52 @@ export class CPU {
                 // 2  8
                 // Z 0 0 0
                 return this.cpInstruction(instruction.n, this.sra)
+            case 'BIT':
+                // WHEN: n is (HL)
+                // 2  16
+                // ELSE:
+                // 2  8
+                // Z 0 0 0
+                return this.cpInstruction(instruction.n, (value: number) => this.bitTest(value, instruction.bitPosition), false)
             default:
                 return assertExhaustive(instruction)
         }
     }
 
-    cpInstruction(n: 'A' | 'B' | 'C' | 'D' | 'E' | 'H' | 'L' | '(HL)', processor: (value: number) => number): [number, number] {
+    cpInstruction(n: 'A' | 'B' | 'C' | 'D' | 'E' | 'H' | 'L' | '(HL)', processor: (value: number) => number, write: boolean = true): [number, number] {
+        processor = processor.bind(this)
         switch (n) {
             case 'A':
-                this.registers.a = this.rrc(this.registers.a)
+                const a = processor(this.registers.a)
+                if (write) { this.registers.a = a }
                 break
             case 'B':
-                this.registers.b = this.rrc(this.registers.b)
+                const b = processor(this.registers.b)
+                if (write) { this.registers.b = b }
                 break
             case 'C':
-                this.registers.c = this.rrc(this.registers.c)
+                const c = processor(this.registers.c)
+                if (write) { this.registers.c = c }
                 break
             case 'D':
-                this.registers.d = this.rrc(this.registers.d)
+                const d = processor(this.registers.d)
+                if (write) { this.registers.d = d }
                 break
             case 'E':
-                this.registers.e = this.rrc(this.registers.e)
+                const e = processor(this.registers.e)
+                if (write) { this.registers.e = e }
                 break
             case 'H':
-                this.registers.h = this.rrc(this.registers.h)
+                const h = processor(this.registers.h)
+                if (write) { this.registers.h = h }
                 break
             case 'L':
-                this.registers.l = this.rrc(this.registers.l)
+                const l = processor(this.registers.l)
+                if (write) { this.registers.l = l }
                 break
             case '(HL)':
-                this.bus.write(this.registers.hl, this.rrc(this.bus.read(this.registers.hl)))
+                const hl = processor(this.bus.read(this.registers.hl))
+                if (write) { this.bus.write(this.registers.hl, hl) }
                 break
             default:
                 assertExhaustive(n)
@@ -1177,7 +1188,7 @@ export class CPU {
 
     sla(value: number): number {
         const carry = (value & 0x80) >> 7 
-        const newValue = value << 1
+        const newValue = (value << 1) && 0xff
         this.registers.f.zero = newValue === 0
         this.registers.f.subtract = false
         this.registers.f.halfCarry = false
@@ -1303,9 +1314,11 @@ export class CPU {
     }
 
     bitTest(value: number, bitPlace: number) {
-        this.registers.f.zero = ((value >> bitPlace) & 1) == 0
+        const result = ((value >> bitPlace) & 1) 
+        this.registers.f.zero = result == 0
         this.registers.f.subtract = false
         this.registers.f.halfCarry = true
+        return result
     }
 
     cp(value: number) {

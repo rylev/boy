@@ -72,8 +72,6 @@ type PUSH = { type: 'PUSH', source: PUSHSource }
 type POPTarget = PUSHSource
 type POP = { type: 'POP', target: POPTarget }
 
-type BIT7H = { type: 'BIT 7,H' }
-
 type PrefixInstructionN = AllRegistersButF | '(HL)'
 type SRL = { type: 'SRL', n: PrefixInstructionN }
 type RR = { type: 'RR', n: PrefixInstructionN }
@@ -83,6 +81,9 @@ type RLCarry = { type: 'RLC', n: PrefixInstructionN }
 type RRCarry = { type: 'RRC', n: PrefixInstructionN }
 type SLA = { type: 'SLA', n: PrefixInstructionN }
 type SRA = { type: 'SRA', n: PrefixInstructionN }
+
+type BitPosition = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
+type BIT = { type: 'BIT', n: PrefixInstructionN, bitPosition: BitPosition }
 
 type JumpInstruction = 
     | JP
@@ -129,7 +130,7 @@ type StackInstruction =
     | POP
 
 type PrefixInstruction = 
-    | BIT7H
+    | BIT
     | SRL
     | RR
     | RL
@@ -187,7 +188,7 @@ export namespace Instruction {
     export const PUSH = (source: PUSHSource): PUSH => ({ type: 'PUSH', source })
     export const POP = (target: POPTarget): POP => ({ type: 'POP', target })
 
-    export const BIT7H: BIT7H = { type: 'BIT 7,H' }
+    export const BIT = (n: PrefixInstructionN, bitPosition: BitPosition): BIT => ({ type: 'BIT', n, bitPosition })
     export const SRL = (n: PrefixInstructionN): SRL => ({ type: 'SRL', n })
     export const RR = (n: PrefixInstructionN): RR => ({ type: 'RR', n })
     export const RL = (n: PrefixInstructionN): RL => ({ type: 'RL', n })
@@ -541,7 +542,14 @@ const byteToPrefixInstructionMap: { [index: number]: Instruction | undefined } =
     0x2e: Instruction.SRA('(HL)'),
     0x2f: Instruction.SRA('A'),
 
-    0x7c: Instruction.BIT7H,
+    0x30: Instruction.SWAP('B'),
+    0x31: Instruction.SWAP('C'),
+    0x32: Instruction.SWAP('D'),
+    0x33: Instruction.SWAP('E'),
+    0x34: Instruction.SWAP('H'),
+    0x35: Instruction.SWAP('L'),
+    0x36: Instruction.SWAP('(HL)'),
+    0x37: Instruction.SWAP('A'),
 
     0x38: Instruction.SRL('B'),
     0x39: Instruction.SRL('C'),
@@ -552,15 +560,76 @@ const byteToPrefixInstructionMap: { [index: number]: Instruction | undefined } =
     0x3e: Instruction.SRL('(HL)'),
     0x3f: Instruction.SRL('A'),
 
+    0x40: Instruction.BIT('B', 0),
+    0x41: Instruction.BIT('C', 0),
+    0x42: Instruction.BIT('D', 0),
+    0x43: Instruction.BIT('E', 0),
+    0x44: Instruction.BIT('H', 0),
+    0x45: Instruction.BIT('L', 0),
+    0x46: Instruction.BIT('(HL)', 0),
+    0x47: Instruction.BIT('A', 0),
+    0x48: Instruction.BIT('B', 1),
+    0x49: Instruction.BIT('C', 1),
+    0x4a: Instruction.BIT('D', 1),
+    0x4b: Instruction.BIT('E', 1),
+    0x4c: Instruction.BIT('H', 1),
+    0x4d: Instruction.BIT('L', 1),
+    0x4e: Instruction.BIT('(HL)', 1),
+    0x4f: Instruction.BIT('A', 1),
 
-    0x30: Instruction.SWAP('B'),
-    0x31: Instruction.SWAP('C'),
-    0x32: Instruction.SWAP('D'),
-    0x33: Instruction.SWAP('E'),
-    0x34: Instruction.SWAP('H'),
-    0x35: Instruction.SWAP('L'),
-    0x36: Instruction.SWAP('(HL)'),
-    0x37: Instruction.SWAP('A'),
+    0x50: Instruction.BIT('B', 2),
+    0x51: Instruction.BIT('C', 2),
+    0x52: Instruction.BIT('D', 2),
+    0x53: Instruction.BIT('E', 2),
+    0x54: Instruction.BIT('H', 2),
+    0x55: Instruction.BIT('L', 2),
+    0x56: Instruction.BIT('(HL)', 2),
+    0x57: Instruction.BIT('A', 2),
+    0x58: Instruction.BIT('B', 3),
+    0x59: Instruction.BIT('C', 3),
+    0x5a: Instruction.BIT('D', 3),
+    0x5b: Instruction.BIT('E', 3),
+    0x5c: Instruction.BIT('H', 3),
+    0x5d: Instruction.BIT('L', 3),
+    0x5e: Instruction.BIT('(HL)', 3),
+    0x5f: Instruction.BIT('A', 3),
+
+
+    0x60: Instruction.BIT('B', 4),
+    0x61: Instruction.BIT('C', 4),
+    0x62: Instruction.BIT('D', 4),
+    0x63: Instruction.BIT('E', 4),
+    0x64: Instruction.BIT('H', 4),
+    0x65: Instruction.BIT('L', 4),
+    0x66: Instruction.BIT('(HL)', 4),
+    0x67: Instruction.BIT('A', 4),
+    0x68: Instruction.BIT('B', 5),
+    0x69: Instruction.BIT('C', 5),
+    0x6a: Instruction.BIT('D', 5),
+    0x6b: Instruction.BIT('E', 5),
+    0x6c: Instruction.BIT('H', 5),
+    0x6d: Instruction.BIT('L', 5),
+    0x6e: Instruction.BIT('(HL)', 5),
+    0x6f: Instruction.BIT('A', 5),
+
+
+    0x70: Instruction.BIT('B', 6),
+    0x71: Instruction.BIT('C', 6),
+    0x72: Instruction.BIT('D', 6),
+    0x73: Instruction.BIT('E', 6),
+    0x74: Instruction.BIT('H', 6),
+    0x75: Instruction.BIT('L', 6),
+    0x76: Instruction.BIT('(HL)', 6),
+    0x77: Instruction.BIT('A', 6),
+    0x78: Instruction.BIT('B', 7),
+    0x79: Instruction.BIT('C', 7),
+    0x7a: Instruction.BIT('D', 7),
+    0x7b: Instruction.BIT('E', 7),
+    0x7c: Instruction.BIT('H', 7),
+    0x7d: Instruction.BIT('L', 7),
+    0x7e: Instruction.BIT('(HL)', 7),
+    0x7f: Instruction.BIT('A', 7),
+
 }
 
 export default Instruction
