@@ -38,6 +38,9 @@ type ADD = { type: 'ADD', n: ADDN }
 type SUBN = ANDN
 type SUB = { type: 'SUB', n: SUBN }
 
+type SRLN = AllRegistersButF | '(HL)'
+type SRL = { type: 'SRL', n: SRLN }
+
 type LD_a16_A = { type: 'LD (a16),A' }
 type LDHA_a8_ = { type: 'LDH A,(a8)' }
 type LDH_a8_A = { type: 'LDH (a8),A' }
@@ -107,6 +110,7 @@ type StackInstruction =
 type PrefixInstruction = 
     | BIT7H
     | RLC
+    | SRL
 
 export type Instruction =
     | JumpInstruction
@@ -154,6 +158,7 @@ export namespace Instruction {
 
     export const BIT7H: BIT7H = { type: 'BIT 7,H' }
     export const RLC: RLC = { type: 'RL C' }
+    export const SRL = (n: SRLN): SRL => ({ type: 'SRL', n })
 
     export function fromByte(byte: number, prefix: boolean): Instruction {
         const instruction = prefix ? byteToPrefixInstructionMap[byte] : byteToInstructionMap[byte]
@@ -164,8 +169,8 @@ export namespace Instruction {
         return instruction
     }
 
-    export function toByte(instruction: Instruction): number {
-        const entries: [string, Instruction][] = Object.entries(byteToInstructionMap)
+    export function toByte(instruction: Instruction, prefix: boolean = false): number {
+        const entries: [string, Instruction][] = prefix ? Object.entries(byteToPrefixInstructionMap) : Object.entries(byteToInstructionMap)
         const entry = entries.find(pair => {
             const [key, value] = pair
             let answer = true
@@ -402,7 +407,15 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
 
 const byteToPrefixInstructionMap: { [index: number]: Instruction | undefined } = {
     0x7c: Instruction.BIT7H,
-    0x11: Instruction.RLC
+    0x11: Instruction.RLC,
+    0x38: Instruction.SRL('B'),
+    0x39: Instruction.SRL('C'),
+    0x3a: Instruction.SRL('D'),
+    0x3b: Instruction.SRL('E'),
+    0x3c: Instruction.SRL('H'),
+    0x3d: Instruction.SRL('L'),
+    0x3e: Instruction.SRL('(HL)'),
+    0x3f: Instruction.SRL('A'),
 }
 
 export default Instruction

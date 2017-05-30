@@ -203,7 +203,7 @@ export class CPU {
                         this.cp(this.readNextByte())
                         return [this.pc + 2, 8]
                     default: 
-                        assertExhaustive(instruction.n)
+                        assertExhaustive(instruction)
                 }
             case 'XOR':
                 // WHEN: n is d8
@@ -242,7 +242,7 @@ export class CPU {
                         this.xor(this.readNextByte())
                         return [this.pc + 2, 8]
                     default: 
-                        assertExhaustive(instruction.n)
+                        assertExhaustive(instruction)
                 }
             case 'RLA':
                 // 1  4
@@ -384,7 +384,7 @@ export class CPU {
                         this.registers.a = this.and(this.readNextByte())
                         break
                     default: 
-                        assertExhaustive(instruction.n)
+                        assertExhaustive(instruction)
                 }
                 if (instruction.n === 'd8') {
                     return [this.pc + 2, 8]
@@ -430,7 +430,7 @@ export class CPU {
                         this.registers.a = this.or(this.readNextByte())
                         break
                     default: 
-                        assertExhaustive(instruction.n)
+                        assertExhaustive(instruction)
                 }
                 if (instruction.n === 'd8') {
                     return [this.pc + 2, 8]
@@ -476,7 +476,7 @@ export class CPU {
                         this.registers.a = this.sub(this.readNextByte())
                         break
                     default: 
-                        assertExhaustive(instruction.n)
+                        assertExhaustive(instruction)
                 }
                 if (instruction.n === 'd8') {
                     return [this.pc + 2, 8]
@@ -522,7 +522,7 @@ export class CPU {
                         this.registers.a = this.add(this.readNextByte())
                         break
                     default: 
-                        assertExhaustive(instruction.n)
+                        assertExhaustive(instruction)
                 }
                 if (instruction.n === 'd8') {
                     return [this.pc + 2, 8]
@@ -833,6 +833,45 @@ export class CPU {
                 // Z 0 0 C
                 this.registers.c = this.rotateLeft(this.registers.c, true)
                 return [this.pc + 1, 4]
+            case 'SRL':
+                // WHEN: n is (HL)
+                // 2  16
+                // ELSE:
+                // 2  8
+                // Z 0 0 C
+                switch (instruction.n) {
+                    case 'A':
+                        this.registers.a = this.srl(this.registers.a)
+                        break
+                    case 'B':
+                        this.registers.b = this.srl(this.registers.b)
+                        break
+                    case 'C':
+                        this.registers.c = this.srl(this.registers.c)
+                        break
+                    case 'D':
+                        this.registers.d = this.srl(this.registers.d)
+                        break
+                    case 'E':
+                        this.registers.e = this.srl(this.registers.e)
+                        break
+                    case 'H':
+                        this.registers.h = this.srl(this.registers.h)
+                        break
+                    case 'L':
+                        this.registers.l = this.srl(this.registers.l)
+                        break
+                    case '(HL)':
+                        this.bus.write(this.registers.hl, this.srl(this.bus.read(this.registers.hl)))
+                        break
+                    default: 
+                        assertExhaustive(instruction)
+                }
+                if (instruction.n === '(HL)') {
+                    return [this.pc + 1, 8]
+                } else {
+                    return [this.pc + 1, 4]
+                }
 
             default:
                 return assertExhaustive(instruction)
@@ -881,6 +920,16 @@ export class CPU {
         this.registers.f.subtract = false
         this.registers.f.halfCarry = false
         this.registers.f.carry = false
+        return newValue
+    }
+
+    srl(value: number): number {
+        const carry = value & 0b1
+        const newValue = value >> 1
+        this.registers.f.zero = newValue === 0
+        this.registers.f.subtract = false
+        this.registers.f.halfCarry = false
+        this.registers.f.carry = carry === 1
         return newValue
     }
 
