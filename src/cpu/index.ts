@@ -249,31 +249,55 @@ export class CPU {
                 // 0 0 0 C
                 this.registers.a = this.rotateLeft(this.registers.a, false)
                 return [this.pc + 1, 4]
-            case 'DEC A':
+            case 'DEC':
+                // WHEN: target is 16 bit register
+                // 1  8
+                // - - - -
+                // WHEN: target is (HL)
+                // 1  12
+                // ELSE: 
                 // 1  4
                 // Z 1 H -
-                this.registers.a = this.dec(this.registers.a)
-                return [this.pc + 1, 4]
-            case 'DEC B':
-                // 1  4
-                // Z 1 H -
-                this.registers.b = this.dec(this.registers.b)
-                return [this.pc + 1, 4]
-            case 'DEC C':
-                // 1  4
-                // Z 1 H -
-                this.registers.c = this.dec(this.registers.c)
-                return [this.pc + 1, 4]
-            case 'DEC D':
-                // 1  4
-                // Z 1 H -
-                this.registers.d = this.dec(this.registers.d)
-                return [this.pc + 1, 4]
-            case 'DEC E':
-                // 1  4
-                // Z 1 H -
-                this.registers.e = this.dec(this.registers.e)
-                return [this.pc + 1, 4]
+                switch (instruction.target) {
+                    case 'A':
+                        this.registers.a = this.dec(this.registers.a)
+                        return [this.pc + 1, 4]
+                    case 'B':
+                        this.registers.b = this.dec(this.registers.b)
+                        return [this.pc + 1, 4]
+                    case 'C':
+                        this.registers.c = this.dec(this.registers.c)
+                        return [this.pc + 1, 4]
+                    case 'D':
+                        this.registers.d = this.dec(this.registers.d)
+                        return [this.pc + 1, 4]
+                    case 'E':
+                        this.registers.e = this.dec(this.registers.e)
+                        return [this.pc + 1, 4]
+                    case 'H':
+                        this.registers.h = this.dec(this.registers.h)
+                        return [this.pc + 1, 4]
+                    case 'L':
+                        this.registers.l = this.dec(this.registers.l)
+                        return [this.pc + 1, 4]
+                    case 'BC':
+                        this.registers.bc = u16.wrappingSub(this.registers.bc, 1)
+                        return [this.pc + 1, 8]
+                    case 'DE':
+                        this.registers.de = u16.wrappingSub(this.registers.de, 1)
+                        return [this.pc + 1, 8]
+                    case 'HL':
+                        this.registers.hl = u16.wrappingSub(this.registers.hl, 1)
+                        return [this.pc + 1, 8]
+                    case 'SP':
+                        this.sp = u16.wrappingSub(this.sp, 1)
+                        return [this.pc + 1, 8]
+                    case '(HL)':
+                        this.bus.write(this.registers.hl, this.dec(this.bus.read(this.registers.hl)))
+                        return [this.pc + 1, 12]
+                    default:
+                        assertExhaustive(instruction)
+                }
             case 'INC':
                 // WHEN: target is 16 bit register
                 // 1  8

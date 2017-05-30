@@ -21,14 +21,11 @@ type CPN = AllRegistersButF | '(HL)' | 'd8'
 type CP = { type: 'CP', n: CPN }
 
 type RLA = { type: 'RLA' }
-type DECA = { type: 'DEC A' }
-type DECB = { type: 'DEC B' }
-type DECC = { type: 'DEC C' }
-type DECD = { type: 'DEC D' }
-type DECE = { type: 'DEC E' }
 
 type INCTarget = AllRegistersButF | WordRegisters | '(HL)' | 'SP'
 type INC = { type: 'INC', target: INCTarget }
+type DECTarget = INCTarget
+type DEC = { type: 'DEC', target: DECTarget }
 
 type ANDN =  AllRegistersButF | '(HL)' | 'd8'
 type AND = { type: 'AND', n: ANDN }
@@ -89,11 +86,7 @@ type ArithmeticInstruction =
     | XOR
     | CP
     | RLA
-    | DECA
-    | DECB
-    | DECC
-    | DECD
-    | DECE
+    | DEC
 
 type LoadStoreInstruction = 
     | LD
@@ -138,12 +131,8 @@ export namespace Instruction {
     export const CP = (n: CPN): CP => ({ type: 'CP', n })
     export const XOR = (n: XORN): XOR => ({ type: 'XOR', n })
     export const RLA: RLA = { type: 'RLA' }
-    export const DECA: DECA = { type: 'DEC A' }
-    export const DECB: DECB = { type: 'DEC B' }
-    export const DECC: DECC = { type: 'DEC C' }
-    export const DECD: DECD = { type: 'DEC D' }
-    export const DECE: DECE = { type: 'DEC E' }
     export const INC = (target: INCTarget): INC => ({ type: 'INC', target })
+    export const DEC = (target: DECTarget): DEC => ({ type: 'DEC', target })
     export const ADD = (n: ADDN): ADD => ({ type: 'ADD', n })
     export const AND = (n: ANDN): AND => ({ type: 'AND', n })
     export const OR = (n: ORN): OR => ({ type: 'OR', n })
@@ -231,10 +220,19 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xee: Instruction.XOR('d8'),
 
     0x17: Instruction.RLA,
-    0x3d: Instruction.DECA,
-    0x05: Instruction.DECB,
-    0x0d: Instruction.DECC,
-    0x1d: Instruction.DECE,
+
+    0x05: Instruction.DEC('B'),
+    0x15: Instruction.DEC('D'),
+    0x25: Instruction.DEC('H'),
+    0x35: Instruction.DEC('(HL)'),
+    0x0b: Instruction.DEC('BC'),
+    0x1b: Instruction.DEC('DE'),
+    0x2b: Instruction.DEC('HL'),
+    0x3b: Instruction.DEC('SP'),
+    0x0d: Instruction.DEC('C'),
+    0x1d: Instruction.DEC('E'),
+    0x2d: Instruction.DEC('L'),
+    0x3d: Instruction.DEC('A'),
 
     0x80: Instruction.ADD('B'),
     0x81: Instruction.ADD('C'),
@@ -275,8 +273,6 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x96: Instruction.SUB('(HL)'),
     0x97: Instruction.SUB('A'),
     0xd6: Instruction.SUB('d8'),
-
-    0x15: Instruction.DECD,
 
     0xc3: Instruction.JP(true),
     0xc2: Instruction.JP('NZ'),

@@ -13,6 +13,18 @@ export namespace u16 {
         return result
     }
 
+    export function underflowingSub(n1: number, n2: number): [number, boolean] {
+        const result = n1 - n2
+        if (result < 0) {
+            return [MAX_U16 + result, true]
+        }
+        return [result, false]
+    }
+    export function wrappingSub(n1: number, n2: number): number {
+        const [result, overflow] = underflowingSub(n1, n2)
+        return result
+    }
+
     export function lsb(n: number): number {
         return n & 0xFF
     }
