@@ -81,6 +81,8 @@ type RL = { type: 'RL', n: PrefixInstructionN }
 type SWAP = { type: 'SWAP', n: PrefixInstructionN }
 type RLCarry = { type: 'RLC', n: PrefixInstructionN }
 type RRCarry = { type: 'RRC', n: PrefixInstructionN }
+type SLA = { type: 'SLA', n: PrefixInstructionN }
+type SRA = { type: 'SRA', n: PrefixInstructionN }
 
 type JumpInstruction = 
     | JP
@@ -134,6 +136,8 @@ type PrefixInstruction =
     | SWAP
     | RLCarry
     | RRCarry
+    | SLA
+    | SRA
 
 export type Instruction =
     | JumpInstruction
@@ -190,6 +194,8 @@ export namespace Instruction {
     export const SWAP = (n: PrefixInstructionN): SWAP => ({ type: 'SWAP', n })
     export const RLCarry = (n: PrefixInstructionN): RLCarry => ({ type: 'RLC', n })
     export const RRCarry = (n: PrefixInstructionN): RRCarry => ({ type: 'RRC', n })
+    export const SLA = (n: PrefixInstructionN): SLA => ({ type: 'SLA', n })
+    export const SRA = (n: PrefixInstructionN): SRA => ({ type: 'SRA', n })
 
     export function fromByte(byte: number, prefix: boolean): Instruction {
         const instruction = prefix ? byteToPrefixInstructionMap[byte] : byteToInstructionMap[byte]
@@ -508,6 +514,33 @@ const byteToPrefixInstructionMap: { [index: number]: Instruction | undefined } =
     0x16: Instruction.RL('(HL)'),
     0x17: Instruction.RL('A'),
 
+    0x18: Instruction.RR('B'),
+    0x19: Instruction.RR('C'),
+    0x1a: Instruction.RR('D'),
+    0x1b: Instruction.RR('E'),
+    0x1c: Instruction.RR('H'),
+    0x1d: Instruction.RR('L'),
+    0x1e: Instruction.RR('(HL)'),
+    0x1f: Instruction.RR('A'),
+
+    0x20: Instruction.SLA('B'),
+    0x21: Instruction.SLA('C'),
+    0x22: Instruction.SLA('D'),
+    0x23: Instruction.SLA('E'),
+    0x24: Instruction.SLA('H'),
+    0x25: Instruction.SLA('L'),
+    0x26: Instruction.SLA('(HL)'),
+    0x27: Instruction.SLA('A'),
+
+    0x28: Instruction.SRA('B'),
+    0x29: Instruction.SRA('C'),
+    0x2a: Instruction.SRA('D'),
+    0x2b: Instruction.SRA('E'),
+    0x2c: Instruction.SRA('H'),
+    0x2d: Instruction.SRA('L'),
+    0x2e: Instruction.SRA('(HL)'),
+    0x2f: Instruction.SRA('A'),
+
     0x7c: Instruction.BIT7H,
 
     0x38: Instruction.SRL('B'),
@@ -519,14 +552,6 @@ const byteToPrefixInstructionMap: { [index: number]: Instruction | undefined } =
     0x3e: Instruction.SRL('(HL)'),
     0x3f: Instruction.SRL('A'),
 
-    0x18: Instruction.RR('B'),
-    0x19: Instruction.RR('C'),
-    0x1a: Instruction.RR('D'),
-    0x1b: Instruction.RR('E'),
-    0x1c: Instruction.RR('H'),
-    0x1d: Instruction.RR('L'),
-    0x1e: Instruction.RR('(HL)'),
-    0x1f: Instruction.RR('A'),
 
     0x30: Instruction.SWAP('B'),
     0x31: Instruction.SWAP('C'),

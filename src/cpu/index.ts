@@ -1073,6 +1073,20 @@ export class CPU {
                 // 2  8
                 // Z 0 0 0
                 return this.cpInstruction(instruction.n, (value: number) => this.rotateLeft(value, true))
+            case 'SLA':
+                // WHEN: n is (HL)
+                // 2  16
+                // ELSE:
+                // 2  8
+                // Z 0 0 0
+                return this.cpInstruction(instruction.n, this.sla)
+            case 'SRA':
+                // WHEN: n is (HL)
+                // 2  16
+                // ELSE:
+                // 2  8
+                // Z 0 0 0
+                return this.cpInstruction(instruction.n, this.sra)
             default:
                 return assertExhaustive(instruction)
         }
@@ -1158,6 +1172,27 @@ export class CPU {
         this.registers.f.subtract = false
         this.registers.f.halfCarry = false
         this.registers.f.carry = false
+        return newValue
+    }
+
+    sla(value: number): number {
+        const carry = (value & 0x80) >> 7 
+        const newValue = value << 1
+        this.registers.f.zero = newValue === 0
+        this.registers.f.subtract = false
+        this.registers.f.halfCarry = false
+        this.registers.f.carry = carry === 1 ? true : false
+        return newValue
+    }
+
+    sra(value: number): number {
+        const msb = value & 0x80
+        const carry = (value & 0x80) >> 7 
+        const newValue = (value >> 1) | msb
+        this.registers.f.zero = newValue === 0
+        this.registers.f.subtract = false
+        this.registers.f.halfCarry = false
+        this.registers.f.carry = carry === 1 ? true : false
         return newValue
     }
 
