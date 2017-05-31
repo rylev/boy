@@ -34,6 +34,11 @@ export enum ObjectSize {
     os16x16
 }
 
+enum ObjectPalette {
+    Zero, 
+    One
+}
+
 export enum Color {
     White = 255,
     LightGray = 192,
@@ -41,8 +46,30 @@ export enum Color {
     Black = 0
 }
 
+export type ObjectData  = {
+    x: number,
+    y: number,
+    tile: number,
+    palette: number,
+    xflip: boolean,
+    yflip: boolean,
+    priority: boolean, 
+}
+
 function blankTile(): TileValue[][] {
     return new Array(8).fill(0).map(_ => new Array(8).fill(TileValue.Zero))
+}
+
+function emptyObjectData(): ObjectData {
+    return {
+        x: 0,
+        y: 0,
+        tile: 0,
+        palette: 0,
+        xflip: false,
+        yflip: false,
+        priority: false,
+    }
 }
 
 class GPU {
@@ -50,16 +77,21 @@ class GPU {
     static readonly height = 144
     static readonly VRAM_BEGIN = 0x8000
     static readonly VRAM_END = 0x9fff
+    static readonly OAM_BEGIN = 0xfe00
+    static readonly OAM_END = 0xfe9f
     static readonly NUMBER_OF_TILES = 384
+    static readonly NUMBER_OF_OBJECTS = 40
 
     readonly vram = new Uint8Array(GPU.VRAM_END - GPU.VRAM_BEGIN + 1).fill(0)
+    readonly oam = new Uint8Array(GPU.OAM_END - GPU.OAM_BEGIN + 1).fill(0)
 
     private _mode = GPUMode.HorizontalBlank
     private _canvas = new Uint8Array(GPU.width * GPU.height * 4)
     private _timer = 0
     onDraw: ((data: ImageData) => void) | undefined
 
-    tileSet: TileValue[][][] = new Array(GPU.NUMBER_OF_TILES).fill(0).map(_ => blankTile())
+    readonly tileSet: TileValue[][][] = new Array(GPU.NUMBER_OF_TILES).fill(0).map(_ => blankTile())
+    readonly objectData: ObjectData[] = new Array(GPU.NUMBER_OF_OBJECTS).fill(0).map(_ => emptyObjectData())
 
     // Registers
     lcdDisplayEnabled: boolean = true
@@ -70,6 +102,7 @@ class GPU {
     backgroundAndWindowDataSelect: BackgroundAndWindowDataSelect = BackgroundAndWindowDataSelect.x8000
     objectSize: ObjectSize = ObjectSize.os8x8
     objectDisplayEnable: boolean = true
+    objectPalette: ObjectPalette = ObjectPalette.Zero
     bgcolor0 = Color.White
     bgcolor1 = Color.LightGray
     bgcolor2 = Color.DarkGray
@@ -165,6 +198,32 @@ class GPU {
         }
     }
 
+    writeOam(index: number, value: number) {
+        this.oam[index] = value
+        const objectIndex = Math.trunc(index / 4)
+        if (objectIndex < GPU.NUMBER_OF_OBJECTS) {
+            const byte = index % 4
+            const data = this.objectData[index]
+            switch (byte) {
+                case 0: 
+                    data.y = value - 16
+                    break
+                case 1: 
+                    data.x = value - 8
+                    break
+                case 2:
+                    data.tile = value
+                    break
+                case 3:
+                    data.palette = (value & 0x10) !== 0 ? ObjectPalette.One : ObjectPalette.Zero
+                    data.xflip = (value & 0x20) !== 0
+                    data.yflip = (value & 0x40) !== 0
+                    data.priority = (value & 0x80) !== 0
+                    break
+            }
+        }
+    }
+
     renderScan() {
         // The current scan line's y-coordinate in the entire background space is a combination 
         // of both the line inside the view port we're currently on and the amount of scroll y there is.
@@ -220,7 +279,6 @@ class GPU {
     }
 
     background1(): Uint8Array {
-        if (this.backgroundTileMap !== BackgroundTileMap.x9800) throw ":-("
         return this.vram.slice(0x1800, 0x1c00)
     }
 

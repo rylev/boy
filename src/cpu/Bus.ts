@@ -77,7 +77,7 @@ class Bus {
         } else if (addr >= 0xc000 && addr <= 0xdfff) {
             this._workingRam[addr - 0xc000] = value
         } else if (addr >= 0xfe00 && addr <= 0xfe9f) {
-            console.warn("Writing to OAM. but ignoring")
+            this._gpu.writeOam(addr - GPU.OAM_BEGIN, value)
         } else if (addr >= 0xfea0 && addr <= 0xfeff) {
             // Unused
         } else if (addr >= 0xff00 && addr <= 0xff7f) {
