@@ -11,6 +11,7 @@ type CALL = { type: 'CALL', test: JumpTest }
 type RET = { type: 'RET', test: JumpTest }
 
 type Halt = { type: 'HALT' }
+type EI = { type: 'EI' }
 type DI = { type: 'DI' }
 type NOP = { type: 'NOP' }
 type PREFIX = { type: 'PREFIX CB' }
@@ -98,6 +99,7 @@ type JumpInstruction =
 type ControlInstruction = 
     | Halt
     | DI
+    | EI
     | NOP
     | PREFIX
     
@@ -163,6 +165,7 @@ export namespace Instruction {
 
     export const Halt: Halt = { type: 'HALT' }
     export const DI: DI = { type: 'DI' }
+    export const EI: EI = { type: 'EI' }
     export const NOP: NOP = { type: 'NOP' }
     export const PREFIX: PREFIX = { type: 'PREFIX CB' }
 
@@ -495,6 +498,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xcb: Instruction.PREFIX,
     0x76: Instruction.Halt,
     0xf3: Instruction.DI,
+    0xfb: Instruction.EI,
     0x00: Instruction.NOP
 }
 

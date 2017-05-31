@@ -137,6 +137,11 @@ export class CPU {
                 // - - - -
                 // TODO: actually disable interrupts
                 return [this.pc + 1, 4]
+            case 'EI':
+                // 1  4
+                // - - - -
+                // TODO: actually enable interrupts
+                return [this.pc + 1, 4]
             case 'PREFIX CB':
                 // 1  4
                 // - - - -

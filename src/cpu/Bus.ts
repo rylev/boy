@@ -52,7 +52,7 @@ class Bus {
         } else if (addr >= GPU.VRAM_BEGIN && addr <= GPU.VRAM_END) {
             value = this._gpu.vram[addr - GPU.VRAM_BEGIN]
         } else if (addr >= 0xa000 && addr <= 0xbfff) {
-            value = undefined // TODO: define
+            value = 0 // TODO: define
         } else if (addr >= 0xc000 && addr <= 0xdfff) {
             value = this._workingRam[addr - 0xc000]
         } else if (addr >= 0xff00 && addr <= 0xff7f) {
@@ -72,6 +72,8 @@ class Bus {
             this._rom[addr] = value
         } else if (addr >= GPU.VRAM_BEGIN && addr <= GPU.VRAM_END) {
             this._gpu.writeVram(addr - GPU.VRAM_BEGIN, value)
+        } else if (addr >= 0xa000 && addr <= 0xbfff) {
+            console.warn("Writing to external ram")
         } else if (addr >= 0xc000 && addr <= 0xdfff) {
             this._workingRam[addr - 0xc000] = value
         } else if (addr >= 0xfe00 && addr <= 0xfe9f) {
@@ -126,13 +128,15 @@ class Bus {
         }
     }
 
+    buffer: string  = ""
+
     writeIO(addr: number, value: number) {
         switch (addr) {
             case 0xff01:
-                console.warn(`Writing 0x${toHex(value)} to serial transfer regsiter. Ignoring...`)
+                this.buffer = this.buffer + String.fromCharCode(value)
                 return
             case 0xff02:
-                console.warn(`Writing 0x${toHex(value)} to serial transfer control regsiter. Ignoring...`)
+                if (value === 0x81) { console.log(this.buffer) }
                 return
             case 0xff07:
                 console.warn(`Writing 0x${toHex(value)} to timer regsiter. Ignoring...`)
@@ -183,7 +187,6 @@ class Bus {
                 return
 
             case 0xff41:
-
                 console.warn(`Writing 0x${value} to 0xff41. TODO: implement LCD stat reg`)
                 return
             case 0xff42:
