@@ -496,6 +496,16 @@ export class CPU {
                 } else {
                     return [this.pc + 1, 4]
                 }
+            case 'ADDSP':
+                // 2  16
+                // 0 0 H C
+                const [addspResult, addspCarry] = u8.overflowingAdd(this.sp, u8.asSigned(this.readNextByte()))
+                this.registers.f.zero = false
+                this.registers.f.subtract = false
+                this.registers.f.halfCarry = false // TODO: calculate this
+                this.registers.f.carry = addspCarry
+                this.sp = addspResult
+                return [this.pc + 2, 16]
             case 'ADD':
                 // WHEN: instruction.n is (hl)
                 // 1  8

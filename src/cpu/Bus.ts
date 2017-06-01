@@ -91,6 +91,9 @@ class Bus {
 
     readIO(addr: number): number {
         switch (addr) {
+            case 0xff00:
+                console.warn("Reading to joypad. Just returning 0 for now")
+                return 0
             case 0xff40:
                 return ((this._gpu.lcdDisplayEnabled ? 1 : 0) << 8) |
                        ((this._gpu.windowTileMap === WindowTileMap.x9c00 ? 1 : 0) << 7) |
@@ -132,6 +135,9 @@ class Bus {
 
     writeIO(addr: number, value: number) {
         switch (addr) {
+            case 0xff00:
+                console.warn("Writing to joypad. Ignoring for now")
+                return
             case 0xff01:
                 this.buffer = this.buffer + String.fromCharCode(value)
                 return

@@ -203,7 +203,7 @@ class GPU {
         const objectIndex = Math.trunc(index / 4)
         if (objectIndex < GPU.NUMBER_OF_OBJECTS) {
             const byte = index % 4
-            const data = this.objectData[index]
+            const data = this.objectData[objectIndex]
             switch (byte) {
                 case 0: 
                     data.y = value - 16
@@ -225,46 +225,48 @@ class GPU {
     }
 
     renderScan() {
-        // The current scan line's y-coordinate in the entire background space is a combination 
-        // of both the line inside the view port we're currently on and the amount of scroll y there is.
-        const yOffset = u8.wrappingAdd(this.line, this.scrollY) 
-        // The current tile we're on is equal to the total y offset we have broken up into 8 pixel chunks 
-        // and multipled by the width of the entire background (i.e. 32)
-        const tileOffset = Math.trunc(yOffset / 8) * 32
+        if (this.backgroundDisplayEnabled) {
+            // The current scan line's y-coordinate in the entire background space is a combination 
+            // of both the line inside the view port we're currently on and the amount of scroll y there is.
+            const yOffset = u8.wrappingAdd(this.line, this.scrollY) 
+            // The current tile we're on is equal to the total y offset we have broken up into 8 pixel chunks 
+            // and multipled by the width of the entire background (i.e. 32)
+            const tileOffset = Math.trunc(yOffset / 8) * 32
 
-        const tileMapBegin = this.backgroundTileMap - GPU.VRAM_BEGIN
-        const tileMapOffset = tileMapBegin + tileOffset
-        // When line and scrollY are zero we just start at the top of the tile
-        // If they're non-zero we must index into the tile cycling through 0 - 7
-        const tileYOffset = yOffset % 8 
+            const tileMapBegin = this.backgroundTileMap - GPU.VRAM_BEGIN
+            const tileMapOffset = tileMapBegin + tileOffset
+            // When line and scrollY are zero we just start at the top of the tile
+            // If they're non-zero we must index into the tile cycling through 0 - 7
+            const tileYOffset = yOffset % 8 
 
-        let xOffset = Math.trunc(this.scrollX / 8)
-        let tileXOffset = this.scrollX % 8 
+            let xOffset = Math.trunc(this.scrollX / 8)
+            let tileXOffset = this.scrollX % 8 
 
-        let canvasOffset = this.line * GPU.width * 4
-        let tileIndex = this.vram[tileMapOffset + xOffset]
+            let canvasOffset = this.line * GPU.width * 4
+            let tileIndex = this.vram[tileMapOffset + xOffset]
 
-        // if(this.backgroundTileMap === BackgroundTileMap.x9c00 && tileIndex < 128) {
-        //     tileIndex += 256
-        // } 
+            // if(this.backgroundTileMap === BackgroundTileMap.x9c00 && tileIndex < 128) {
+            //     tileIndex += 256
+            // } 
 
-        for (var i = 0; i < 160; i++) {
-            const value = this.tileSet[tileIndex][tileYOffset][tileXOffset]
-            const color = this.valueToBgColor(value)
-            this._canvas[canvasOffset] = color
-            this._canvas[canvasOffset + 1] = color
-            this._canvas[canvasOffset + 2] = color
-            this._canvas[canvasOffset + 3] = 255
-            canvasOffset += 4
+            for (var i = 0; i < 160; i++) {
+                const value = this.tileSet[tileIndex][tileYOffset][tileXOffset]
+                const color = this.valueToBgColor(value)
+                this._canvas[canvasOffset] = color
+                this._canvas[canvasOffset + 1] = color
+                this._canvas[canvasOffset + 2] = color
+                this._canvas[canvasOffset + 3] = 255
+                canvasOffset += 4
 
-            tileXOffset = tileXOffset + 1
-            if (tileXOffset === 8) {
-                tileXOffset = 0
-                xOffset = (xOffset + 1) & 0x1f
-                tileIndex = this.vram[tileMapOffset + xOffset]
-                // if (this.backgroundTileMap === BackgroundTileMap.x9c00 && tileIndex < 128) {
-                //     tileIndex += 256
-                // }
+                tileXOffset = tileXOffset + 1
+                if (tileXOffset === 8) {
+                    tileXOffset = 0
+                    xOffset = (xOffset + 1) & 0x1f
+                    tileIndex = this.vram[tileMapOffset + xOffset]
+                    // if (this.backgroundTileMap === BackgroundTileMap.x9c00 && tileIndex < 128) {
+                    //     tileIndex += 256
+                    // }
+                }
             }
         }
     }

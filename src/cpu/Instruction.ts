@@ -45,6 +45,7 @@ type SUBCN = ANDN
 type SUBC = { type: 'SUBC', n: SUBCN }
 type RRA = { type: 'RRA' }
 type DAA = { type: 'DAA' }
+type ADDSP = { type: 'ADDSP' }
 
 type LDHA_a8_ = { type: 'LDH A,(a8)' }
 type LDH_a8_A = { type: 'LDH (a8),A' }
@@ -118,6 +119,7 @@ type ArithmeticInstruction =
     | RRA
     | DEC
     | DAA
+    | ADDSP
 
 type LoadStoreInstruction = 
     | LD
@@ -183,6 +185,7 @@ export namespace Instruction {
     export const OR = (n: ORN): OR => ({ type: 'OR', n })
     export const RRA: RRA = { type: 'RRA' }
     export const DAA: DAA = { type: 'DAA' }
+    export const ADDSP: ADDSP = { type: 'ADDSP' }
 
     export const LD = (target: AllRegistersButF, source: LDSource): LD => ({ type: 'LD', target, source })
     export const LDWord = (target: WordTarget): LDWord => ({ type: 'LD Word', target })
@@ -308,6 +311,8 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x8e: Instruction.ADDC('(HL)'),
     0x8f: Instruction.ADDC('A'),
     0xce: Instruction.ADDC('d8'),
+
+    0xe8: Instruction.ADDSP,
 
     0xa0: Instruction.AND('B'),
     0xa1: Instruction.AND('C'),
