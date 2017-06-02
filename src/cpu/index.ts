@@ -506,6 +506,14 @@ export class CPU {
                 this.registers.f.carry = addspCarry
                 this.sp = addspResult
                 return [this.pc + 2, 16]
+            case 'CPL':
+                // 1  4
+                // - 1 1 -
+                // 0 0 H C
+                this.registers.a = (~(this.registers.a) & 0xff)
+                this.registers.f.halfCarry = true
+                this.registers.f.carry = true
+                return [this.pc + 1, 4]
             case 'ADD':
                 // WHEN: instruction.n is (hl)
                 // 1  8

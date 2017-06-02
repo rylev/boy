@@ -22,6 +22,8 @@ type AddHL = { type: 'ADD HL', source: AddHLSource }
 type CPN = AllRegistersButF | '(HL)' | 'd8'
 type CP = { type: 'CP', n: CPN }
 
+type CPL = { type: 'CPL' }
+
 type RLA = { type: 'RLA' }
 
 type INCTarget = AllRegistersButF | WordRegisters | '(HL)' | 'SP'
@@ -120,6 +122,7 @@ type ArithmeticInstruction =
     | DEC
     | DAA
     | ADDSP
+    | CPL 
 
 type LoadStoreInstruction = 
     | LD
@@ -186,6 +189,7 @@ export namespace Instruction {
     export const RRA: RRA = { type: 'RRA' }
     export const DAA: DAA = { type: 'DAA' }
     export const ADDSP: ADDSP = { type: 'ADDSP' }
+    export const CPL: CPL = { type: 'CPL' }
 
     export const LD = (target: AllRegistersButF, source: LDSource): LD => ({ type: 'LD', target, source })
     export const LDWord = (target: WordTarget): LDWord => ({ type: 'LD Word', target })
@@ -313,6 +317,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xce: Instruction.ADDC('d8'),
 
     0xe8: Instruction.ADDSP,
+    0x2f: Instruction.CPL,
 
     0xa0: Instruction.AND('B'),
     0xa1: Instruction.AND('C'),
