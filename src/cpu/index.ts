@@ -255,6 +255,11 @@ export class CPU {
                 // 0 0 0 C
                 this.registers.a = this.rotateLeft(this.registers.a, false)
                 return [this.pc + 1, 4]
+            case 'RLCA':
+                // 1  4
+                // 0 0 0 C
+                this.registers.a = this.rlc(this.registers.a, false)
+                return [this.pc + 1, 4]
             case 'DAA':
                 // 1  4
                 // Z - 0 C
@@ -514,6 +519,13 @@ export class CPU {
                 this.registers.a = (~(this.registers.a) & 0xff)
                 this.registers.f.halfCarry = true
                 this.registers.f.carry = true
+                return [this.pc + 1, 4]
+            case 'SCF':
+                // 1  4
+                // - 0 0 1
+                this.registers.f.carry = true
+                this.registers.f.halfCarry = false
+                this.registers.f.subtract = false
                 return [this.pc + 1, 4]
             case 'ADD':
                 // WHEN: instruction.n is (hl)
@@ -1279,10 +1291,10 @@ export class CPU {
         return newValue
     }
 
-    rlc(value: number): number {
+    rlc(value: number, setZero: boolean = true): number {
         const carry = (value & 0x80) >> 7
         const newValue = (value << 1) & 0xff
-        this.registers.f.zero = newValue === 0
+        this.registers.f.zero = setZero && newValue === 0
         this.registers.f.subtract = false
         this.registers.f.halfCarry = false
         this.registers.f.carry = carry === 1
