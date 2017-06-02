@@ -294,7 +294,7 @@ class GPU {
                             this._canvas[canvasoffs + 0] = color
                             this._canvas[canvasoffs + 1] = color
                             this._canvas[canvasoffs + 2] = color
-                            this._canvas[canvasoffs + 3] = color
+                            this._canvas[canvasoffs + 3] = 255
 
                             canvasoffs += 4;
                         }
