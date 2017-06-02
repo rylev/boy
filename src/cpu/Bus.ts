@@ -106,7 +106,7 @@ class Bus {
                        ((this._gpu.objectDisplayEnable ? 1 : 0) << 2) |
                        (this._gpu.backgroundDisplayEnabled ? 1 : 0)
             case 0xff41:
-                console.warn("Reading lcd status register 0xff41. TODO: implement interrupt status")
+                // TODO: implement interrupt status
                 return this._gpu.mode
             case 0xff42:
                 return this._gpu.scrollY
@@ -173,6 +173,8 @@ class Bus {
                 // Channel 2 Frequency hi data
             case 0xff1a:
                 // Channel 3 Sound on/off
+            case 0xff1c:
+                // Channel 3 Select output level
             case 0xff21: 
                 // Channel 4 Volume Envelope
             case 0xff23:
@@ -183,6 +185,23 @@ class Bus {
                 // TODO: Selection of Sound output terminal
             case 0xff26:
                 // TODO: Sound on/off
+            case 0xff30:
+            case 0xff31:
+            case 0xff32:
+            case 0xff33:
+            case 0xff34:
+            case 0xff35:
+            case 0xff36:
+            case 0xff37:
+            case 0xff38:
+            case 0xff39:
+            case 0xff3a:
+            case 0xff3b:
+            case 0xff3c:
+            case 0xff3d:
+            case 0xff3e:
+            case 0xff3f:
+                //Wave Pattern RAM
                 console.warn(`Writing to sound register is ignored: 0x${toHex(addr)}`)
                 return
             case 0xff40: 

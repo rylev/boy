@@ -360,7 +360,6 @@ export class CPU {
                         this.registers.hl = u16.wrappingAdd(this.registers.hl, 1)
                         return [this.pc + 1, 8]
                     case 'SP':
-
                         this.sp = u16.wrappingAdd(this.sp, 1)
                         return [this.pc + 1, 8]
                     case '(HL)':
@@ -510,7 +509,7 @@ export class CPU {
             case 'ADDSP':
                 // 2  16
                 // 0 0 H C
-                const [addspResult, addspCarry] = u8.overflowingAdd(this.sp, u8.asSigned(this.readNextByte()))
+                const [addspResult, addspCarry] = u16.overflowingAdd(this.sp, (u8.asSigned(this.readNextByte()) >>> 0) & 0xffff)
                 this.registers.f.zero = false
                 this.registers.f.subtract = false
                 this.registers.f.halfCarry = false // TODO: calculate this
@@ -1007,7 +1006,7 @@ export class CPU {
                 switch (instruction.source) {
                     case '(BC)':
                         this.registers.a = this.bus.read(this.registers.bc)
-                        return [this.pc + 1, 8]
+                        return [u16.wrappingAdd(this.pc, 1), 8]
                     case '(DE)':
                         this.registers.a = this.bus.read(this.registers.de)
                         return [this.pc + 1, 8]

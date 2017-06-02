@@ -30,7 +30,8 @@ class Gameboy extends React.Component<Props, State> {
         super(props)
         const cpu = this.newCPU(props)
         this.state = { 
-            cpu: cpu
+            cpu: cpu,
+            debug: new Debugger()
         }
     }
 
@@ -70,12 +71,26 @@ class Gameboy extends React.Component<Props, State> {
         return <div className="error">{error.message}</div>
     }
 
+    addr: number
+
+    updateAddr = (e: React.ChangeEvent<HTMLInputElement>) => {
+        this.addr = parseInt(e.target.value, 16)
+    }
+    submitBreakpoint = (e: React.FormEvent<HTMLFormElement>) => {
+        this.addBreakPoint(this.addr)
+        e.preventDefault()
+    }
+
     debug(): JSX.Element | null {
         const { debug } = this.state
         if (debug === undefined) { return null }
 
         return (
             <div>
+                <form onSubmit={this.submitBreakpoint}>
+                    <input type="text" name="addr" onChange={this.updateAddr}/>
+                    <input type="submit" value="Submit"/>
+                </form>
                 Breakpoints: {debug.breakpoints.map(bp => `0x${bp.toString(16)}`).join(",")}
             </div>
         )
