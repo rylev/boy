@@ -26,6 +26,7 @@ type CPL = { type: 'CPL' }
 
 type RLA = { type: 'RLA' }
 type RLCA = { type: 'RLCA' }
+type RRCA = { type: 'RRCA' }
 
 type INCTarget = AllRegistersButF | WordRegisters | '(HL)' | 'SP'
 type INC = { type: 'INC', target: INCTarget }
@@ -121,6 +122,7 @@ type ArithmeticInstruction =
     | CP
     | RLA
     | RLCA
+    | RRCA
     | RRA
     | DEC
     | DAA
@@ -183,6 +185,7 @@ export namespace Instruction {
     export const XOR = (n: XORN): XOR => ({ type: 'XOR', n })
     export const RLA: RLA = { type: 'RLA' }
     export const RLCA: RLCA = { type: 'RLCA' }
+    export const RRCA: RRCA = { type: 'RRCA' }
     export const INC = (target: INCTarget): INC => ({ type: 'INC', target })
     export const DEC = (target: DECTarget): DEC => ({ type: 'DEC', target })
     export const ADD = (n: ADDN): ADD => ({ type: 'ADD', n })
@@ -288,6 +291,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xee: Instruction.XOR('d8'),
 
     0x07: Instruction.RLCA,
+    0x0f: Instruction.RRCA,
     0x17: Instruction.RLA,
 
     0x05: Instruction.DEC('B'),

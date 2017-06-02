@@ -260,6 +260,11 @@ export class CPU {
                 // 0 0 0 C
                 this.registers.a = this.rlc(this.registers.a, false)
                 return [this.pc + 1, 4]
+            case 'RRCA':
+                // 1  4
+                // 0 0 0 C
+                this.registers.a = this.rrc(this.registers.a, false)
+                return [this.pc + 1, 4]
             case 'DAA':
                 // 1  4
                 // Z - 0 C
@@ -1301,10 +1306,10 @@ export class CPU {
         return newValue
     }
 
-    rrc(value: number): number {
+    rrc(value: number, setZero: boolean = true): number {
         const carry = value & 0b1 
         const newValue = value >> 1
-        this.registers.f.zero = newValue === 0
+        this.registers.f.zero = setZero && newValue === 0
         this.registers.f.subtract = false
         this.registers.f.halfCarry = false
         this.registers.f.carry = carry === 1
