@@ -225,6 +225,7 @@ class GPU {
     }
 
     renderScan() {
+        const scanRow: TileValue[] = []
         if (this.backgroundDisplayEnabled) {
             // The current scan line's y-coordinate in the entire background space is a combination 
             // of both the line inside the view port we're currently on and the amount of scroll y there is.
@@ -257,6 +258,7 @@ class GPU {
                 this._canvas[canvasOffset + 2] = color
                 this._canvas[canvasOffset + 3] = 255
                 canvasOffset += 4
+                scanRow[i] = value
 
                 tileXOffset = tileXOffset + 1
                 if (tileXOffset === 8) {
@@ -269,6 +271,37 @@ class GPU {
                 }
             }
         }
+
+        if (this.objectDisplayEnable) {
+            this.objectData.forEach(object => {
+                if (object.y <= this.line && object.y + 8 > this.line) {
+                    let canvasoffs = (this.line * 160 + object.x) * 4
+                    const tile = this.tileSet[object.tile]
+                    let tileRow: TileValue[] = [] 
+                    if (object.yflip) {
+                        tileRow = tile[7 - (this.line - object.y)]
+                    } else {
+                        tileRow = tile[this.line - object.y]
+                    }
+
+                    for (var x = 0; x < 8; x++) {
+                        if ((object.x + x) >= 0 && (object.x + x) < 160 &&
+                            tileRow[x] &&
+                            (object.priority || scanRow[object.x + x] === TileValue.Zero)) {
+                            const pixel = tileRow[object.xflip ? (7 - x) : x]
+                            const color = this.valueToObjectColor(pixel)
+
+                            this._canvas[canvasoffs + 0] = color
+                            this._canvas[canvasoffs + 1] = color
+                            this._canvas[canvasoffs + 2] = color
+                            this._canvas[canvasoffs + 3] = color
+
+                            canvasoffs += 4;
+                        }
+                    }
+                }
+            })
+        }
     }
 
     valueToBgColor(value: TileValue) {
@@ -277,6 +310,15 @@ class GPU {
             case TileValue.One: return this.bgcolor1
             case TileValue.Two: return this.bgcolor2
             case TileValue.Three: return this.bgcolor3
+        }
+    }
+
+    valueToObjectColor(value: TileValue) {
+        switch (value) {
+            case TileValue.Zero: return this.objectPalette === ObjectPalette.Zero ? this.obj0color1 : this.obj1color1
+            case TileValue.One: return this.objectPalette === ObjectPalette.Zero ? this.obj0color2 : this.obj1color2
+            case TileValue.Two: return this.objectPalette === ObjectPalette.Zero ? this.obj0color3 : this.obj1color3
+            case TileValue.Three: return this.objectPalette === ObjectPalette.Zero ? this.obj0color3 : this.obj1color3
         }
     }
 
