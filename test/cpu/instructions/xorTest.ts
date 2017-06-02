@@ -12,7 +12,7 @@ describe('Instruction.XOR', () => {
                 0x25, 
                 Instruction.toByte(Instruction.Halt)
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.a = 0x11
             cpu.runFrame()
 
@@ -31,7 +31,7 @@ describe('Instruction.XOR', () => {
                 Instruction.toByte(Instruction.XOR('B')),
                 Instruction.toByte(Instruction.Halt)
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.a = 0x11
             cpu.registers.b = 0x25
             cpu.runFrame()
@@ -56,7 +56,7 @@ describe('Instruction.XOR', () => {
                 Instruction.toByte(Instruction.NOP),
                 0x25
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.a = 0x11
             cpu.registers.h = u16.msb(rom.length - 1)
             cpu.registers.l = u16.lsb(rom.length - 1)

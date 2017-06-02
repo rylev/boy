@@ -13,7 +13,7 @@ describe('Instruction.LDWord', () => {
                 0x30, 
                 Instruction.toByte(Instruction.Halt)
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.runFrame()
 
             assert.equal(cpu.registers.bc, 0x3010)
@@ -29,7 +29,7 @@ describe('Instruction.LDWord', () => {
                 0x30, 
                 Instruction.toByte(Instruction.Halt)
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.runFrame()
 
             assert.equal(cpu.sp, 0x3010)

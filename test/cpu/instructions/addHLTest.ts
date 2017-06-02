@@ -10,7 +10,7 @@ describe('Instruction.ADDHL', () => {
                 Instruction.toByte(Instruction.AddHL('BC')),
                 Instruction.toByte(Instruction.Halt),
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.b = 0x01
             cpu.registers.c = 0x01
             cpu.registers.hl = 0x01

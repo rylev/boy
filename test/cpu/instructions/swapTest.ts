@@ -12,7 +12,7 @@ describe('Instruction.SWAP', () => {
                 Instruction.toByte(Instruction.SWAP('B'), true),
                 Instruction.toByte(Instruction.Halt)
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.f.carry = true
             cpu.registers.b = 0xdc
             cpu.runFrame()

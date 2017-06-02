@@ -14,7 +14,7 @@ describe('Instruction.LDAFromIndirect', () => {
                 0,
                 0x10, 
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.b = u16.msb(rom.length - 1)
             cpu.registers.c = u16.lsb(rom.length - 1)
             cpu.runFrame()
@@ -33,7 +33,7 @@ describe('Instruction.LDAFromIndirect', () => {
                 0,
                 0x10, 
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.h = u16.msb(rom.length - 1)
             cpu.registers.l = u16.lsb(rom.length - 1)
             cpu.runFrame()
@@ -53,7 +53,7 @@ describe('Instruction.LDAFromIndirect', () => {
                 0,
                 0x10
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.runFrame()
 
             assert.equal(cpu.registers.a, 0x10)

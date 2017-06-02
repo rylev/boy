@@ -11,7 +11,7 @@ describe('Instruction.PUSH', () => {
                 Instruction.toByte(Instruction.PUSH('BC')),
                 Instruction.toByte(Instruction.Halt)
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.bc = 0xfeed
             cpu.sp = 0xfffe
             cpu.runFrame()

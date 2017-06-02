@@ -11,7 +11,7 @@ describe('Instruction.POP', () => {
                 Instruction.toByte(Instruction.POP('AF')),
                 Instruction.toByte(Instruction.Halt)
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.af = 0xFF00 | 0b10110000
             cpu.sp = 0xfffe
             cpu.runFrame()

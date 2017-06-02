@@ -17,7 +17,7 @@ describe('Instruction.JR', () => {
             ])
 
             it('jumps when zero flag is set', () => {
-                const cpu = new CPU(undefined, rom, {})
+                const cpu = new CPU(undefined, rom)
                 cpu.registers.f.zero = true
                 cpu.runFrame()
 
@@ -25,7 +25,7 @@ describe('Instruction.JR', () => {
             })
 
             it('doesn\'t jump when zero flag is set', () => {
-                const cpu = new CPU(undefined, rom, {})
+                const cpu = new CPU(undefined, rom)
                 cpu.registers.f.zero = false
                 cpu.runFrame()
 
@@ -41,7 +41,7 @@ describe('Instruction.JR', () => {
                 0xFE,
                 Instruction.toByte(Instruction.NOP)
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.f.zero = true
             cpu.pc = rom.length - 3
             cpu.runFrame()
@@ -63,7 +63,7 @@ describe('Instruction.JR', () => {
             ])
 
             it('jumps when zero flag is set', () => {
-                const cpu = new CPU(undefined, rom, {})
+                const cpu = new CPU(undefined, rom)
                 cpu.runFrame()
 
                 assert.equal(cpu.pc, rom.length)
@@ -78,7 +78,7 @@ describe('Instruction.JR', () => {
                 0xFE,
                 Instruction.toByte(Instruction.NOP)
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.pc = rom.length - 3
             cpu.runFrame()
 

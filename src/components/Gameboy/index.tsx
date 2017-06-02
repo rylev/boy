@@ -7,6 +7,7 @@ import Memory from 'components/Memory'
 import Background from 'components/Background'
 import TileSet from 'components/TileSet'
 import { CPU as CPUModel }from 'cpu'
+import Joypad from 'cpu/Joypad'
 import Debugger from 'Debugger'
 import './gameboy.css'
 
@@ -195,8 +196,37 @@ class Gameboy extends React.Component<Props, State> {
         const onError = (e: Error) => { this.setState({error: e, runningState: RunningState.Stopped}) }
         const onPause = () => { this.setState({runningState: RunningState.Paused})}
         const onMaxClockCycles = () => { this.setState({cpu: cpu})}
-        const cpu = new CPUModel(props.bios, props.rom, { onError, onPause, onMaxClockCycles })
+        const cpu = new CPUModel(props.bios, props.rom, this.joypad(), { onError, onPause, onMaxClockCycles })
         return cpu
+    }
+
+    joypad() {
+        const joypad = new Joypad()
+        window.onkeydown = (e) => {
+            switch (e.keyCode) {
+                case 39: joypad.right = true; break;
+                case 37: joypad.left = true; break;
+                case 38: joypad.up = true; break;
+                case 40: joypad.down = true; break;
+                case 90: joypad.a = true; break;
+                case 88: joypad.b = true; break;
+                case 32: joypad.select = true; break;
+                case 13: joypad.start = true; break;
+            }
+        }
+        window.onkeyup = (e) => {
+            switch (e.keyCode) {
+                case 39: joypad.right = false; break;
+                case 37: joypad.left = false; break;
+                case 38: joypad.up = false; break;
+                case 40: joypad.down = false; break;
+                case 90: joypad.a = false; break;
+                case 88: joypad.b = false; break;
+                case 32: joypad.select = false; break;
+                case 13: joypad.start = false; break;
+            }
+        }
+        return joypad
     }
 }
 

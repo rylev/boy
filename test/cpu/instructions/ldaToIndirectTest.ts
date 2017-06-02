@@ -14,7 +14,7 @@ describe('Instruction.LDAToIndirect', () => {
                 0,
                 0, 
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.a = 0x10
             cpu.registers.b = u16.msb(rom.length - 1)
             cpu.registers.c = u16.lsb(rom.length - 1)
@@ -34,7 +34,7 @@ describe('Instruction.LDAToIndirect', () => {
                 0,
                 0, 
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.a = 0x10
             cpu.registers.h = u16.msb(rom.length - 1)
             cpu.registers.l = u16.lsb(rom.length - 1)
@@ -55,7 +55,7 @@ describe('Instruction.LDAToIndirect', () => {
                 0,
                 0
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.a = 0x10
             cpu.runFrame()
 

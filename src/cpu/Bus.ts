@@ -1,21 +1,24 @@
 import { toHex } from 'lib/hex'
 import GPU, { Color, WindowTileMap, BackgroundTileMap, BackgroundAndWindowDataSelect, ObjectSize, GPUMode } from './GPU'
+import Joypad, { Column } from './Joypad'
 
 class Bus {
     private _biosMapped: boolean
     private _bios: Uint8Array
     private _rom: Uint8Array
     private _gpu: GPU
+    private _joypad: Joypad
     private _zeroPagedRam: Uint8Array
     private _workingRam: Uint8Array
 
-    constructor(bios: Uint8Array | undefined, rom: Uint8Array, gpu: GPU) {
+    constructor(bios: Uint8Array | undefined, rom: Uint8Array, gpu: GPU, joypad: Joypad) {
         if (bios) {
             this._bios = bios
             this._biosMapped = true
         }
         this._rom = rom
         this._gpu = gpu
+        this._joypad = joypad
         this._zeroPagedRam = new Uint8Array(0xffff - 0xff7f)
         this._workingRam = new Uint8Array(0xbfff - 0x9fff)
     }
@@ -92,8 +95,7 @@ class Bus {
     readIO(addr: number): number {
         switch (addr) {
             case 0xff00:
-                // console.warn("Reading to joypad. Just returning 0 for now")
-                return 0
+                return this._joypad.toByte()
             case 0xff40:
                 return ((this._gpu.lcdDisplayEnabled ? 1 : 0) << 8) |
                        ((this._gpu.windowTileMap === WindowTileMap.x9c00 ? 1 : 0) << 7) |
@@ -136,7 +138,7 @@ class Bus {
     writeIO(addr: number, value: number) {
         switch (addr) {
             case 0xff00:
-                // console.warn("Writing to joypad. Ignoring for now")
+                this._joypad.column = (value & 0x10) !== 0 ? Column.Zero : Column.One
                 return
             case 0xff01:
                 this.buffer = this.buffer + String.fromCharCode(value)
@@ -161,8 +163,12 @@ class Bus {
                 // Channel 1 Frequency lo
             case 0xff14:
                 // Channel 1 Frequency hi
+            case 0xff16: 
+                // Channel 2 Sound Length/Wave Pattern Duty 
             case 0xff17:
                 // Channel 2 Volume Envelope
+            case 0xff18: 
+                // Channel 2 Frequency lo data
             case 0xff19:
                 // Channel 2 Frequency hi data
             case 0xff1a:

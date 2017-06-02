@@ -2,6 +2,7 @@ import Registers from './Registers'
 import Instruction from './Instruction'
 import Bus from './Bus'
 import GPU from './GPU'
+import Joypad from './Joypad'
 import { assertExhaustive } from 'typescript'
 import u16 from 'lib/u16'
 import u8 from 'lib/u8'
@@ -34,9 +35,9 @@ export class CPU {
     private _onError: ((error: Error) => void) | undefined
     private _onMaxClockCycles: (() => void) | undefined
 
-    constructor(bios: Uint8Array | undefined, rom: Uint8Array, callbacks: CPUCallbacks) {
+    constructor(bios: Uint8Array | undefined, rom: Uint8Array, joypad: Joypad = new Joypad(), callbacks: CPUCallbacks = {}) {
         this.gpu = new GPU()
-        this.bus = new Bus(bios, rom, this.gpu)
+        this.bus = new Bus(bios, rom, this.gpu, joypad)
         this.registers = new Registers()
         this.pc = bios ? 0 : CPU.START_ADDR
         this.sp = bios ? 0 : 0xfffe

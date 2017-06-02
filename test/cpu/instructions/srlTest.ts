@@ -12,7 +12,7 @@ describe('Instruction.SRL', () => {
                 Instruction.toByte(Instruction.SRL('B'), true),
                 Instruction.toByte(Instruction.Halt)
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.b = 0x81
             cpu.runFrame()
 
