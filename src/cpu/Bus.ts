@@ -20,15 +20,19 @@ class Bus {
         }
         this._rom = rom
         this._gpu = gpu
+        gpu.modeChange = (oldMode: GPUMode, newMode: GPUMode) => {
+            if (newMode === GPUMode.VerticalBlank) {
+                this._interruptFlags = this._interruptFlags | 1 
+
+            }
+        }
         this._joypad = joypad
         this._zeroPagedRam = new Uint8Array(0xffff - 0xff7f)
         this._workingRam = new Uint8Array(0xbfff - 0x9fff)
     }
 
     get interruptFlags(): number {
-        return this._gpu.mode === GPUMode.VerticalBlank ? 
-            this._interruptFlags | 1 : 
-            this._interruptFlags
+        return this._interruptFlags
     }
 
     set interruptFlags(value: number) {
