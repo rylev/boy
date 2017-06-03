@@ -62,8 +62,8 @@ function blankTile(): TileValue[][] {
 
 function emptyObjectData(): ObjectData {
     return {
-        x: 0,
-        y: 0,
+        x: -8,
+        y: -16,
         tile: 0,
         palette: 0,
         xflip: false,
