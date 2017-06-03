@@ -197,7 +197,7 @@ class Bus {
     writeIO(addr: number, value: number) {
         switch (addr) {
             case 0xff00:
-                this._joypad.column = (value & 0x10) === 0 ? Column.One : Column.Zero
+                this._joypad.column = (value & 0x20) === 0 ? Column.One : Column.Zero
                 return
             case 0xff01:
                 this.buffer = this.buffer + String.fromCharCode(value)
