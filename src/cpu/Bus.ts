@@ -2,14 +2,45 @@ import { toHex } from 'lib/hex'
 import GPU, { Color, WindowTileMap, BackgroundTileMap, BackgroundAndWindowDataSelect, ObjectSize, GPUMode } from './GPU'
 import Joypad, { Column } from './Joypad'
 
+type TimerFrequency = 4096 | 262144 | 65536 | 16384
+
+class Timer {
+    frequency: TimerFrequency
+    modulo: number = 0
+    value: number
+    private _on: boolean
+    private _task: number | undefined
+
+    get on(): boolean {
+        return this._on
+    }
+
+    set on(value: boolean) {
+        if (value) {
+            this._task = setInterval(() => {
+                this.value += 1
+                if (this.value > 0xff) {
+                    this.value = this.modulo
+                    // TODO: trigger interrupt
+                }
+            }, Math.trunc(this.frequency / 1000))
+        } else {
+            this._task && clearInterval(this._task)
+        }
+    }
+}
+
 class Bus {
     private _biosMapped: boolean
     private _bios: Uint8Array
     private _rom: Uint8Array
     private _gpu: GPU
+    private _timer: Timer = new Timer()
     private _joypad: Joypad
     private _zeroPagedRam: Uint8Array
     private _workingRam: Uint8Array
+    private _timerEnabled: boolean
+    private _timerFrequency: TimerFrequency
     interruptEnable: number = 0
     _interruptFlags: number = 0
 
@@ -23,7 +54,6 @@ class Bus {
         gpu.modeChange = (oldMode: GPUMode, newMode: GPUMode) => {
             if (newMode === GPUMode.VerticalBlank) {
                 this._interruptFlags = this._interruptFlags | 1 
-
             }
         }
         this._joypad = joypad
@@ -126,13 +156,13 @@ class Bus {
             case 0xff00:
                 return this._joypad.toByte()
             case 0xff40:
-                return ((this._gpu.lcdDisplayEnabled ? 1 : 0) << 8) |
-                       ((this._gpu.windowTileMap === WindowTileMap.x9c00 ? 1 : 0) << 7) |
-                       ((this._gpu.windowDisplayEnabled ? 1 : 0) << 6) |
-                       ((this._gpu.backgroundAndWindowDataSelect === BackgroundAndWindowDataSelect.x8000 ? 1 : 0) << 5) |
-                       ((this._gpu.backgroundTileMap === BackgroundTileMap.x9c00 ? 1 : 0) << 4) |
-                       ((this._gpu.objectSize === ObjectSize.os16x16 ? 1 : 0) << 3) |
-                       ((this._gpu.objectDisplayEnable ? 1 : 0) << 2) |
+                return ((this._gpu.lcdDisplayEnabled ? 1 : 0) << 7) |
+                       ((this._gpu.windowTileMap === WindowTileMap.x9c00 ? 1 : 0) << 6) |
+                       ((this._gpu.windowDisplayEnabled ? 1 : 0) << 5) |
+                       ((this._gpu.backgroundAndWindowDataSelect === BackgroundAndWindowDataSelect.x8000 ? 1 : 0) << 4) |
+                       ((this._gpu.backgroundTileMap === BackgroundTileMap.x9c00 ? 1 : 0) << 3) |
+                       ((this._gpu.objectSize === ObjectSize.os16x16 ? 1 : 0) << 2) |
+                       ((this._gpu.objectDisplayEnable ? 1 : 0) << 1) |
                        (this._gpu.backgroundDisplayEnabled ? 1 : 0)
             case 0xff41:
                 // TODO: implement interrupt status
@@ -176,10 +206,24 @@ class Bus {
                 if (value === 0x81) { console.log(this.buffer) }
                 return
             case 0xff03:
-            case 0xff04:
                 console.warn(`Writing 0x${toHex(value)} which is unknown. Ignoring...`)
+            case 0xff04:
+                console.warn(`Writing 0x${toHex(value)} to timer register. Ignoring...`)
+                return
+            case 0xff05:
+                this._timer.value = value
+                return
+            case 0xff06:
+                this._timer.modulo = value
+                return
             case 0xff07:
-                console.warn(`Writing 0x${toHex(value)} to timer regsiter. Ignoring...`)
+                switch (value & 0b11) {
+                    case 0b00: this._timer.frequency = 4096
+                    case 0b01: this._timer.frequency = 262144
+                    case 0b10: this._timer.frequency = 65536
+                    case 0b11: this._timer.frequency = 16384
+                }
+                this._timer.on = (value & 0b100) !== 0 
                 return
             case 0xff0f:
                 console.warn(`Writing 0x${toHex(value)} to interrupt register. Ignoring...`)
@@ -248,7 +292,6 @@ class Bus {
                 this._gpu.objectDisplayEnable = ((value >> 1) & 0b1) === 1 
                 this._gpu.backgroundDisplayEnabled = (value & 0b1) === 1 
                 return
-
             case 0xff41:
                 console.warn(`Writing 0x${value} to 0xff41. TODO: implement LCD stat reg`)
                 return

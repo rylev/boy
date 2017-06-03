@@ -140,6 +140,7 @@ class Gameboy extends React.Component<Props, State> {
         const { cpu } = this.state
         cpu.unpause()
         this.setState({ runningState: RunningState.Running }, () => {
+            this.step()
             this.runFrame(cpu, 0, true)
         })
     }
