@@ -979,11 +979,11 @@ export class CPU {
                         return [this.pc + 1, 8]
                     case '(HL+)':
                         this.bus.write(this.registers.hl, this.registers.a)
-                        u16.wrappingAdd(this.registers.hl, 1)
+                        this.registers.hl = u16.wrappingAdd(this.registers.hl, 1)
                         return [this.pc + 1, 8]
                     case '(HL-)':
                         this.bus.write(this.registers.hl, this.registers.a)
-                        u16.wrappingSub(this.registers.hl, 1)
+                        this.registers.hl = u16.wrappingSub(this.registers.hl, 1)
                         return [this.pc + 1, 8]
                     case '(C)':
                         this.bus.write(0xff00 + this.registers.c, this.registers.a)
@@ -1033,11 +1033,11 @@ export class CPU {
                         return [this.pc + 1, 8]
                     case '(HL+)':
                         this.registers.a = this.bus.read(this.registers.hl)
-                        u16.wrappingAdd(this.registers.hl, 1)
+                        this.registers.hl = u16.wrappingAdd(this.registers.hl, 1)
                         return [this.pc + 1, 8]
                     case '(HL-)':
                         this.registers.a = this.bus.read(this.registers.hl)
-                        u16.wrappingSub(this.registers.hl, 1)
+                        this.registers.hl = u16.wrappingSub(this.registers.hl, 1)
                         return [this.pc + 1, 8]
                     case '(C)':
                         this.registers.a = this.bus.read(0xff00 + this.registers.c)

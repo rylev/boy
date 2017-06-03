@@ -225,6 +225,17 @@ class Bus {
                 }
                 this._timer.on = (value & 0b100) !== 0 
                 return
+            case 0xff08:
+            case 0xff09:
+            case 0xff0a:
+            case 0xff0b:
+            case 0xff0c:
+            case 0xff0d:
+            case 0xff0e:
+            case 0xff0f:
+                console.warn(`Writing 0x${toHex(value)} which is unknown. Ignoring...`)
+                return
+
             case 0xff0f:
                 console.warn(`Writing 0x${toHex(value)} to interrupt register. Ignoring...`)
                 return
@@ -303,11 +314,12 @@ class Bus {
                 return
             case 0xff46:
                 // TODO: account for the fact this takes 160 microseconds
-                const dmaSource = Math.trunc(value / 0x100)
+                const dmaSource = (value << 8) 
                 const dmaDestination = 0xfe00
                 for (let x = 0; x < 150; x++) {
-                    this.write(dmaDestination + x, dmaSource + x)
+                    this.write(dmaDestination + x, this.read(dmaSource + x))
                 }
+                return
             case 0xff47:
                 this._gpu.bgcolor3 = bitsToColor(value >> 6)
                 this._gpu.bgcolor2 = bitsToColor((value >> 4) & 0b11)
