@@ -121,6 +121,8 @@ class GPU {
 
     line = 0
 
+    modeChange: ((oldMode: GPUMode, newMode: GPUMode) => void) | undefined
+
     get mode(): GPUMode { return this._mode }
 
     constructor() {
@@ -139,8 +141,10 @@ class GPU {
                     if (this.line === 143) {
 
                         this.draw()
+                        this.modeChange && this.modeChange(this._mode, GPUMode.VerticalBlank)
                         this._mode = GPUMode.VerticalBlank
                     } else {
+                        this.modeChange && this.modeChange(this._mode, GPUMode.OAMAccess)
                         this._mode = GPUMode.OAMAccess
                     }
                 }
@@ -151,6 +155,7 @@ class GPU {
                     this.line++
 
                     if (this.line > 153) {
+                        this.modeChange && this.modeChange(this._mode, GPUMode.OAMAccess)
                         this._mode = GPUMode.OAMAccess
                         this.line = 0
                     }
@@ -159,12 +164,14 @@ class GPU {
             case GPUMode.OAMAccess:
                 if (this._timer >= 80) {
                     this._timer = 0
+                    this.modeChange && this.modeChange(this._mode, GPUMode.VRAMAccess)
                     this._mode = GPUMode.VRAMAccess
                 }
                 return
             case GPUMode.VRAMAccess:
                 if (this._timer >= 172) {
                     this._timer = 0
+                    this.modeChange && this.modeChange(this._mode, GPUMode.HorizontalBlank)
                     this._mode = GPUMode.HorizontalBlank
 
                     this.renderScan()

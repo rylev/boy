@@ -34,6 +34,7 @@ export class CPU {
     private _onPause: (() => void) | undefined
     private _onError: ((error: Error) => void) | undefined
     private _onMaxClockCycles: (() => void) | undefined
+    private _interruptsEnabled: boolean = true
 
     constructor(bios: Uint8Array | undefined, rom: Uint8Array, joypad: Joypad = new Joypad(), callbacks: CPUCallbacks = {}) {
         this.gpu = new GPU()
@@ -109,6 +110,13 @@ export class CPU {
             this.clockTicksInSecond += cycles
 
             this.pc = nextPC
+            if (this._interruptsEnabled && this.bus.interruptEnable > 0 && this.bus.interruptFlags > 0) {
+                const shouldFire = this.bus.interruptEnable & this.bus.interruptFlags
+                if ((shouldFire & 0x1) > 0) {
+                    this.bus.interruptFlags = this.bus.interruptFlags & 0x254
+                    this.verticalBlank()
+                }
+            }
         } catch (e) {
             console.error(e)
             this._isRunning = false
@@ -117,6 +125,13 @@ export class CPU {
             return
         }
 
+    }
+
+    verticalBlank() {
+        this._interruptsEnabled = false
+        this.push(this.pc)
+        this.pc = 0x40
+        this.clockTicksInFrame += 12
     }
 
     execute(instruction: Instruction): [Address, Cycles] {
@@ -136,13 +151,19 @@ export class CPU {
             case 'DI':
                 // 1  4
                 // - - - -
-                // TODO: actually disable interrupts
+                this._interruptsEnabled = false
                 return [this.pc + 1, 4]
             case 'EI':
                 // 1  4
                 // - - - -
-                // TODO: actually enable interrupts
+                this._interruptsEnabled = true
                 return [this.pc + 1, 4]
+            case 'RETI':
+                // 1  16
+                // - - - -
+                this._interruptsEnabled = true
+                const retiPC = this.pop()
+                return [retiPC, 16]
             case 'PREFIX CB':
                 // 1  4
                 // - - - -
@@ -958,11 +979,11 @@ export class CPU {
                         return [this.pc + 1, 8]
                     case '(HL+)':
                         this.bus.write(this.registers.hl, this.registers.a)
-                        this.registers.hl++
+                        this.registers.hl = u16.wrappingAdd(this.registers.hl, 1)
                         return [this.pc + 1, 8]
                     case '(HL-)':
                         this.bus.write(this.registers.hl, this.registers.a)
-                        this.registers.hl--
+                        this.registers.hl = u16.wrappingSub(this.registers.hl, 1)
                         return [this.pc + 1, 8]
                     case '(C)':
                         this.bus.write(0xff00 + this.registers.c, this.registers.a)
@@ -1012,11 +1033,11 @@ export class CPU {
                         return [this.pc + 1, 8]
                     case '(HL+)':
                         this.registers.a = this.bus.read(this.registers.hl)
-                        this.registers.hl++
+                        this.registers.hl = u16.wrappingAdd(this.registers.hl, 1)
                         return [this.pc + 1, 8]
                     case '(HL-)':
                         this.registers.a = this.bus.read(this.registers.hl)
-                        this.registers.hl--
+                        this.registers.hl = u16.wrappingSub(this.registers.hl, 1)
                         return [this.pc + 1, 8]
                     case '(C)':
                         this.registers.a = this.bus.read(0xff00 + this.registers.c)
@@ -1069,7 +1090,7 @@ export class CPU {
                     default: 
                         assertExhaustive(instruction)
                 }
-                return [this.pc +1, 12]
+                return [this.pc + 1, 12]
             
             case 'SRL':
                 // WHEN: n is (HL)
