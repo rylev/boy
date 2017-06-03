@@ -104,6 +104,8 @@ class Bus {
             value = 0 // TODO: define
         } else if (addr >= 0xc000 && addr <= 0xdfff) {
             value = this._workingRam[addr - 0xc000]
+        } else if (addr >= 0xfe00 && addr <= 0xfe9f) {
+            value = this._gpu.oam[addr - 0xfe00]
         } else if (addr >= 0xff00 && addr <= 0xff7f) {
             value = this.readIO(addr)
         } else if (addr >= 0xff80 && addr <= 0xffff) {

@@ -759,6 +759,10 @@ export class CPU {
 
                 }
                 return this.call(condition)
+            case 'RST':
+                // 1  16
+                // - - - -
+                return this.rst(instruction.location)
             case 'RET':
                 // WHEN: condition is constant true
                 // 1  16
@@ -1382,6 +1386,11 @@ export class CPU {
         } else {
             return [u16.wrappingAdd(this.pc, 2), 8]
         }
+    }
+
+    rst(location: number): [Address, Cycles] {
+        this.push(u16.wrappingAdd(this.pc, 3))
+        return [location, 24]
     }
 
     call(condition: boolean): [Address, Cycles] {

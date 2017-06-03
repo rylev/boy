@@ -9,6 +9,8 @@ type JPIndirect = { type: 'JP Indirect' }
 type JR = { type: 'JR', test: JumpTest }
 type CALL = { type: 'CALL', test: JumpTest }
 type RET = { type: 'RET', test: JumpTest }
+type RSTLocation = 0x0 | 0x8 | 0x10 | 0x18 | 0x20 | 0x28 | 0x30 | 0x38
+type RST = { type: 'RST', location: RSTLocation }
 
 type Halt = { type: 'HALT' }
 type EI = { type: 'EI' }
@@ -102,6 +104,7 @@ type JumpInstruction =
     | JR
     | CALL
     | RET
+    | RST
 
 type ControlInstruction = 
     | Halt
@@ -175,6 +178,7 @@ export namespace Instruction {
     export const JPIndirect: JPIndirect = { type: 'JP Indirect'}
     export const CALL = (test: JumpTest): CALL => ({ type: 'CALL', test })
     export const RET = (test: JumpTest): RET => ({ type: 'RET', test })
+    export const RST = (location: RSTLocation): RST => ({ type: 'RST', location })
 
     export const Halt: Halt = { type: 'HALT' }
     export const DI: DI = { type: 'DI' }
@@ -403,6 +407,16 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xc8: Instruction.RET('Z'),
     0xd8: Instruction.RET('C'),
     0xc9: Instruction.RET(true),
+
+    0xc7: Instruction.RST(0x0),
+    0xd7: Instruction.RST(0x10),
+    0xe7: Instruction.RST(0x20),
+    0xf7: Instruction.RST(0x30),
+    0xcf: Instruction.RST(0x08),
+    0xdf: Instruction.RST(0x18),
+    0xef: Instruction.RST(0x28),
+    0xff: Instruction.RST(0x38),
+
 
     0xf2: Instruction.LDAFromIndirect('(C)'),
     0x0a: Instruction.LDAFromIndirect('(BC)'),
