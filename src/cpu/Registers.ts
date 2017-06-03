@@ -20,7 +20,7 @@ class Registers {
     }
 
     get af(): number {
-        return (this.a << 8) + this.f.toByte()
+        return (this.a << 8) | this.f.toByte()
     }
     set af(value: number) {
         this.a = (value & 0xFF00) >> 8
@@ -28,7 +28,7 @@ class Registers {
     }
 
     get bc(): number {
-        return (this.b << 8) + this.c
+        return (this.b << 8) | this.c
     }
     set bc(value: number) {
         this.b = (value & 0xFF00) >> 8
@@ -36,15 +36,15 @@ class Registers {
     }
 
     get hl(): number {
-        return (this.h << 8) + this.l
+        return (this.h << 8) | this.l
     }
     set hl(value: number) {
-        this.h = (value & 0xFF00) >> 8
-        this.l = (value & 0XFF)
+        this.h = (value & 0xff00) >> 8
+        this.l = (value & 0Xff)
     }
 
     get de(): number {
-        return (this.d << 8) + this.e
+        return (this.d << 8) | this.e
     }
     set de(value: number) {
         this.d = (value & 0xFF00) >> 8

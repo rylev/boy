@@ -17,7 +17,7 @@ describe('Instruction.RET', () => {
         ])
 
         it('jumps when zero flag is set', () => {
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.f.zero = true
             cpu.sp = 0x102
             cpu.runFrame()
@@ -26,7 +26,7 @@ describe('Instruction.RET', () => {
         })
 
         it('doesn\'t jump when zero flag is not set', () => {
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.f.zero = false
             cpu.sp = 0x102
             cpu.runFrame()
@@ -48,7 +48,7 @@ describe('Instruction.RET', () => {
                 Instruction.toByte(Instruction.Halt),
             ])
 
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.sp = 0x101
             cpu.runFrame()
 

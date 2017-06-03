@@ -17,7 +17,7 @@ describe('Instruction.CALL', () => {
         ])
 
         it('jumps when zero flag is set', () => {
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.f.zero = true
             cpu.runFrame()
 
@@ -25,7 +25,7 @@ describe('Instruction.CALL', () => {
         })
 
         it('doesn\'t jump when zero flag is not set', () => {
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.f.zero = false
             cpu.runFrame()
 
@@ -46,7 +46,7 @@ describe('Instruction.CALL', () => {
                 Instruction.toByte(Instruction.Halt),
             ])
 
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.runFrame()
 
             assert.equal(cpu.pc, rom.length)

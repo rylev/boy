@@ -2,6 +2,7 @@ import Registers from './Registers'
 import Instruction from './Instruction'
 import Bus from './Bus'
 import GPU from './GPU'
+import Joypad from './Joypad'
 import { assertExhaustive } from 'typescript'
 import u16 from 'lib/u16'
 import u8 from 'lib/u8'
@@ -33,10 +34,11 @@ export class CPU {
     private _onPause: (() => void) | undefined
     private _onError: ((error: Error) => void) | undefined
     private _onMaxClockCycles: (() => void) | undefined
+    private _interruptsEnabled: boolean = true
 
-    constructor(bios: Uint8Array | undefined, rom: Uint8Array, callbacks: CPUCallbacks) {
+    constructor(bios: Uint8Array | undefined, rom: Uint8Array, joypad: Joypad = new Joypad(), callbacks: CPUCallbacks = {}) {
         this.gpu = new GPU()
-        this.bus = new Bus(bios, rom, this.gpu)
+        this.bus = new Bus(bios, rom, this.gpu, joypad)
         this.registers = new Registers()
         this.pc = bios ? 0 : CPU.START_ADDR
         this.sp = bios ? 0 : 0xfffe
@@ -108,6 +110,13 @@ export class CPU {
             this.clockTicksInSecond += cycles
 
             this.pc = nextPC
+            if (this._interruptsEnabled && this.bus.interruptEnable > 0 && this.bus.interruptFlags > 0) {
+                const shouldFire = this.bus.interruptEnable & this.bus.interruptFlags
+                if ((shouldFire & 0x1) > 0) {
+                    this.bus.interruptFlags = this.bus.interruptFlags & 0x254
+                    this.verticalBlank()
+                }
+            }
         } catch (e) {
             console.error(e)
             this._isRunning = false
@@ -116,6 +125,13 @@ export class CPU {
             return
         }
 
+    }
+
+    verticalBlank() {
+        this._interruptsEnabled = false
+        this.push(this.pc)
+        this.pc = 0x40
+        this.clockTicksInFrame += 12
     }
 
     execute(instruction: Instruction): [Address, Cycles] {
@@ -135,13 +151,19 @@ export class CPU {
             case 'DI':
                 // 1  4
                 // - - - -
-                // TODO: actually disable interrupts
+                this._interruptsEnabled = false
                 return [this.pc + 1, 4]
             case 'EI':
                 // 1  4
                 // - - - -
-                // TODO: actually enable interrupts
+                this._interruptsEnabled = true
                 return [this.pc + 1, 4]
+            case 'RETI':
+                // 1  16
+                // - - - -
+                this._interruptsEnabled = true
+                const retiPC = this.pop()
+                return [retiPC, 16]
             case 'PREFIX CB':
                 // 1  4
                 // - - - -
@@ -254,6 +276,16 @@ export class CPU {
                 // 0 0 0 C
                 this.registers.a = this.rotateLeft(this.registers.a, false)
                 return [this.pc + 1, 4]
+            case 'RLCA':
+                // 1  4
+                // 0 0 0 C
+                this.registers.a = this.rlc(this.registers.a, false)
+                return [this.pc + 1, 4]
+            case 'RRCA':
+                // 1  4
+                // 0 0 0 C
+                this.registers.a = this.rrc(this.registers.a, false)
+                return [this.pc + 1, 4]
             case 'DAA':
                 // 1  4
                 // Z - 0 C
@@ -349,7 +381,6 @@ export class CPU {
                         this.registers.hl = u16.wrappingAdd(this.registers.hl, 1)
                         return [this.pc + 1, 8]
                     case 'SP':
-
                         this.sp = u16.wrappingAdd(this.sp, 1)
                         return [this.pc + 1, 8]
                     case '(HL)':
@@ -496,6 +527,31 @@ export class CPU {
                 } else {
                     return [this.pc + 1, 4]
                 }
+            case 'ADDSP':
+                // 2  16
+                // 0 0 H C
+                const [addspResult, addspCarry] = u16.overflowingAdd(this.sp, (u8.asSigned(this.readNextByte()) >>> 0) & 0xffff)
+                this.registers.f.zero = false
+                this.registers.f.subtract = false
+                this.registers.f.halfCarry = false // TODO: calculate this
+                this.registers.f.carry = addspCarry
+                this.sp = addspResult
+                return [this.pc + 2, 16]
+            case 'CPL':
+                // 1  4
+                // - 1 1 -
+                // 0 0 H C
+                this.registers.a = (~(this.registers.a) & 0xff)
+                this.registers.f.halfCarry = true
+                this.registers.f.carry = true
+                return [this.pc + 1, 4]
+            case 'SCF':
+                // 1  4
+                // - 0 0 1
+                this.registers.f.carry = true
+                this.registers.f.halfCarry = false
+                this.registers.f.subtract = false
+                return [this.pc + 1, 4]
             case 'ADD':
                 // WHEN: instruction.n is (hl)
                 // 1  8
@@ -923,11 +979,11 @@ export class CPU {
                         return [this.pc + 1, 8]
                     case '(HL+)':
                         this.bus.write(this.registers.hl, this.registers.a)
-                        this.registers.hl++
+                        this.registers.hl = u16.wrappingAdd(this.registers.hl, 1)
                         return [this.pc + 1, 8]
                     case '(HL-)':
                         this.bus.write(this.registers.hl, this.registers.a)
-                        this.registers.hl--
+                        this.registers.hl = u16.wrappingSub(this.registers.hl, 1)
                         return [this.pc + 1, 8]
                     case '(C)':
                         this.bus.write(0xff00 + this.registers.c, this.registers.a)
@@ -971,17 +1027,17 @@ export class CPU {
                 switch (instruction.source) {
                     case '(BC)':
                         this.registers.a = this.bus.read(this.registers.bc)
-                        return [this.pc + 1, 8]
+                        return [u16.wrappingAdd(this.pc, 1), 8]
                     case '(DE)':
                         this.registers.a = this.bus.read(this.registers.de)
                         return [this.pc + 1, 8]
                     case '(HL+)':
                         this.registers.a = this.bus.read(this.registers.hl)
-                        this.registers.hl++
+                        this.registers.hl = u16.wrappingAdd(this.registers.hl, 1)
                         return [this.pc + 1, 8]
                     case '(HL-)':
                         this.registers.a = this.bus.read(this.registers.hl)
-                        this.registers.hl--
+                        this.registers.hl = u16.wrappingSub(this.registers.hl, 1)
                         return [this.pc + 1, 8]
                     case '(C)':
                         this.registers.a = this.bus.read(0xff00 + this.registers.c)
@@ -1034,7 +1090,7 @@ export class CPU {
                     default: 
                         assertExhaustive(instruction)
                 }
-                return [this.pc +1, 12]
+                return [this.pc + 1, 12]
             
             case 'SRL':
                 // WHEN: n is (HL)
@@ -1260,20 +1316,20 @@ export class CPU {
         return newValue
     }
 
-    rlc(value: number): number {
+    rlc(value: number, setZero: boolean = true): number {
         const carry = (value & 0x80) >> 7
         const newValue = (value << 1) & 0xff
-        this.registers.f.zero = newValue === 0
+        this.registers.f.zero = setZero && newValue === 0
         this.registers.f.subtract = false
         this.registers.f.halfCarry = false
         this.registers.f.carry = carry === 1
         return newValue
     }
 
-    rrc(value: number): number {
+    rrc(value: number, setZero: boolean = true): number {
         const carry = value & 0b1 
         const newValue = value >> 1
-        this.registers.f.zero = newValue === 0
+        this.registers.f.zero = setZero && newValue === 0
         this.registers.f.subtract = false
         this.registers.f.halfCarry = false
         this.registers.f.carry = carry === 1

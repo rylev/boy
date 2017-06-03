@@ -7,6 +7,7 @@ import Memory from 'components/Memory'
 import Background from 'components/Background'
 import TileSet from 'components/TileSet'
 import { CPU as CPUModel }from 'cpu'
+import Joypad from 'cpu/Joypad'
 import Debugger from 'Debugger'
 import './gameboy.css'
 
@@ -29,7 +30,8 @@ class Gameboy extends React.Component<Props, State> {
         super(props)
         const cpu = this.newCPU(props)
         this.state = { 
-            cpu: cpu
+            cpu: cpu,
+            debug: new Debugger()
         }
     }
 
@@ -69,12 +71,26 @@ class Gameboy extends React.Component<Props, State> {
         return <div className="error">{error.message}</div>
     }
 
+    addr: number
+
+    updateAddr = (e: React.ChangeEvent<HTMLInputElement>) => {
+        this.addr = parseInt(e.target.value, 16)
+    }
+    submitBreakpoint = (e: React.FormEvent<HTMLFormElement>) => {
+        this.addBreakPoint(this.addr)
+        e.preventDefault()
+    }
+
     debug(): JSX.Element | null {
         const { debug } = this.state
         if (debug === undefined) { return null }
 
         return (
             <div>
+                <form onSubmit={this.submitBreakpoint}>
+                    <input type="text" name="addr" onChange={this.updateAddr}/>
+                    <input type="submit" value="Submit"/>
+                </form>
                 Breakpoints: {debug.breakpoints.map(bp => `0x${bp.toString(16)}`).join(",")}
             </div>
         )
@@ -124,6 +140,7 @@ class Gameboy extends React.Component<Props, State> {
         const { cpu } = this.state
         cpu.unpause()
         this.setState({ runningState: RunningState.Running }, () => {
+            this.step()
             this.runFrame(cpu, 0, true)
         })
     }
@@ -195,8 +212,37 @@ class Gameboy extends React.Component<Props, State> {
         const onError = (e: Error) => { this.setState({error: e, runningState: RunningState.Stopped}) }
         const onPause = () => { this.setState({runningState: RunningState.Paused})}
         const onMaxClockCycles = () => { this.setState({cpu: cpu})}
-        const cpu = new CPUModel(props.bios, props.rom, { onError, onPause, onMaxClockCycles })
+        const cpu = new CPUModel(props.bios, props.rom, this.joypad(), { onError, onPause, onMaxClockCycles })
         return cpu
+    }
+
+    joypad() {
+        const joypad = new Joypad()
+        window.onkeydown = (e) => {
+            switch (e.keyCode) {
+                case 39: joypad.right = true; break;
+                case 37: joypad.left = true; break;
+                case 38: joypad.up = true; break;
+                case 40: joypad.down = true; break;
+                case 90: joypad.a = true; break;
+                case 88: joypad.b = true; break;
+                case 32: joypad.select = true; break;
+                case 13: joypad.start = true; break;
+            }
+        }
+        window.onkeyup = (e) => {
+            switch (e.keyCode) {
+                case 39: joypad.right = false; break;
+                case 37: joypad.left = false; break;
+                case 38: joypad.up = false; break;
+                case 40: joypad.down = false; break;
+                case 90: joypad.a = false; break;
+                case 88: joypad.b = false; break;
+                case 32: joypad.select = false; break;
+                case 13: joypad.start = false; break;
+            }
+        }
+        return joypad
     }
 }
 

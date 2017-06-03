@@ -10,7 +10,7 @@ describe('Instruction.SUB', () => {
                 Instruction.toByte(Instruction.SUB('A')),
                 Instruction.toByte(Instruction.Halt),
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.a = 0x10
             cpu.runFrame()
 
@@ -28,7 +28,7 @@ describe('Instruction.SUB', () => {
                 Instruction.toByte(Instruction.SUB('B')),
                 Instruction.toByte(Instruction.Halt),
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.a = 0x10
             cpu.registers.b = 0x11
             cpu.runFrame()
@@ -51,7 +51,7 @@ describe('Instruction.SUB', () => {
                 0x14,
                 Instruction.toByte(Instruction.Halt),
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.a = 0x10
             cpu.runFrame()
 

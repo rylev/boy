@@ -13,6 +13,7 @@ type RET = { type: 'RET', test: JumpTest }
 type Halt = { type: 'HALT' }
 type EI = { type: 'EI' }
 type DI = { type: 'DI' }
+type RETI = { type: 'RETI' }
 type NOP = { type: 'NOP' }
 type PREFIX = { type: 'PREFIX CB' }
 
@@ -22,7 +23,11 @@ type AddHL = { type: 'ADD HL', source: AddHLSource }
 type CPN = AllRegistersButF | '(HL)' | 'd8'
 type CP = { type: 'CP', n: CPN }
 
+type CPL = { type: 'CPL' }
+
 type RLA = { type: 'RLA' }
+type RLCA = { type: 'RLCA' }
+type RRCA = { type: 'RRCA' }
 
 type INCTarget = AllRegistersButF | WordRegisters | '(HL)' | 'SP'
 type INC = { type: 'INC', target: INCTarget }
@@ -45,6 +50,8 @@ type SUBCN = ANDN
 type SUBC = { type: 'SUBC', n: SUBCN }
 type RRA = { type: 'RRA' }
 type DAA = { type: 'DAA' }
+type ADDSP = { type: 'ADDSP' }
+type SCF = { type: 'SCF' }
 
 type LDHA_a8_ = { type: 'LDH A,(a8)' }
 type LDH_a8_A = { type: 'LDH (a8),A' }
@@ -102,6 +109,7 @@ type ControlInstruction =
     | EI
     | NOP
     | PREFIX
+    | RETI
     
 type ArithmeticInstruction = 
     | AND
@@ -115,9 +123,14 @@ type ArithmeticInstruction =
     | XOR
     | CP
     | RLA
+    | RLCA
+    | RRCA
     | RRA
     | DEC
     | DAA
+    | ADDSP
+    | CPL 
+    | SCF
 
 type LoadStoreInstruction = 
     | LD
@@ -166,6 +179,7 @@ export namespace Instruction {
     export const Halt: Halt = { type: 'HALT' }
     export const DI: DI = { type: 'DI' }
     export const EI: EI = { type: 'EI' }
+    export const RETI: RETI = { type: 'RETI' }
     export const NOP: NOP = { type: 'NOP' }
     export const PREFIX: PREFIX = { type: 'PREFIX CB' }
 
@@ -173,6 +187,8 @@ export namespace Instruction {
     export const CP = (n: CPN): CP => ({ type: 'CP', n })
     export const XOR = (n: XORN): XOR => ({ type: 'XOR', n })
     export const RLA: RLA = { type: 'RLA' }
+    export const RLCA: RLCA = { type: 'RLCA' }
+    export const RRCA: RRCA = { type: 'RRCA' }
     export const INC = (target: INCTarget): INC => ({ type: 'INC', target })
     export const DEC = (target: DECTarget): DEC => ({ type: 'DEC', target })
     export const ADD = (n: ADDN): ADD => ({ type: 'ADD', n })
@@ -183,6 +199,9 @@ export namespace Instruction {
     export const OR = (n: ORN): OR => ({ type: 'OR', n })
     export const RRA: RRA = { type: 'RRA' }
     export const DAA: DAA = { type: 'DAA' }
+    export const ADDSP: ADDSP = { type: 'ADDSP' }
+    export const CPL: CPL = { type: 'CPL' }
+    export const SCF: SCF = { type: 'SCF' }
 
     export const LD = (target: AllRegistersButF, source: LDSource): LD => ({ type: 'LD', target, source })
     export const LDWord = (target: WordTarget): LDWord => ({ type: 'LD Word', target })
@@ -274,6 +293,8 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xaf: Instruction.XOR('A'),
     0xee: Instruction.XOR('d8'),
 
+    0x07: Instruction.RLCA,
+    0x0f: Instruction.RRCA,
     0x17: Instruction.RLA,
 
     0x05: Instruction.DEC('B'),
@@ -308,6 +329,9 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x8e: Instruction.ADDC('(HL)'),
     0x8f: Instruction.ADDC('A'),
     0xce: Instruction.ADDC('d8'),
+
+    0xe8: Instruction.ADDSP,
+    0x2f: Instruction.CPL,
 
     0xa0: Instruction.AND('B'),
     0xa1: Instruction.AND('C'),
@@ -350,6 +374,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xde: Instruction.SUBC('d8'),
 
     0x27: Instruction.DAA,
+    0x37: Instruction.SCF,
 
     0x1f: Instruction.RRA,
 
@@ -499,7 +524,8 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x76: Instruction.Halt,
     0xf3: Instruction.DI,
     0xfb: Instruction.EI,
-    0x00: Instruction.NOP
+    0x00: Instruction.NOP,
+    0xd9: Instruction.RETI
 }
 
 const byteToPrefixInstructionMap: { [index: number]: Instruction | undefined } = {

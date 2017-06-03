@@ -10,7 +10,7 @@ describe('Instruction.ADDC', () => {
                 Instruction.toByte(Instruction.ADDC('A')),
                 Instruction.toByte(Instruction.Halt),
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.a = 0x10
             cpu.registers.f.carry = true
             cpu.runFrame()
@@ -31,7 +31,7 @@ describe('Instruction.ADDC', () => {
                 0x14,
                 Instruction.toByte(Instruction.Halt),
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.a = 0x10
             cpu.registers.f.carry = true
             cpu.runFrame()

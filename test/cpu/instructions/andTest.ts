@@ -12,7 +12,7 @@ describe('Instruction.AND', () => {
                 0x10, 
                 Instruction.toByte(Instruction.Halt)
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.a = 0x11
             cpu.runFrame()
 
@@ -31,7 +31,7 @@ describe('Instruction.AND', () => {
                 Instruction.toByte(Instruction.AND('B')),
                 Instruction.toByte(Instruction.Halt)
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.a = 0x11
             cpu.registers.b = 0x10
             cpu.runFrame()
@@ -55,7 +55,7 @@ describe('Instruction.AND', () => {
                 Instruction.toByte(Instruction.NOP),
                 0x10
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.registers.a = 0x11
             cpu.registers.h = u16.msb(rom.length - 1)
             cpu.registers.l = u16.lsb(rom.length - 1)

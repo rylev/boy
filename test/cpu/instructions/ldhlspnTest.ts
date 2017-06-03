@@ -12,7 +12,7 @@ describe('Instruction.LD', () => {
                 0x12,
                 Instruction.toByte(Instruction.Halt)
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.sp = 0x100
             cpu.runFrame()
 
@@ -28,7 +28,7 @@ describe('Instruction.LD', () => {
                 0xff,
                 Instruction.toByte(Instruction.Halt)
             ])
-            const cpu = new CPU(undefined, rom, {})
+            const cpu = new CPU(undefined, rom)
             cpu.sp = 0x100
             cpu.runFrame()
 
