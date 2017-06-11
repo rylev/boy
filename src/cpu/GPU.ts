@@ -228,7 +228,7 @@ class GPU {
                     data.palette = (value & 0x10) !== 0 ? ObjectPalette.One : ObjectPalette.Zero
                     data.xflip = (value & 0x20) !== 0
                     data.yflip = (value & 0x40) !== 0
-                    data.priority = (value & 0x80) !== 0
+                    data.priority = (value & 0x80) === 0
                     break
             }
         }
@@ -296,7 +296,7 @@ class GPU {
 
                     for (var x = 0; x < 8; x++) {
                         if ((object.x + x) >= 0 && (object.x + x) < 160 &&
-                            tileRow[x] &&
+                            tileRow[x] !== TileValue.Zero &&
                             (object.priority || scanRow[object.x + x] === TileValue.Zero)) {
                             const pixel = tileRow[object.xflip ? (7 - x) : x]
                             const color = this.valueToObjectColor(pixel)
@@ -306,8 +306,8 @@ class GPU {
                             this._canvas[canvasoffs + 2] = color
                             this._canvas[canvasoffs + 3] = 255
 
-                            canvasoffs += 4;
                         }
+                        canvasoffs += 4;
                     }
                 }
             })
@@ -325,9 +325,9 @@ class GPU {
 
     valueToObjectColor(value: TileValue) {
         switch (value) {
-            case TileValue.Zero: return this.objectPalette === ObjectPalette.Zero ? this.obj0color1 : this.obj1color1
-            case TileValue.One: return this.objectPalette === ObjectPalette.Zero ? this.obj0color2 : this.obj1color2
-            case TileValue.Two: return this.objectPalette === ObjectPalette.Zero ? this.obj0color3 : this.obj1color3
+            case TileValue.Zero: throw "Objects should not have use tile value zero. This should be transparent"
+            case TileValue.One: return this.objectPalette === ObjectPalette.Zero ? this.obj0color1 : this.obj1color1
+            case TileValue.Two: return this.objectPalette === ObjectPalette.Zero ? this.obj0color2 : this.obj1color2
             case TileValue.Three: return this.objectPalette === ObjectPalette.Zero ? this.obj0color3 : this.obj1color3
         }
     }
