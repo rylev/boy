@@ -237,7 +237,6 @@ class Bus {
             case 0xff0f:
                 console.warn(`Writing 0x${toHex(value)} which is unknown. Ignoring...`)
                 return
-
             case 0xff0f:
                 console.warn(`Writing 0x${toHex(value)} to interrupt register. Ignoring...`)
                 return
@@ -316,10 +315,10 @@ class Bus {
                 return
             case 0xff46:
                 // TODO: account for the fact this takes 160 microseconds
-                const dmaSource = (value << 8) 
+                const dmaSource = value << 8 
                 const dmaDestination = 0xfe00
-                for (let x = 0; x < 150; x++) {
-                    this.write(dmaDestination + x, this.read(dmaSource + x))
+                for (let offset = 0; offset < 150; offset++) {
+                    this.write(dmaDestination + offset, this.read(dmaSource + offset))
                 }
                 return
             case 0xff47:

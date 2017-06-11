@@ -957,9 +957,8 @@ export class CPU {
                     default:
                         ldToIndirectSource = 0
                         assertExhaustive(instruction)
-                    
-                    this.bus.write(this.registers.hl, ldToIndirectSource)
                 }
+                this.bus.write(this.registers.hl, ldToIndirectSource)
 
                 if (instruction.source === 'd8') {
                     return [this.pc + 2, 12]
