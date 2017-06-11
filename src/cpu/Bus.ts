@@ -163,6 +163,9 @@ class Bus {
                 return this._joypad.toByte()
             case 0xff04:
                 return this._dividerTimer.value
+            case 0xff1c:
+                // TODO: Channel 3 Select output level
+                return 0
             case 0xff40:
                 return ((this._gpu.lcdDisplayEnabled ? 1 : 0) << 7) |
                        ((this._gpu.windowTileMap === WindowTileMap.x9c00 ? 1 : 0) << 6) |
