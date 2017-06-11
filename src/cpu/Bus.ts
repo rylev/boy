@@ -6,10 +6,15 @@ type TimerFrequency = 4096 | 262144 | 65536 | 16384
 
 class Timer {
     frequency: TimerFrequency
+    private _on: boolean 
     modulo: number = 0
-    value: number
-    private _on: boolean
-    private _task: number | undefined
+    value: number = 0
+    private _task: number | undefined = undefined
+
+    constructor(frequency: TimerFrequency) {
+        this.frequency = frequency
+        this.on = true
+    }
 
     get on(): boolean {
         return this._on
@@ -35,12 +40,11 @@ class Bus {
     private _bios: Uint8Array
     private _rom: Uint8Array
     private _gpu: GPU
-    private _timer: Timer = new Timer()
+    private _timer: Timer = new Timer(4096)
     private _joypad: Joypad
     private _zeroPagedRam: Uint8Array
     private _workingRam: Uint8Array
-    private _timerEnabled: boolean
-    private _timerFrequency: TimerFrequency
+    private _dividerTimer = new Timer(16384)
     interruptEnable: number = 0
     _interruptFlags: number = 0
 
@@ -157,6 +161,8 @@ class Bus {
         switch (addr) {
             case 0xff00:
                 return this._joypad.toByte()
+            case 0xff04:
+                return this._dividerTimer.value
             case 0xff40:
                 return ((this._gpu.lcdDisplayEnabled ? 1 : 0) << 7) |
                        ((this._gpu.windowTileMap === WindowTileMap.x9c00 ? 1 : 0) << 6) |
@@ -210,7 +216,7 @@ class Bus {
             case 0xff03:
                 console.warn(`Writing 0x${toHex(value)} which is unknown. Ignoring...`)
             case 0xff04:
-                console.warn(`Writing 0x${toHex(value)} to timer register. Ignoring...`)
+                this._dividerTimer.value = 0
                 return
             case 0xff05:
                 this._timer.value = value
