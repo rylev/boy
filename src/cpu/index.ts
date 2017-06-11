@@ -1389,7 +1389,7 @@ export class CPU {
     }
 
     rst(location: number): [Address, Cycles] {
-        this.push(u16.wrappingAdd(this.pc, 3))
+        this.push(u16.wrappingAdd(this.pc, 1))
         return [location, 24]
     }
 
