@@ -1271,11 +1271,11 @@ export class CPU {
 
     sla(value: number): number {
         const carry = (value & 0x80) >> 7 
-        const newValue = (value << 1) && 0xff
+        const newValue = (value << 1) & 0xff
         this.registers.f.zero = newValue === 0
         this.registers.f.subtract = false
         this.registers.f.halfCarry = false
-        this.registers.f.carry = carry === 1 ? true : false
+        this.registers.f.carry = carry === 1 
         return newValue
     }
 
@@ -1286,7 +1286,7 @@ export class CPU {
         this.registers.f.zero = newValue === 0
         this.registers.f.subtract = false
         this.registers.f.halfCarry = false
-        this.registers.f.carry = carry === 1 ? true : false
+        this.registers.f.carry = carry === 1 
         return newValue
     }
 

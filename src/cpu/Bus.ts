@@ -261,10 +261,20 @@ class Bus {
                 // Channel 2 Frequency hi data
             case 0xff1a:
                 // Channel 3 Sound on/off
+            case 0xff1b:
+                // Channel 3 Sound length
             case 0xff1c:
                 // Channel 3 Select output level
+            case 0xff1d:
+                // Channel 3 Frequency's lower data
+            case 0xff1e: 
+                // Channel 3 Frequency's higher data
+            case 0xff20: 
+                // Channel 4 Sound Length
             case 0xff21: 
                 // Channel 4 Volume Envelope
+            case 0xff22:
+                // Channel 4 Polynomial Counter
             case 0xff23:
                 // Channel 4 Counter/consecutive
             case 0xff24:
