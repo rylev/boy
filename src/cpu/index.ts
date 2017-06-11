@@ -991,7 +991,7 @@ export class CPU {
                         return [this.pc + 1, 8]
                     case '(C)':
                         this.bus.write(0xff00 + this.registers.c, this.registers.a)
-                        return [this.pc + 2, 8]
+                        return [this.pc + 1, 8]
                     case '(a16)':
                         this.bus.write(this.readNextWord(), this.registers.a)
                         return [this.pc + 3, 16]
