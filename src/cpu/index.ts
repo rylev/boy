@@ -1229,7 +1229,7 @@ export class CPU {
         this.registers.f.zero = add2 === 0
         this.registers.f.subtract = false
         this.registers.f.carry = carry || carry2
-        this.registers.f.halfCarry = false // TODO: set properly
+        this.registers.f.halfCarry = ((this.registers.a & 0xf) + (value & 0xf)) > 0xf
         return add2
     }
 
@@ -1248,7 +1248,7 @@ export class CPU {
         this.registers.f.zero = sub2 === 0
         this.registers.f.subtract = true
         this.registers.f.carry = carry1 || carry2
-        this.registers.f.halfCarry = false // TODO: set properly
+        this.registers.f.halfCarry = ((this.registers.a & 0xf) - (value & 0xf)) < 0
         return sub2
     }
 
@@ -1344,7 +1344,7 @@ export class CPU {
         const newValue = u8.wrappingAdd(value, 1)
         this.registers.f.zero = newValue === 0
         this.registers.f.subtract = false
-        this.registers.f.halfCarry = false // TODO: set properly
+        this.registers.f.halfCarry = ((value & 0xf) + 1) > 0xf
         return newValue
     }
 
@@ -1352,7 +1352,7 @@ export class CPU {
         const newValue = u8.wrappingSub(value, 1)
         this.registers.f.zero = newValue === 0
         this.registers.f.subtract = true
-        this.registers.f.halfCarry = false // TODO: set properly
+        this.registers.f.halfCarry = ((value & 0xf) - 1) < 0
         return newValue
     }
 
@@ -1423,13 +1423,16 @@ export class CPU {
     cp(value: number) {
         this.registers.f.zero = this.registers.a === value
         this.registers.f.subtract = true
-        this.registers.f.halfCarry = false // TODO: Set halfCarry
+        this.registers.f.halfCarry = (this.registers.a & 0xf) - (value & 0xf) < 0
         this.registers.f.carry = this.registers.a < value
     }
 
     xor(value: number) {
         this.registers.a ^= value
         this.registers.f.zero = this.registers.a === 0
+        this.registers.f.subtract = false
+        this.registers.f.carry = false
+        this.registers.f.halfCarry = false
     }
 
     readNextWord(): number {
