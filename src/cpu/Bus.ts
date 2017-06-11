@@ -338,6 +338,12 @@ class Bus {
                 this._gpu.obj1color2 = bitsToColor((value >> 4) & 0b11)
                 this._gpu.obj1color1 = bitsToColor((value >> 2) & 0b11)
                 return
+            case 0xff4a:
+                this._gpu.windowY = value
+                return
+            case 0xff4b:
+                this._gpu.windowX = value
+                return
             case 0xff50:
                 this._biosMapped = false
                 return

@@ -119,6 +119,9 @@ class GPU {
     scrollX: number = 0
     scrollY: number = 0
 
+    windowX: number = 0
+    windowY: number = 0
+
     line = 0
 
     modeChange: ((oldMode: GPUMode, newMode: GPUMode) => void) | undefined
