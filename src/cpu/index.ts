@@ -1466,29 +1466,23 @@ export class CPU {
     }
 
     decimalAdjust(value: number): number {
-        if (this.registers.f.subtract) {
-            if (this.registers.f.halfCarry || (value & 0xf) > 9) {
-                value = value + 0x6
-            }
-            if (this.registers.f.carry || value > 0x9f) {
-                value = value + 0x60
-            }
-        } else {
-            if (this.registers.f.halfCarry) {
-                value = (value - 0x6) & 0xff
-            }
-
-            if (this.registers.f.carry) {
-                value = value - 0x60
-            }
+        // TODO: test that this is correct
+        let result = value
+        let carryResult = false
+        if (this.registers.f.halfCarry || ((value & 0xf) > 0x9)) {
+            result = result + (this.registers.f.subtract ? 0x06 : -0x06)
+        }
+        if (this.registers.f.carry || ((value & 0xf0) > 0x90)) {
+            result = result + (this.registers.f.subtract ? 0x60 : -0x60)
+            carryResult = true
         }
 
-        this.registers.f.carry = value > 0xff
+        this.registers.f.carry = carryResult
 
-        value = value & 0xff
-        this.registers.f.zero = value === 0
-        this.registers.f.halfCarry = false
-        return value
+        // this.registers.f.zero = value === 0
+        // this.registers.f.halfCarry = false
+
+        return result
     }
 }
 
