@@ -75,10 +75,10 @@ export class FlagRegister {
     }
 
     fromByte(byte: number) {
-        this.zero = byte >> 7 !== 0
-        this.subtract = byte >> 6 !== 0
-        this.halfCarry = byte >> 5 !== 0
-        this.carry = byte >> 4 !== 0
+        this.zero = ((byte >> 7) & 0b1) !== 0
+        this.subtract = ((byte >> 6) & 0b1) !== 0
+        this.halfCarry = ((byte >> 5) & 0b1) !== 0
+        this.carry = ((byte >> 4) & 0b1) !== 0
     }
 
 }
