@@ -1223,12 +1223,13 @@ export class CPU {
     }
 
     add(value: number, addCarry: boolean = false): number {
+        const additionalCarry = addCarry && this.registers.f.carry ? 1 : 0
         let [add, carry] = u8.overflowingAdd(this.registers.a, value)
-        const [add2, carry2] = u8.overflowingAdd(add, addCarry && this.registers.f.carry ? 1 : 0)
+        const [add2, carry2] = u8.overflowingAdd(add, additionalCarry)
         this.registers.f.zero = add2 === 0
         this.registers.f.subtract = false
         this.registers.f.carry = carry || carry2
-        this.registers.f.halfCarry = ((this.registers.a & 0xf) + (value & 0xf)) > 0xf
+        this.registers.f.halfCarry = ((this.registers.a & 0xf) + (value & 0xf) + additionalCarry) > 0xf
         return add2
     }
 
@@ -1242,12 +1243,13 @@ export class CPU {
     }
 
     sub(value: number, addCarry: boolean = false): number {
+        const additionalCarry = addCarry && this.registers.f.carry ? 1 : 0
         const [sub1, carry1] = u8.overflowingSub(this.registers.a, value)
-        const [sub2, carry2] = u8.overflowingSub(sub1, addCarry && this.registers.f.carry ? 1 : 0)
+        const [sub2, carry2] = u8.overflowingSub(sub1, additionalCarry)
         this.registers.f.zero = sub2 === 0
         this.registers.f.subtract = true
         this.registers.f.carry = carry1 || carry2
-        this.registers.f.halfCarry = ((this.registers.a & 0xf) - (value & 0xf)) < 0
+        this.registers.f.halfCarry = ((this.registers.a & 0xf) - (value & 0xf) - additionalCarry) < 0
         return sub2
     }
 
