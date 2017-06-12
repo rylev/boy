@@ -1286,7 +1286,7 @@ export class CPU {
 
     sra(value: number): number {
         const msb = value & 0x80
-        const carry = (value & 0x80) >> 7 
+        const carry = value & 0b1 
         const newValue = (value >> 1) | msb
         this.registers.f.zero = newValue === 0
         this.registers.f.subtract = false
