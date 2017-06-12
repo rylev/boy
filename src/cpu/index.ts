@@ -1236,7 +1236,10 @@ export class CPU {
     addHL(value: number) {
         const [result, carry] = u16.overflowingAdd(this.registers.hl, value)
         this.registers.f.subtract = false
-        this.registers.f.halfCarry = false // TODO: Set halfCarry
+        // Half carry tests if we flow over the 11th bit i.e. does adding the two 
+        // numbers together cause the 11th bit to flip
+        const mask = 0b11111111111
+        this.registers.f.halfCarry = (value & mask) + (this.registers.hl & mask) > mask
         this.registers.f.carry = carry
 
         this.registers.hl = result
