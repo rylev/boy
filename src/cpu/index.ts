@@ -1326,7 +1326,7 @@ export class CPU {
 
     rlc(value: number, setZero: boolean = true): number {
         const carry = (value & 0x80) >> 7
-        const newValue = (value << 1) & 0xff
+        const newValue = ((value << 1) & 0xff) | carry
         this.registers.f.zero = setZero && newValue === 0
         this.registers.f.subtract = false
         this.registers.f.halfCarry = false
@@ -1336,7 +1336,7 @@ export class CPU {
 
     rrc(value: number, setZero: boolean = true): number {
         const carry = value & 0b1 
-        const newValue = value >> 1
+        const newValue = (value >> 1) | (carry << 7)
         this.registers.f.zero = setZero && newValue === 0
         this.registers.f.subtract = false
         this.registers.f.halfCarry = false
