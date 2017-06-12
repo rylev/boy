@@ -545,10 +545,16 @@ export class CPU {
             case 'CPL':
                 // 1  4
                 // - 1 1 -
-                // 0 0 H C
                 this.registers.a = (~(this.registers.a) & 0xff)
                 this.registers.f.halfCarry = true
-                this.registers.f.carry = true
+                this.registers.f.subtract = true
+                return [this.pc + 1, 4]
+            case 'CCF':
+                // 1  4
+                // - 0 0 C
+                this.registers.f.carry = !this.registers.f.carry
+                this.registers.f.halfCarry = false
+                this.registers.f.subtract = false
                 return [this.pc + 1, 4]
             case 'SCF':
                 // 1  4
