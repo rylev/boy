@@ -1468,21 +1468,27 @@ export class CPU {
     }
 
     decimalAdjust(value: number): number {
-        // TODO: test that this is correct
+        // Huge help from: https://github.com/Gekkio/mooneye-gb/blob/04ea55869b9d1587b36e35b204930a30abd186f5/src/cpu/mod.rs#L773-L797
         let result = value
         let carryResult = false
-        if (this.registers.f.halfCarry || ((value & 0xf) > 0x9)) {
-            result = result + (this.registers.f.subtract ? 0x06 : -0x06)
-        }
-        if (this.registers.f.carry || ((value & 0xf0) > 0x90)) {
-            result = result + (this.registers.f.subtract ? 0x60 : -0x60)
+        if (!this.registers.f.subtract) {
+            if (this.registers.f.carry || value > 0x99) {
+                result = u8.wrappingAdd(result, 0x60)
+                carryResult = true
+            }
+            if (this.registers.f.halfCarry || ((value & 0xf) > 0x9)) {
+                result = u8.wrappingAdd(result, 0x6)
+            }
+        } else if (this.registers.f.carry) {
             carryResult = true
+            result = u8.wrappingAdd(result, this.registers.f.halfCarry ? 0x9a : 0xa0)
+        } else if (this.registers.f.halfCarry) {
+            result = u8.wrappingAdd(result, 0xfa)
         }
 
         this.registers.f.carry = carryResult
-
-        // this.registers.f.zero = value === 0
-        // this.registers.f.halfCarry = false
+        this.registers.f.zero = result === 0
+        this.registers.f.halfCarry = false
 
         return result
     }
