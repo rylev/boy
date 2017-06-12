@@ -16,7 +16,7 @@ export namespace u16 {
     export function underflowingSub(n1: number, n2: number): [number, boolean] {
         const result = n1 - n2
         if (result < 0) {
-            return [MAX_U16 + result, true]
+            return [MAX_U16 + result + 1, true]
         }
         return [result, false]
     }
