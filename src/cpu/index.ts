@@ -530,11 +530,16 @@ export class CPU {
             case 'ADDSP':
                 // 2  16
                 // 0 0 H C
-                const [addspResult, addspCarry] = u16.overflowingAdd(this.sp, (u8.asSigned(this.readNextByte()) >>> 0) & 0xffff)
+                const r = (u8.asSigned(this.readNextByte()) >>> 0) & 0xffff
+                const addspResult = u16.wrappingAdd(this.sp, r)
                 this.registers.f.zero = false
                 this.registers.f.subtract = false
-                this.registers.f.halfCarry = false // TODO: calculate this
-                this.registers.f.carry = addspCarry
+                // Half and whole carry are computed at the nibble and byte level instead
+                // of the byte and word level like you might expect for 16 bit values
+                const halfCarryMask = 0xf
+                this.registers.f.halfCarry = (this.sp & halfCarryMask) + (r & halfCarryMask) > halfCarryMask
+                const carryMask = 0xff
+                this.registers.f.carry = (this.sp & carryMask) + (r & carryMask) > carryMask
                 this.sp = addspResult
                 return [this.pc + 2, 16]
             case 'CPL':
@@ -1002,17 +1007,20 @@ export class CPU {
                 // - - - -
                 const address = this.readNextWord()
                 this.bus.write(address, u16.lsb(this.sp))
-                this.bus.write(address, u16.msb(this.sp))
+                this.bus.write(u16.wrappingAdd(address,1), u16.msb(this.sp))
                 return [this.pc + 3, 20]
             case 'LDHL SP,n':
                 // 2  12
                 // 0 0 H C
-                const [spnResult, spnCarry] = u16.overflowingAdd(this.sp, u8.asSigned(this.readNextByte()))
+                const n = u8.asSigned(this.readNextByte())
+                const spnResult = u16.wrappingAdd(this.sp, n)
                 this.registers.hl = spnResult
                 this.registers.f.zero = false
                 this.registers.f.subtract = false
-                this.registers.f.halfCarry = false // TODO: set properly
-                this.registers.f.carry = spnCarry
+                // Half and whole carry are computed at the nibble and byte level instead
+                // of the byte and word level like you might expect for 16 bit values
+                this.registers.f.halfCarry = (this.sp & 0xf) + (n & 0xf) > 0xf
+                this.registers.f.carry = (this.sp & 0xff) + (n & 0xff) > 0xff
                 return [this.pc + 2, 12]
             case 'LD SP,HL':
                 // 1  8
