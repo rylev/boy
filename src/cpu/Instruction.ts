@@ -1,17 +1,20 @@
 import { toHex } from 'lib/hex'
 
-type AllRegistersButF = 'A' | 'B' | 'C' | 'D' | 'E' | 'H' | 'L'
-type WordRegisters = 'BC' | 'DE' | 'HL'
+type ByteRegisterExceptF = 'A' | 'B' | 'C' | 'D' | 'E' | 'H' | 'L'
+type WordRegisterExceptAF = 'BC' | 'DE' | 'HL' | 'SP'
 
+// Jump Instructions
 type JumpTest = 'NZ' | 'NC' | 'Z' | 'C' | true
+type RSTLocation = 0x0 | 0x8 | 0x10 | 0x18 | 0x20 | 0x28 | 0x30 | 0x38
+
 type JP = { type: 'JP', test: JumpTest }
-type JPIndirect = { type: 'JP Indirect' }
 type JR = { type: 'JR', test: JumpTest }
+type JPIndirect = { type: 'JP (HL)' }
 type CALL = { type: 'CALL', test: JumpTest }
 type RET = { type: 'RET', test: JumpTest }
-type RSTLocation = 0x0 | 0x8 | 0x10 | 0x18 | 0x20 | 0x28 | 0x30 | 0x38
 type RST = { type: 'RST', location: RSTLocation }
 
+// Control Instructions
 type Halt = { type: 'HALT' }
 type EI = { type: 'EI' }
 type DI = { type: 'DI' }
@@ -19,72 +22,63 @@ type RETI = { type: 'RETI' }
 type NOP = { type: 'NOP' }
 type PREFIX = { type: 'PREFIX CB' }
 
-type AddHLSource = 'BC' | 'DE' | 'HL' | 'SP'
-type AddHL = { type: 'ADD HL', source: AddHLSource }
+// Arithmetic Instructions
+type ArithmeticN =  ByteRegisterExceptF | '(HL)' | 'd8'
+type IncDecN = ByteRegisterExceptF | WordRegisterExceptAF | '(HL)' 
 
-type CPN = AllRegistersButF | '(HL)' | 'd8'
-type CP = { type: 'CP', n: CPN }
+type INC = { type: 'INC', n: IncDecN }
+type DEC = { type: 'DEC', n: IncDecN }
 
+type AND = { type: 'AND', n: ArithmeticN }
+type OR = { type: 'OR', n: ArithmeticN }
+type XOR = { type: 'XOR', n: ArithmeticN }
+type ADD = { type: 'ADD', n: ArithmeticN }
+type ADDC = { type: 'ADDC', n: ArithmeticN }
+type SUB = { type: 'SUB', n: ArithmeticN }
+type SUBC = { type: 'SUBC', n: ArithmeticN }
+type ADDSP = { type: 'ADD SP' }
+type ADDHL = { type: 'ADD HL', n: WordRegisterExceptAF }
+
+type CP = { type: 'CP', n: ArithmeticN }
+type DAA = { type: 'DAA' }
+type RRA = { type: 'RRA' }
+type RLA = { type: 'RLA' }
+type RRCA = { type: 'RRC A' }
+type RLCA = { type: 'RLC A' }
 type CPL = { type: 'CPL' }
 type CCF = { type: 'CCF' }
-
-type RLA = { type: 'RLA' }
-type RLCA = { type: 'RLCA' }
-type RRCA = { type: 'RRCA' }
-
-type INCTarget = AllRegistersButF | WordRegisters | '(HL)' | 'SP'
-type INC = { type: 'INC', target: INCTarget }
-type DECTarget = INCTarget
-type DEC = { type: 'DEC', target: DECTarget }
-
-type ANDN =  AllRegistersButF | '(HL)' | 'd8'
-type AND = { type: 'AND', n: ANDN }
-type ORN =  ANDN
-type OR = { type: 'OR', n: ORN }
-type XORN =  ANDN
-type XOR = { type: 'XOR', n: XORN }
-type ADDN = ANDN
-type ADD = { type: 'ADD', n: ADDN }
-type ADDCN = ANDN
-type ADDC = { type: 'ADDC', n: ADDCN }
-type SUBN = ANDN
-type SUB = { type: 'SUB', n: SUBN }
-type SUBCN = ANDN
-type SUBC = { type: 'SUBC', n: SUBCN }
-type RRA = { type: 'RRA' }
-type DAA = { type: 'DAA' }
-type ADDSP = { type: 'ADDSP' }
 type SCF = { type: 'SCF' }
 
-type LDHA_a8_ = { type: 'LDH A,(a8)' }
-type LDH_a8_A = { type: 'LDH (a8),A' }
+// Load/Store Instructions
+type Indirect = '(BC)' | '(DE)' | '(HL-)' | '(HL+)' | '(a16)' | '(C)'
+type LDIndirectSource = ByteRegisterExceptF | 'd8'
+type ByteSource = ByteRegisterExceptF | '(HL)' | 'd8'
+type ByteTarget = ByteRegisterExceptF | '(HL)'
+type WordTarget = WordRegisterExceptAF
 
-type LDAIndirectSource = '(BC)' | '(DE)' | '(HL-)' | '(HL+)' | '(a16)' | '(C)'
-type LDAFromIndirect = { type: 'LD A From Indirect', source: LDAIndirectSource }
-type LDAIndirectTarget = '(BC)' | '(DE)' | '(HL-)' | '(HL+)' | '(a16)' | '(C)'
-type LDAToIndirect = { type: 'LD A To Indirect', target: LDAIndirectTarget }
-
-type LDIndirectSource = AllRegistersButF | 'd8'
-type LDToIndirect = { type: 'LD To Indirect', source: LDIndirectSource }
-type LDToIndirectFromSP = { type: 'LD (a16),SP' }
-
-type LDSource = AllRegistersButF | '(HL)' | 'd8'
-type LDTarget = AllRegistersButF  
-type LD = { type: 'LD', source: LDSource, target: LDTarget }
-
+type LDByte = { type: 'LD n,n', target: ByteTarget, source: ByteSource }
+type LDWord = { type: 'LD nn,d16', target: WordTarget }
+type LDAFromIndirect = { type: 'LD A,(nn)', source: Indirect }
+type LDIndirectFromA = { type: 'LD (nn),A', target: Indirect }
+type LDAFromByteAddr = { type: 'LDH A,(a8)' }
+type LDByteAddrFromA = { type: 'LDH (a8),A' }
+type LDIndirectFromSP = { type: 'LD (a16),SP' }
 type LDSPHL = { type: 'LD SP,HL' }
-
-type WordTarget = WordRegisters | 'SP'
-type LDWord = { type: 'LD Word', target: WordTarget }
-
 type LDHLSPn = { type: 'LDHL SP,n' }
 
+// Stack Instructions
 type PUSHSource = 'AF' | 'BC' | 'DE' | 'HL'
+type POPTarget = 'AF' | 'BC' | 'DE' | 'HL'
 type PUSH = { type: 'PUSH', source: PUSHSource }
-type POPTarget = PUSHSource
 type POP = { type: 'POP', target: POPTarget }
 
-type PrefixInstructionN = AllRegistersButF | '(HL)'
+// Prefix Instructions
+type PrefixInstructionN = ByteRegisterExceptF | '(HL)'
+type BitPosition = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
+
+type BIT = { type: 'BIT', n: PrefixInstructionN, bitPosition: BitPosition }
+type RES = { type: 'RES', n: PrefixInstructionN, bitPosition: BitPosition }
+type SET = { type: 'SET', n: PrefixInstructionN, bitPosition: BitPosition }
 type SRL = { type: 'SRL', n: PrefixInstructionN }
 type RR = { type: 'RR', n: PrefixInstructionN }
 type RL = { type: 'RL', n: PrefixInstructionN }
@@ -94,10 +88,6 @@ type RRCarry = { type: 'RRC', n: PrefixInstructionN }
 type SLA = { type: 'SLA', n: PrefixInstructionN }
 type SRA = { type: 'SRA', n: PrefixInstructionN }
 
-type BitPosition = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
-type BIT = { type: 'BIT', n: PrefixInstructionN, bitPosition: BitPosition }
-type RES = { type: 'RES', n: PrefixInstructionN, bitPosition: BitPosition }
-type SET = { type: 'SET', n: PrefixInstructionN, bitPosition: BitPosition }
 
 type JumpInstruction = 
     | JP
@@ -116,36 +106,35 @@ type ControlInstruction =
     | RETI
     
 type ArithmeticInstruction = 
+    | INC
+    | DEC
     | AND
     | OR
+    | XOR
     | ADD
     | ADDC
     | SUB
     | SUBC
-    | INC
-    | AddHL
-    | XOR
-    | CP
-    | RLA
-    | RLCA
-    | RRCA
-    | RRA
-    | DEC
-    | DAA
     | ADDSP
+    | ADDHL
+    | CP
+    | DAA
+    | RRA
+    | RLA
+    | RRCA
+    | RLCA
     | CPL 
     | CCF
     | SCF
 
 type LoadStoreInstruction = 
-    | LD
+    | LDByte
     | LDWord
     | LDAFromIndirect
-    | LDAToIndirect
-    | LDToIndirect
-    | LDToIndirectFromSP
-    | LDH_a8_A
-    | LDHA_a8_
+    | LDIndirectFromA
+    | LDAFromByteAddr
+    | LDByteAddrFromA
+    | LDIndirectFromSP
     | LDHLSPn
     | LDSPHL
 
@@ -155,16 +144,16 @@ type StackInstruction =
 
 type PrefixInstruction = 
     | BIT
+    | RES 
+    | SET
     | SRL
     | RR
     | RL
-    | SWAP
-    | RLCarry
     | RRCarry
-    | SLA
+    | RLCarry
     | SRA
-    | RES 
-    | SET
+    | SLA
+    | SWAP
 
 export type Instruction =
     | JumpInstruction
@@ -177,7 +166,7 @@ export type Instruction =
 export namespace Instruction {
     export const JR = (test: JumpTest ): JR => ({ type: 'JR', test })
     export const JP = (test: JumpTest): JP => ({ type: 'JP', test })
-    export const JPIndirect: JPIndirect = { type: 'JP Indirect'}
+    export const JPIndirect: JPIndirect = { type: 'JP (HL)'}
     export const CALL = (test: JumpTest): CALL => ({ type: 'CALL', test })
     export const RET = (test: JumpTest): RET => ({ type: 'RET', test })
     export const RST = (location: RSTLocation): RST => ({ type: 'RST', location })
@@ -189,35 +178,34 @@ export namespace Instruction {
     export const NOP: NOP = { type: 'NOP' }
     export const PREFIX: PREFIX = { type: 'PREFIX CB' }
 
-    export const AddHL = (source: AddHLSource): AddHL => ({ type: 'ADD HL', source })
-    export const CP = (n: CPN): CP => ({ type: 'CP', n })
-    export const XOR = (n: XORN): XOR => ({ type: 'XOR', n })
-    export const RLA: RLA = { type: 'RLA' }
-    export const RLCA: RLCA = { type: 'RLCA' }
-    export const RRCA: RRCA = { type: 'RRCA' }
-    export const INC = (target: INCTarget): INC => ({ type: 'INC', target })
-    export const DEC = (target: DECTarget): DEC => ({ type: 'DEC', target })
-    export const ADD = (n: ADDN): ADD => ({ type: 'ADD', n })
-    export const ADDC = (n: ADDCN): ADDC => ({ type: 'ADDC', n })
-    export const SUB = (n: SUBN): SUB => ({ type: 'SUB', n })
-    export const SUBC = (n: SUBCN): SUBC => ({ type: 'SUBC', n })
-    export const AND = (n: ANDN): AND => ({ type: 'AND', n })
-    export const OR = (n: ORN): OR => ({ type: 'OR', n })
-    export const RRA: RRA = { type: 'RRA' }
+    export const INC = (n: IncDecN): INC => ({ type: 'INC', n })
+    export const DEC = (n: IncDecN): DEC => ({ type: 'DEC', n })
+    export const AND = (n: ArithmeticN): AND => ({ type: 'AND', n })
+    export const OR = (n: ArithmeticN): OR => ({ type: 'OR', n })
+    export const XOR = (n: ArithmeticN): XOR => ({ type: 'XOR', n })
+    export const ADD = (n: ArithmeticN): ADD => ({ type: 'ADD', n })
+    export const ADDC = (n: ArithmeticN): ADDC => ({ type: 'ADDC', n })
+    export const SUB = (n: ArithmeticN): SUB => ({ type: 'SUB', n })
+    export const SUBC = (n: ArithmeticN): SUBC => ({ type: 'SUBC', n })
+    export const ADDSP: ADDSP = { type: 'ADD SP' }
+    export const ADDHL = (n: WordRegisterExceptAF): ADDHL => ({ type: 'ADD HL', n })
+    export const CP = (n: ArithmeticN): CP => ({ type: 'CP', n })
     export const DAA: DAA = { type: 'DAA' }
-    export const ADDSP: ADDSP = { type: 'ADDSP' }
+    export const RRA: RRA = { type: 'RRA' }
+    export const RLA: RLA = { type: 'RLA' }
+    export const RRCA: RRCA = { type: 'RRC A' }
+    export const RLCA: RLCA = { type: 'RLC A' }
     export const CPL: CPL = { type: 'CPL' }
-    export const SCF: SCF = { type: 'SCF' }
     export const CCF: CCF = { type: 'CCF' }
+    export const SCF: SCF = { type: 'SCF' }
 
-    export const LD = (target: AllRegistersButF, source: LDSource): LD => ({ type: 'LD', target, source })
-    export const LDWord = (target: WordTarget): LDWord => ({ type: 'LD Word', target })
-    export const LDAFromIndirect = (source: LDAIndirectSource): LDAFromIndirect => ({ type: 'LD A From Indirect', source })
-    export const LDAToIndirect = (target: LDAIndirectTarget): LDAToIndirect => ({ type: 'LD A To Indirect', target })
-    export const LDToIndirect = (source: LDIndirectSource): LDToIndirect => ({ type: 'LD To Indirect', source })
-    export const LDToIndirectFromSP: LDToIndirectFromSP = { type: 'LD (a16),SP'}
-    export const LDHA_a8_: LDHA_a8_ = { type: 'LDH A,(a8)' }
-    export const LDH_a8_A: LDH_a8_A = { type: 'LDH (a8),A' }
+    export const LDByte = (target: ByteTarget, source: ByteSource): LDByte => ({ type: 'LD n,n', target, source })
+    export const LDWord = (target: WordTarget): LDWord => ({ type: 'LD nn,d16', target })
+    export const LDAFromIndirect = (source: Indirect): LDAFromIndirect => ({ type: 'LD A,(nn)', source })
+    export const LDAToIndirect = (target: Indirect): LDIndirectFromA => ({ type: 'LD (nn),A', target })
+    export const LDIndirectFromSP: LDIndirectFromSP = { type: 'LD (a16),SP'}
+    export const LDAFromByteAddr: LDAFromByteAddr = { type: 'LDH A,(a8)' }
+    export const LDByteAddrFromA: LDByteAddrFromA = { type: 'LDH (a8),A' }
     export const LDHLSPn: LDHLSPn = { type: 'LDHL SP,n' }
     export const LDSPHL: LDSPHL = { type: 'LD SP,HL' }
 
@@ -262,10 +250,10 @@ export namespace Instruction {
 }
 
 const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
-    0x09: Instruction.AddHL('BC'),
-    0x19: Instruction.AddHL('DE'),
-    0x29: Instruction.AddHL('HL'),
-    0x39: Instruction.AddHL('SP'),
+    0x09: Instruction.ADDHL('BC'),
+    0x19: Instruction.ADDHL('DE'),
+    0x29: Instruction.ADDHL('HL'),
+    0x39: Instruction.ADDHL('SP'),
 
     0xb8: Instruction.CP('B'),
     0xb9: Instruction.CP('C'),
@@ -436,7 +424,7 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0x32: Instruction.LDAToIndirect('(HL-)'),
     0xea: Instruction.LDAToIndirect('(a16)'),
 
-    0x08: Instruction.LDToIndirectFromSP,
+    0x08: Instruction.LDIndirectFromSP,
 
     0x01: Instruction.LDWord('BC'),
     0x11: Instruction.LDWord('DE'),
@@ -445,89 +433,89 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
 
     0xf9: Instruction.LDSPHL,
 
-    0x40: Instruction.LD('B', 'B'),
-    0x41: Instruction.LD('B', 'C'),
-    0x42: Instruction.LD('B', 'D'),
-    0x43: Instruction.LD('B', 'E'),
-    0x44: Instruction.LD('B', 'H'),
-    0x45: Instruction.LD('B', 'L'),
-    0x46: Instruction.LD('B', '(HL)'),
-    0x47: Instruction.LD('B', 'A'),
+    0x40: Instruction.LDByte('B', 'B'),
+    0x41: Instruction.LDByte('B', 'C'),
+    0x42: Instruction.LDByte('B', 'D'),
+    0x43: Instruction.LDByte('B', 'E'),
+    0x44: Instruction.LDByte('B', 'H'),
+    0x45: Instruction.LDByte('B', 'L'),
+    0x46: Instruction.LDByte('B', '(HL)'),
+    0x47: Instruction.LDByte('B', 'A'),
 
-    0x48: Instruction.LD('C', 'B'),
-    0x49: Instruction.LD('C', 'C'),
-    0x4a: Instruction.LD('C', 'D'),
-    0x4b: Instruction.LD('C', 'E'),
-    0x4c: Instruction.LD('C', 'H'),
-    0x4d: Instruction.LD('C', 'L'),
-    0x4e: Instruction.LD('C', '(HL)'),
-    0x4f: Instruction.LD('C', 'A'),
+    0x48: Instruction.LDByte('C', 'B'),
+    0x49: Instruction.LDByte('C', 'C'),
+    0x4a: Instruction.LDByte('C', 'D'),
+    0x4b: Instruction.LDByte('C', 'E'),
+    0x4c: Instruction.LDByte('C', 'H'),
+    0x4d: Instruction.LDByte('C', 'L'),
+    0x4e: Instruction.LDByte('C', '(HL)'),
+    0x4f: Instruction.LDByte('C', 'A'),
 
-    0x50: Instruction.LD('D', 'B'),
-    0x51: Instruction.LD('D', 'C'),
-    0x52: Instruction.LD('D', 'D'),
-    0x53: Instruction.LD('D', 'E'),
-    0x54: Instruction.LD('D', 'H'),
-    0x55: Instruction.LD('D', 'L'),
-    0x56: Instruction.LD('D', '(HL)'),
-    0x57: Instruction.LD('D', 'A'),
+    0x50: Instruction.LDByte('D', 'B'),
+    0x51: Instruction.LDByte('D', 'C'),
+    0x52: Instruction.LDByte('D', 'D'),
+    0x53: Instruction.LDByte('D', 'E'),
+    0x54: Instruction.LDByte('D', 'H'),
+    0x55: Instruction.LDByte('D', 'L'),
+    0x56: Instruction.LDByte('D', '(HL)'),
+    0x57: Instruction.LDByte('D', 'A'),
 
-    0x58: Instruction.LD('E', 'B'),
-    0x59: Instruction.LD('E', 'C'),
-    0x5a: Instruction.LD('E', 'D'),
-    0x5b: Instruction.LD('E', 'E'),
-    0x5c: Instruction.LD('E', 'H'),
-    0x5d: Instruction.LD('E', 'L'),
-    0x5e: Instruction.LD('E', '(HL)'),
-    0x5f: Instruction.LD('E', 'A'),
+    0x58: Instruction.LDByte('E', 'B'),
+    0x59: Instruction.LDByte('E', 'C'),
+    0x5a: Instruction.LDByte('E', 'D'),
+    0x5b: Instruction.LDByte('E', 'E'),
+    0x5c: Instruction.LDByte('E', 'H'),
+    0x5d: Instruction.LDByte('E', 'L'),
+    0x5e: Instruction.LDByte('E', '(HL)'),
+    0x5f: Instruction.LDByte('E', 'A'),
 
-    0x60: Instruction.LD('H', 'B'),
-    0x61: Instruction.LD('H', 'C'),
-    0x62: Instruction.LD('H', 'D'),
-    0x63: Instruction.LD('H', 'E'),
-    0x64: Instruction.LD('H', 'H'),
-    0x65: Instruction.LD('H', 'L'),
-    0x66: Instruction.LD('H', '(HL)'),
-    0x67: Instruction.LD('H', 'A'),
+    0x60: Instruction.LDByte('H', 'B'),
+    0x61: Instruction.LDByte('H', 'C'),
+    0x62: Instruction.LDByte('H', 'D'),
+    0x63: Instruction.LDByte('H', 'E'),
+    0x64: Instruction.LDByte('H', 'H'),
+    0x65: Instruction.LDByte('H', 'L'),
+    0x66: Instruction.LDByte('H', '(HL)'),
+    0x67: Instruction.LDByte('H', 'A'),
 
-    0x68: Instruction.LD('L', 'B'),
-    0x69: Instruction.LD('L', 'C'),
-    0x6a: Instruction.LD('L', 'D'),
-    0x6b: Instruction.LD('L', 'E'),
-    0x6c: Instruction.LD('L', 'H'),
-    0x6d: Instruction.LD('L', 'L'),
-    0x6e: Instruction.LD('L', '(HL)'),
-    0x6f: Instruction.LD('L', 'A'),
+    0x68: Instruction.LDByte('L', 'B'),
+    0x69: Instruction.LDByte('L', 'C'),
+    0x6a: Instruction.LDByte('L', 'D'),
+    0x6b: Instruction.LDByte('L', 'E'),
+    0x6c: Instruction.LDByte('L', 'H'),
+    0x6d: Instruction.LDByte('L', 'L'),
+    0x6e: Instruction.LDByte('L', '(HL)'),
+    0x6f: Instruction.LDByte('L', 'A'),
 
-    0x70: Instruction.LDToIndirect('B'),
-    0x71: Instruction.LDToIndirect('C'),
-    0x72: Instruction.LDToIndirect('D'),
-    0x73: Instruction.LDToIndirect('E'),
-    0x74: Instruction.LDToIndirect('H'),
-    0x75: Instruction.LDToIndirect('L'),
-    0x77: Instruction.LDToIndirect('A'),
-    0x36: Instruction.LDToIndirect('d8'),
+    0x70: Instruction.LDByte('(HL)','B'),
+    0x71: Instruction.LDByte('(HL)','C'),
+    0x72: Instruction.LDByte('(HL)','D'),
+    0x73: Instruction.LDByte('(HL)','E'),
+    0x74: Instruction.LDByte('(HL)','H'),
+    0x75: Instruction.LDByte('(HL)','L'),
+    0x77: Instruction.LDByte('(HL)','A'),
+    0x36: Instruction.LDByte('(HL)','d8'),
 
-    0x78: Instruction.LD('A', 'B'),
-    0x79: Instruction.LD('A', 'C'),
-    0x7a: Instruction.LD('A', 'D'),
-    0x7b: Instruction.LD('A', 'E'),
-    0x7c: Instruction.LD('A', 'H'),
-    0x7d: Instruction.LD('A', 'L'),
-    0x7e: Instruction.LD('A', '(HL)'),
-    0x7f: Instruction.LD('A', 'A'),
+    0x78: Instruction.LDByte('A', 'B'),
+    0x79: Instruction.LDByte('A', 'C'),
+    0x7a: Instruction.LDByte('A', 'D'),
+    0x7b: Instruction.LDByte('A', 'E'),
+    0x7c: Instruction.LDByte('A', 'H'),
+    0x7d: Instruction.LDByte('A', 'L'),
+    0x7e: Instruction.LDByte('A', '(HL)'),
+    0x7f: Instruction.LDByte('A', 'A'),
 
-    0x3e: Instruction.LD('A', 'd8'),
-    0x06: Instruction.LD('B', 'd8'),
-    0x0e: Instruction.LD('C', 'd8'),
-    0x16: Instruction.LD('D', 'd8'),
-    0x1e: Instruction.LD('E', 'd8'),
-    0x26: Instruction.LD('H', 'd8'),
-    0x2e: Instruction.LD('L', 'd8'),
+    0x3e: Instruction.LDByte('A', 'd8'),
+    0x06: Instruction.LDByte('B', 'd8'),
+    0x0e: Instruction.LDByte('C', 'd8'),
+    0x16: Instruction.LDByte('D', 'd8'),
+    0x1e: Instruction.LDByte('E', 'd8'),
+    0x26: Instruction.LDByte('H', 'd8'),
+    0x2e: Instruction.LDByte('L', 'd8'),
 
     0xf8: Instruction.LDHLSPn,
-    0xe0: Instruction.LDH_a8_A,
-    0xf0: Instruction.LDHA_a8_,
+    0xe0: Instruction.LDByteAddrFromA,
+    0xf0: Instruction.LDAFromByteAddr,
 
     0xc5: Instruction.PUSH('BC'),
     0xd5: Instruction.PUSH('DE'),

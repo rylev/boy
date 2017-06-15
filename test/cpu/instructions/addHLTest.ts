@@ -7,7 +7,7 @@ describe('Instruction.ADDHL', () => {
     describe('when source is bc', () => {
         it('subtracts the right amount', () => {
             const rom = createRom([
-                Instruction.toByte(Instruction.AddHL('BC')),
+                Instruction.toByte(Instruction.ADDHL('BC')),
                 Instruction.toByte(Instruction.Halt),
             ])
             const cpu = new CPU(undefined, rom)

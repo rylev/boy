@@ -174,7 +174,7 @@ export class CPU {
                 // 1  8
                 // - 0 H C
                 let value
-                switch (instruction.source) {
+                switch (instruction.n) {
                     case 'BC':
                         value = this.registers.bc
                         break
@@ -276,12 +276,12 @@ export class CPU {
                 // 0 0 0 C
                 this.registers.a = this.rotateLeft(this.registers.a, false)
                 return [this.pc + 1, 4]
-            case 'RLCA':
+            case 'RLC A':
                 // 1  4
                 // 0 0 0 C
                 this.registers.a = this.rlc(this.registers.a, false)
                 return [this.pc + 1, 4]
-            case 'RRCA':
+            case 'RRC A':
                 // 1  4
                 // 0 0 0 C
                 this.registers.a = this.rrc(this.registers.a, false)
@@ -300,7 +300,7 @@ export class CPU {
                 // ELSE: 
                 // 1  4
                 // Z 1 H -
-                switch (instruction.target) {
+                switch (instruction.n) {
                     case 'A':
                         this.registers.a = this.dec(this.registers.a)
                         return [this.pc + 1, 4]
@@ -349,7 +349,7 @@ export class CPU {
                 // ELSE: 
                 // 1  4
                 // Z 0 H -
-                switch (instruction.target) {
+                switch (instruction.n) {
                     case 'A':
                         this.registers.a = this.inc(this.registers.a)
                         return [this.pc + 1, 4]
@@ -527,7 +527,7 @@ export class CPU {
                 } else {
                     return [this.pc + 1, 4]
                 }
-            case 'ADDSP':
+            case 'ADD SP':
                 // 2  16
                 // 0 0 H C
                 const r = (u8.asSigned(this.readNextByte()) >>> 0) & 0xffff
@@ -722,7 +722,7 @@ export class CPU {
                         assertExhaustive(instruction.test)
                         return [0, 0]
                 }
-            case 'JP Indirect':
+            case 'JP (HL)':
                 // 1  4
                 // - - - -
                 return [this.registers.hl, 4]
@@ -812,7 +812,7 @@ export class CPU {
                     retCycles = 8
                 }
                 return [retPC, retCycles]
-            case 'LD':
+            case 'LD n,n':
                 // WHEN: source is d8
                 // 2  8
                 // WHEN: source is (HL)
@@ -897,6 +897,9 @@ export class CPU {
                     case 'L':
                         this.registers.l = source
                         break
+                    case '(HL)':
+                        this.bus.write(this.registers.hl, source)
+                        break
                     default:
                         assertExhaustive(instruction)
                 }
@@ -911,7 +914,7 @@ export class CPU {
                 // - - - -
                 this.registers.a = this.bus.read(0xff00 + this.readNextByte()) // TODO: wrap
                 return [this.pc + 2, 12]
-            case 'LD Word':
+            case 'LD nn,d16':
                 // 3  12
                 // - - - -
                 const word = this.readNextWord()
@@ -933,50 +936,7 @@ export class CPU {
 
                 }
                 return [this.pc + 3, 12]
-            case 'LD To Indirect':
-                // WHEN: source is d8
-                // 2  12
-                // ELSE
-                // 1  8
-                // - - - -
-                let ldToIndirectSource
-                switch (instruction.source) {
-                    case 'A':
-                        ldToIndirectSource = this.registers.a
-                        break
-                    case 'B':
-                        ldToIndirectSource = this.registers.b
-                        break
-                    case 'C':
-                        ldToIndirectSource = this.registers.c
-                        break
-                    case 'D':
-                        ldToIndirectSource = this.registers.d
-                        break
-                    case 'E':
-                        ldToIndirectSource = this.registers.e
-                        break
-                    case 'H':
-                        ldToIndirectSource = this.registers.h
-                        break
-                    case 'L':
-                        ldToIndirectSource = this.registers.l
-                        break
-                    case 'd8':
-                        ldToIndirectSource = this.readNextByte()
-                        break
-                    default:
-                        ldToIndirectSource = 0
-                        assertExhaustive(instruction)
-                }
-                this.bus.write(this.registers.hl, ldToIndirectSource)
-
-                if (instruction.source === 'd8') {
-                    return [this.pc + 2, 12]
-                } else {
-                    return [this.pc + 1, 8]
-                }
-            case 'LD A To Indirect':
+            case 'LD (nn),A':
                 // WHEN: instruction.source is (C)
                 // 2  8
                 // WHEN: instruction.source is (a16)
@@ -1008,32 +968,7 @@ export class CPU {
                     default: 
                         assertExhaustive(instruction)
                 }
-            case 'LD (a16),SP':
-                // 3  20
-                // - - - -
-                const address = this.readNextWord()
-                this.bus.write(address, u16.lsb(this.sp))
-                this.bus.write(u16.wrappingAdd(address,1), u16.msb(this.sp))
-                return [this.pc + 3, 20]
-            case 'LDHL SP,n':
-                // 2  12
-                // 0 0 H C
-                const n = u8.asSigned(this.readNextByte())
-                const spnResult = u16.wrappingAdd(this.sp, n)
-                this.registers.hl = spnResult
-                this.registers.f.zero = false
-                this.registers.f.subtract = false
-                // Half and whole carry are computed at the nibble and byte level instead
-                // of the byte and word level like you might expect for 16 bit values
-                this.registers.f.halfCarry = (this.sp & 0xf) + (n & 0xf) > 0xf
-                this.registers.f.carry = (this.sp & 0xff) + (n & 0xff) > 0xff
-                return [this.pc + 2, 12]
-            case 'LD SP,HL':
-                // 1  8
-                // - - - -
-                this.sp = this.registers.hl
-                return [this.pc + 1, 8]
-            case 'LD A From Indirect':
+            case 'LD A,(nn)':
                 // WHEN: instruction.source is (C)
                 // 2  8
                 // WHEN: instruction.source is (a16)
@@ -1065,6 +1000,31 @@ export class CPU {
                     default: 
                         assertExhaustive(instruction)
                 }
+            case 'LD (a16),SP':
+                // 3  20
+                // - - - -
+                const address = this.readNextWord()
+                this.bus.write(address, u16.lsb(this.sp))
+                this.bus.write(u16.wrappingAdd(address,1), u16.msb(this.sp))
+                return [this.pc + 3, 20]
+            case 'LDHL SP,n':
+                // 2  12
+                // 0 0 H C
+                const n = u8.asSigned(this.readNextByte())
+                const spnResult = u16.wrappingAdd(this.sp, n)
+                this.registers.hl = spnResult
+                this.registers.f.zero = false
+                this.registers.f.subtract = false
+                // Half and whole carry are computed at the nibble and byte level instead
+                // of the byte and word level like you might expect for 16 bit values
+                this.registers.f.halfCarry = (this.sp & 0xf) + (n & 0xf) > 0xf
+                this.registers.f.carry = (this.sp & 0xff) + (n & 0xff) > 0xff
+                return [this.pc + 2, 12]
+            case 'LD SP,HL':
+                // 1  8
+                // - - - -
+                this.sp = this.registers.hl
+                return [this.pc + 1, 8]
 
             case 'PUSH':
                 // 1  16
