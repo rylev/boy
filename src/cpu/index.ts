@@ -110,9 +110,15 @@ export class CPU {
             this.clockTicksInSecond += cycles
 
             this.pc = nextPC
-            if (this._interruptsEnabled && this.bus.interruptEnable.vblank && this.bus.interruptFlag.vblank) {
-                this.bus.interruptFlag.vblank = false 
-                this.interrupt(Bus.VBLANK_VECTOR)
+            if (this._interruptsEnabled) {
+                if (this.bus.interruptEnable.vblank && this.bus.interruptFlag.vblank) {
+                    this.bus.interruptFlag.vblank = false
+                    this.interrupt(Bus.VBLANK_VECTOR)
+                }
+                if (this.bus.interruptEnable.timer && this.bus.interruptFlag.timer) {
+                    this.bus.interruptFlag.timer = false
+                    this.interrupt(Bus.TIMER_VECTOR)
+                }
             }
         } catch (e) {
             console.error(e)

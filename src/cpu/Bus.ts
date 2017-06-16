@@ -6,31 +6,46 @@ type TimerFrequency = 4096 | 262144 | 65536 | 16384
 
 class Timer {
     frequency: TimerFrequency
-    private _on: boolean 
+    private readonly _interrupt: (() => void) | undefined
+
+    on: boolean = false
     modulo: number = 0
     value: number = 0
-    private _task: number | undefined = undefined
+    private _cycles = 0
 
-    constructor(frequency: TimerFrequency) {
+    constructor(frequency: TimerFrequency, interrupt?: () => void  ) {
         this.frequency = frequency
-        this.on = true
+        this._interrupt = interrupt
     }
 
-    get on(): boolean {
-        return this._on
+    step(cycles: number) {
+        if (this.on === false) { return }
+
+        this._cycles += cycles
+        let cyclesPerTick = this.cyclesPerTick()
+        if (this._cycles > cyclesPerTick) {
+            this.value += 1
+            this._cycles = this._cycles % cyclesPerTick
+        }
+        if (this.value > 0xff) {
+            this.value = this.modulo
+            this._interrupt && this._interrupt()
+        }
     }
 
-    set on(value: boolean) {
-        if (value) {
-            this._task = setInterval(() => {
-                this.value += 1
-                if (this.value > 0xff) {
-                    this.value = this.modulo
-                    // TODO: trigger interrupt
-                }
-            }, Math.trunc(this.frequency / 1000))
-        } else {
-            this._task && clearInterval(this._task)
+    private cyclesPerTick(): number {
+        // cyclesPerTick is the number of CPU cycles that occur
+        // per tick of the clock. This is equal to the number of
+        // cpu cycles per second (4194304) divided by the timer frequency.
+        switch (this.frequency) {
+            case 4096: 
+                return 1024
+            case 262144:
+                return 16
+            case 65536:
+                return 64
+            case 16384:
+                return 256
         }
     }
 }
@@ -61,7 +76,8 @@ class InterruptFlag {
 
 class Bus {
     static VBLANK_VECTOR = 0x40
-    
+    static TIMER_VECTOR = 0x50
+
     static BIOS_END = 0xff
     static ROM_BEGIN = 0x100
     static ROM_END = 0x7fff
@@ -84,10 +100,10 @@ class Bus {
     private _rom: Uint8Array
     private _gpu: GPU
     private _joypad: Joypad
+    private _timer: Timer
+    private _divider = new Timer(16384)
     private _zeroPagedRam = new Uint8Array(Bus.ZERO_PAGE_END - Bus.ZERO_PAGE_BEGIN + 1)
-    private _workingRam = new Uint8Array(Bus.WORKING_RAM_BEGIN - Bus.WORKING_RAM_END + 1)
-    private _timer = new Timer(4096)
-    private _dividerTimer = new Timer(16384)
+    private _workingRam = new Uint8Array(Bus.WORKING_RAM_END - Bus.WORKING_RAM_BEGIN + 1)
     readonly interruptFlag = new InterruptFlag()
     readonly interruptEnable = new InterruptFlag()
 
@@ -104,6 +120,14 @@ class Bus {
             }
         }
         this._joypad = joypad
+        this._timer = new Timer(4096, () => {
+            this.interruptFlag.timer = true
+        })
+    }
+
+    step(cycles: number) {
+        this._timer.step(cycles)
+        this._divider.step(cycles)
     }
 
     get biosMapped(): boolean {
@@ -186,7 +210,7 @@ class Bus {
             case 0xff00:
                 return this._joypad.toByte()
             case 0xff04:
-                return this._dividerTimer.value
+                return this._divider.value
             case 0xff0f:
                 return this.interruptFlag.toByte()
             case 0xff1c:
@@ -245,7 +269,7 @@ class Bus {
             case 0xff03:
                 console.warn(`Writing 0x${toHex(value)} which is unknown. Ignoring...`)
             case 0xff04:
-                this._dividerTimer.value = 0
+                this._divider.value = 0
                 return
             case 0xff05:
                 this._timer.value = value
