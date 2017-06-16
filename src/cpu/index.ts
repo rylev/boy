@@ -105,6 +105,7 @@ export class CPU {
             const [nextPC, cycles] = this.execute(instruction)
 
             this.gpu.step(cycles)
+            this.bus.step(cycles)
 
             this.clockTicksInFrame += cycles
             this.clockTicksInSecond += cycles

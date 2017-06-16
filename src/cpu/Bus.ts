@@ -281,12 +281,12 @@ class Bus {
                 return
             case 0xff07:
                 switch (value & 0b11) {
-                    case 0b00: this._timer.frequency = 4096
-                    case 0b01: this._timer.frequency = 262144
-                    case 0b10: this._timer.frequency = 65536
-                    case 0b11: this._timer.frequency = 16384
+                    case 0b00: this._timer.frequency = 4096; break
+                    case 0b01: this._timer.frequency = 262144; break
+                    case 0b10: this._timer.frequency = 65536; break
+                    case 0b11: this._timer.frequency = 16384; break
                 }
-                this._timer.on = (value & 0b100) !== 0 
+                this._timer.on = (value & 0b100) === 0b100
                 return
             case 0xff08:
             case 0xff09:
