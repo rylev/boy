@@ -128,6 +128,7 @@ class Bus {
         this._timer = new Timer(4096, () => {
             this.interruptFlag.timer = true
         })
+        this._divider.on = true
     }
 
     step(cycles: number) {
