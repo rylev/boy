@@ -24,7 +24,6 @@ export class CPU {
     pc: number
     sp: number
     bus: Bus
-    gpu: GPU
     clockTicksInFrame = 0
     clockTicksInSecond = 0
     private _prefix: boolean = false
@@ -38,8 +37,7 @@ export class CPU {
     private _interruptsEnabled: boolean = true
 
     constructor(bios: Uint8Array | undefined, rom: Uint8Array, joypad: Joypad = new Joypad(), callbacks: CPUCallbacks = {}) {
-        this.gpu = new GPU()
-        this.bus = new Bus(bios, rom, this.gpu, joypad)
+        this.bus = new Bus(bios, rom, joypad)
         this.registers = new Registers()
         this.pc = bios ? 0 : CPU.START_ADDR
         this.sp = bios ? 0 : 0xfffe
@@ -105,7 +103,6 @@ export class CPU {
             const instruction = Instruction.fromByte(instructionByte, this._prefix)
             const [nextPC, cycles] = this.execute(instruction)
 
-            this.gpu.step(cycles)
             this.bus.step(cycles)
 
             this.clockTicksInFrame += cycles

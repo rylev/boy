@@ -1,83 +1,8 @@
 import { toHex } from 'lib/hex'
 import GPU, { Color, WindowTileMap, BackgroundTileMap, BackgroundAndWindowDataSelect, ObjectSize, GPUMode } from './GPU'
 import Joypad, { Column } from './Joypad'
-
-type TimerFrequency = 4096 | 262144 | 65536 | 16384
-
-class Timer {
-    frequency: TimerFrequency
-    private readonly _interrupt: (() => void) | undefined
-
-    on: boolean = false
-    modulo: number = 0
-    value: number = 0
-    private _cycles = 0
-
-    constructor(frequency: TimerFrequency, interrupt?: () => void  ) {
-        this.frequency = frequency
-        this._interrupt = interrupt
-    }
-
-    step(cycles: number) {
-        if (this.on === false) { return }
-
-        this._cycles += cycles
-        let cyclesPerTick = this.cyclesPerTick()
-        if (this._cycles > cyclesPerTick) {
-            this.value += 1
-            this._cycles = this._cycles % cyclesPerTick
-        }
-        if (this.value > 0xff) {
-            this.value = this.modulo
-            this._interrupt && this._interrupt()
-        }
-    }
-
-    private cyclesPerTick(): number {
-        // cyclesPerTick is the number of CPU cycles that occur
-        // per tick of the clock. This is equal to the number of
-        // cpu cycles per second (4194304) divided by the timer frequency.
-        switch (this.frequency) {
-            case 4096: 
-                return 1024
-            case 262144:
-                return 16
-            case 65536:
-                return 64
-            case 16384:
-                return 256
-        }
-    }
-}
-
-class InterruptFlag {
-    vblank = false
-    lcdstat = false
-    timer = false
-    serial = false
-    joypad = false
-
-    get any(): boolean {
-        return this.vblank || this.lcdstat || this.timer || this.serial || this.joypad
-    }
-
-    toByte(): number {
-        return (0b11100000) | // unused bits always read as 1s
-               ((this.joypad ? 1 : 0) << 4) |
-               ((this.serial ? 1 : 0) << 3) |
-               ((this.timer ? 1 : 0) << 2) |
-               ((this.lcdstat ? 1 : 0) << 1) |
-               (this.vblank ? 1 : 0)
-    }
-
-    fromByte(byte: number) {
-        this.vblank  = (byte & 0b1) === 0b1
-        this.lcdstat = (byte & 0b10) === 0b10
-        this.timer   = (byte & 0b100) === 0b100
-        this.serial  = (byte & 0b1000) === 0b1000
-        this.joypad  = (byte & 0b10000) === 0b10000
-    }
-}
+import Timer from './Timer'
+import InterruptFlag from './InterruptFlag'
 
 class Bus {
     static VBLANK_VECTOR = 0x40
@@ -112,18 +37,13 @@ class Bus {
     readonly interruptFlag = new InterruptFlag()
     readonly interruptEnable = new InterruptFlag()
 
-    constructor(bios: Uint8Array | undefined, rom: Uint8Array, gpu: GPU, joypad: Joypad) {
+    constructor(bios: Uint8Array | undefined, rom: Uint8Array, joypad: Joypad) {
         if (bios !== undefined) {
             this._bios = bios
             this._biosMapped = true
         }
         this._rom = rom
-        this._gpu = gpu
-        gpu.modeChange = (oldMode: GPUMode, newMode: GPUMode) => {
-            if (newMode === GPUMode.VerticalBlank) {
-                this.interruptFlag.vblank = true
-            }
-        }
+        this._gpu = new GPU(() => this.interruptFlag.vblank = true)
         this._joypad = joypad
         this._timer = new Timer(4096, () => {
             this.interruptFlag.timer = true
@@ -134,6 +54,7 @@ class Bus {
     step(cycles: number) {
         this._timer.step(cycles)
         this._divider.step(cycles)
+        this._gpu.step(cycles)
     }
 
     get biosMapped(): boolean {
@@ -142,6 +63,10 @@ class Bus {
 
     get bios(): Uint8Array {
         return this._bios
+    }
+
+    get gpu(): GPU {
+        return this._gpu
     }
 
     get rom(): Uint8Array {

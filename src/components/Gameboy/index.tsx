@@ -50,7 +50,7 @@ class Gameboy extends React.Component<Props, State> {
         return (
             <div className="gameboy">
                 {this.error()}
-                <Screen gpu={cpu.gpu}/>
+                <Screen gpu={cpu.bus.gpu}/>
                 {this.controls()}
                 <Internals 
                     cpu={cpu} 
