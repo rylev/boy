@@ -57,6 +57,10 @@ class InterruptFlag {
     serial = false
     joypad = false
 
+    get any(): boolean {
+        return this.vblank || this.lcdstat || this.timer || this.serial || this.joypad
+    }
+
     toByte(): number {
         return (0b11100000) | // unused bits always read as 1s
                ((this.joypad ? 1 : 0) << 4) |

@@ -30,6 +30,7 @@ export class CPU {
     private _prefix: boolean = false
     private _isRunning: boolean = false
     private _isPaused: boolean = false
+    private _isHalted: boolean = false
     private _hasErrored: boolean = false
     private _onPause: (() => void) | undefined
     private _onError: ((error: Error) => void) | undefined
@@ -110,7 +111,10 @@ export class CPU {
             this.clockTicksInFrame += cycles
             this.clockTicksInSecond += cycles
 
-            this.pc = nextPC
+            if (this._isHalted && this.bus.interruptFlag.any) {
+                this._isHalted = false
+            } 
+            if (!this._isHalted) { this.pc = nextPC }
             if (this._interruptsEnabled) {
                 if (this.bus.interruptEnable.vblank && this.bus.interruptFlag.vblank) {
                     this.bus.interruptFlag.vblank = false
@@ -146,7 +150,7 @@ export class CPU {
             case 'HALT':
                 // 1  4
                 // - - - -
-                this._isRunning = false
+                this._isHalted = true
                 return [this.pc + 1, 4]
             case 'NOP':
                 // 1  4
