@@ -35,7 +35,33 @@ class Timer {
     }
 }
 
+class InterruptFlag {
+    vblank = false
+    lcdstat = false
+    timer = false
+    serial = false
+    joypad = false
+
+    toByte(): number {
+        return (this.joypad ? 1 : 0 << 4) |
+               (this.serial ? 1 : 0 << 3) |
+               (this.timer ? 1 : 0 << 2) |
+               (this.lcdstat ? 1 : 0 << 1) |
+               (this.vblank ? 1 : 0)
+    }
+
+    fromByte(byte: number) {
+        this.vblank  = (byte & 0b1) === 0b1
+        this.lcdstat = (byte & 0b10) === 0b10
+        this.timer   = (byte & 0b100) === 0b100
+        this.serial  = (byte & 0b1000) === 0b1000
+        this.joypad  = (byte & 0b10000) === 0b10000
+    }
+}
+
 class Bus {
+    static VBLANK_VECTOR = 0x40
+    
     static BIOS_END = 0xff
     static ROM_BEGIN = 0x100
     static ROM_END = 0x7fff
@@ -57,16 +83,16 @@ class Bus {
     private _bios: Uint8Array
     private _rom: Uint8Array
     private _gpu: GPU
-    private _timer: Timer = new Timer(4096)
     private _joypad: Joypad
-    private _zeroPagedRam: Uint8Array
-    private _workingRam: Uint8Array
+    private _zeroPagedRam = new Uint8Array(Bus.ZERO_PAGE_END - Bus.ZERO_PAGE_BEGIN + 1)
+    private _workingRam = new Uint8Array(Bus.WORKING_RAM_BEGIN - Bus.WORKING_RAM_END + 1)
+    private _timer = new Timer(4096)
     private _dividerTimer = new Timer(16384)
-    interruptEnable: number = 0
-    _interruptFlags: number = 0
+    readonly interruptFlag = new InterruptFlag()
+    readonly interruptEnable = new InterruptFlag()
 
     constructor(bios: Uint8Array | undefined, rom: Uint8Array, gpu: GPU, joypad: Joypad) {
-        if (bios) {
+        if (bios !== undefined) {
             this._bios = bios
             this._biosMapped = true
         }
@@ -74,20 +100,10 @@ class Bus {
         this._gpu = gpu
         gpu.modeChange = (oldMode: GPUMode, newMode: GPUMode) => {
             if (newMode === GPUMode.VerticalBlank) {
-                this._interruptFlags = this._interruptFlags | 1 
+                this.interruptFlag.vblank = true
             }
         }
         this._joypad = joypad
-        this._zeroPagedRam = new Uint8Array(0xffff - 0xff7f)
-        this._workingRam = new Uint8Array(0xbfff - 0x9fff)
-    }
-
-    get interruptFlags(): number {
-        return this._interruptFlags
-    }
-
-    set interruptFlags(value: number) {
-        this._interruptFlags = value
     }
 
     get biosMapped(): boolean {
@@ -120,9 +136,9 @@ class Bus {
         } else if (addr <= Bus.ROM_END) {
             value = this._rom[addr]
         } else if (addr >= Bus.VRAM_BEGIN && addr <= Bus.VRAM_END) {
-            value = this._gpu.vram[addr - Bus.VRAM_BEGIN] // TODO move array indexing into GPU
+            value = this._gpu.vram[addr - Bus.VRAM_BEGIN] // TODO: move array indexing into GPU
         } else if (addr >= Bus.EXTERNAL_RAM_BEGIN && addr <= Bus.EXTERNAL_RAM_END) {
-            value = undefined // TODO
+            throw new Error("Reading external ram is not yet supported") // TODO: implement external ram
         } else if (addr >= Bus.WORKING_RAM_BEGIN && addr <= Bus.WORKING_RAM_END) {
             value = this._workingRam[addr - Bus.WORKING_RAM_BEGIN]
         } else if (addr >= Bus.OAM_BEGIN && addr <= Bus.OAM_END) {
@@ -132,7 +148,7 @@ class Bus {
         } else if (addr >= Bus.ZERO_PAGE_BEGIN && addr <= Bus.ZERO_PAGE_END) {
             value = this._zeroPagedRam[addr - Bus.ZERO_PAGE_BEGIN]
         } else if (addr === Bus.INTERRUPT_ENABLE_REGISTER) {
-            value = this.interruptEnable
+            value = this.interruptEnable.toByte()
         } 
 
         if (value === undefined) { throw new Error(`No value at address 0x${toHex(addr)}`)}
@@ -147,7 +163,7 @@ class Bus {
         } else if (addr >= Bus.VRAM_BEGIN && addr <= Bus.VRAM_END) {
             this._gpu.writeVram(addr - Bus.VRAM_BEGIN, value)
         } else if (addr >= Bus.EXTERNAL_RAM_BEGIN && addr <= Bus.EXTERNAL_RAM_END) {
-            throw new Error("External RAM not yet implemented")
+            throw new Error("External RAM not yet implemented") // TODO: implement external ram
         } else if (addr >= Bus.WORKING_RAM_BEGIN && addr <= Bus.WORKING_RAM_END) {
             this._workingRam[addr - Bus.WORKING_RAM_BEGIN] = value
         } else if (addr >= Bus.OAM_BEGIN && addr <= Bus.OAM_END) {
@@ -159,7 +175,7 @@ class Bus {
         } else if (addr >= Bus.ZERO_PAGE_BEGIN && addr <= Bus.ZERO_PAGE_END) {
             this._zeroPagedRam[addr - Bus.ZERO_PAGE_BEGIN] = value
         } else if (addr === Bus.INTERRUPT_ENABLE_REGISTER) {
-            this.interruptEnable = value
+            this.interruptEnable.fromByte(value)
         } else {
             throw new Error(`Unrecognized address 0x${toHex(addr)}`)
         }
@@ -172,7 +188,7 @@ class Bus {
             case 0xff04:
                 return this._dividerTimer.value
             case 0xff0f:
-                return this.interruptFlags
+                return this.interruptFlag.toByte()
             case 0xff1c:
                 // TODO: Channel 3 Select output level
                 return 0
@@ -254,7 +270,7 @@ class Bus {
             case 0xff0d:
             case 0xff0e:
             case 0xff0f:
-                this._interruptFlags = value
+                this.interruptFlag.fromByte(value)
                 return
             case 0xff0f:
                 console.warn(`Writing 0x${toHex(value)} to interrupt register. Ignoring...`)

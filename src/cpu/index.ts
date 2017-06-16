@@ -110,12 +110,9 @@ export class CPU {
             this.clockTicksInSecond += cycles
 
             this.pc = nextPC
-            if (this._interruptsEnabled && this.bus.interruptEnable > 0 && this.bus.interruptFlags > 0) {
-                const shouldFire = this.bus.interruptEnable & this.bus.interruptFlags
-                if ((shouldFire & 0x1) > 0) {
-                    this.bus.interruptFlags = this.bus.interruptFlags & 0x254
-                    this.verticalBlank()
-                }
+            if (this._interruptsEnabled && this.bus.interruptEnable.vblank && this.bus.interruptFlag.vblank) {
+                this.bus.interruptFlag.vblank = false 
+                this.interrupt(Bus.VBLANK_VECTOR)
             }
         } catch (e) {
             console.error(e)
@@ -127,10 +124,10 @@ export class CPU {
 
     }
 
-    verticalBlank() {
+    interrupt(location: number) {
         this._interruptsEnabled = false
         this.push(this.pc)
-        this.pc = 0x40
+        this.pc = location
         this.clockTicksInFrame += 12
     }
 
