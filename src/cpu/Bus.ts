@@ -227,6 +227,7 @@ class Bus {
                        (this._gpu.backgroundDisplayEnabled ? 1 : 0)
             case 0xff41:
                 // TODO: implement interrupt status
+                console.warn("Reading 0xff41 LCDC Status register which is not fully implemented")
                 return this._gpu.mode
             case 0xff42:
                 return this._gpu.scrollY
