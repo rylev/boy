@@ -203,7 +203,7 @@ class GPU {
         // Tiles are encoded in two bits with the first byte always
         // on an even address. Bitwise anding the address with 0xffe
         // gives us the address of the first byte of the tile.
-        const normalizedAddr = index & 0xffe 
+        const normalizedAddr = index & 0xfffe 
         const tileIndex = Math.trunc(index / 16) // Tiles begin every 16 bytes
         const y = Math.trunc((index % 16) / 2) // Every two bytes is a new row
         const vram1 = this.vram[normalizedAddr]
@@ -269,9 +269,9 @@ class GPU {
             let canvasOffset = this.line * GPU.width * 4
             let tileIndex = this.vram[tileMapOffset + xOffset]
 
-            // if(this.backgroundTileMap === BackgroundTileMap.x9c00 && tileIndex < 128) {
-            //     tileIndex += 256
-            // } 
+            if(this.backgroundAndWindowDataSelect === BackgroundAndWindowDataSelect.x8800 && tileIndex < 128) {
+                tileIndex += 256
+            } 
 
             for (var i = 0; i < 160; i++) {
                 const value = this.tileSet[tileIndex][tileYOffset][tileXOffset]
@@ -288,9 +288,9 @@ class GPU {
                     tileXOffset = 0
                     xOffset = (xOffset + 1) & 0x1f
                     tileIndex = this.vram[tileMapOffset + xOffset]
-                    // if (this.backgroundTileMap === BackgroundTileMap.x9c00 && tileIndex < 128) {
-                    //     tileIndex += 256
-                    // }
+                    if (this.backgroundAndWindowDataSelect === BackgroundAndWindowDataSelect.x8800 && tileIndex < 128) {
+                        tileIndex += 256
+                    } 
                 }
             }
         }
