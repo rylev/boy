@@ -1,7 +1,7 @@
 import u8 from 'lib/u8'
 
 export enum GPUMode {
-    HorizontalBlank,
+    HorizontalBlank = 0,
     VerticalBlank,
     OAMAccess,
     VRAMAccess
@@ -56,6 +56,13 @@ export type ObjectData  = {
     priority: boolean, 
 }
 
+type Interrupts = {
+    vblank: () => void,
+    hblank: () => void,
+    oamAccess: () => void,
+    lycLyCoincidence: () => void
+}
+
 function blankTile(): TileValue[][] {
     return new Array(8).fill(0).map(_ => new Array(8).fill(TileValue.Zero))
 }
@@ -85,7 +92,12 @@ class GPU {
     readonly vram = new Uint8Array(GPU.VRAM_END - GPU.VRAM_BEGIN + 1).fill(0)
     readonly oam = new Uint8Array(GPU.OAM_END - GPU.OAM_BEGIN + 1).fill(0)
 
-    private _vblankInterrupt: () => void
+    private _interrupts: Interrupts
+    lycLyCoincidenceInterruptEnabled = false
+    oamInterruptEnabled = false
+    vblankInterruptEnabled = false
+    hblankInterruptEnabled = false
+
     private _mode = GPUMode.HorizontalBlank
     private _canvas = new Uint8Array(GPU.width * GPU.height * 4)
     private _timer = 0
@@ -124,11 +136,12 @@ class GPU {
     windowY: number = 0
 
     line = 0
+    lyc = 0
 
     get mode(): GPUMode { return this._mode }
 
-    constructor(vblankInterrupt: () => void) {
-        this._vblankInterrupt = vblankInterrupt
+    constructor(interrupts: Interrupts) {
+        this._interrupts = interrupts
         this._canvas = this._canvas.map(_ => Color.White)
     }
 
@@ -144,9 +157,10 @@ class GPU {
                     if (this.line === 143) {
 
                         this.draw()
-                        this._vblankInterrupt()
+                        this._interrupts.vblank()
                         this._mode = GPUMode.VerticalBlank
                     } else {
+                        this._interrupts.oamAccess()
                         this._mode = GPUMode.OAMAccess
                     }
                 }
@@ -155,8 +169,10 @@ class GPU {
                 if (this._timer >= 456) {
                     this._timer = 0
                     this.line++
+                    if (this.line === this.lyc) { this._interrupts.lycLyCoincidence() }
 
                     if (this.line > 153) {
+                        this._interrupts.oamAccess()
                         this._mode = GPUMode.OAMAccess
                         this.line = 0
                     }
@@ -171,6 +187,7 @@ class GPU {
             case GPUMode.VRAMAccess:
                 if (this._timer >= 172) {
                     this._timer = 0
+                    this._interrupts.hblank()
                     this._mode = GPUMode.HorizontalBlank
 
                     this.renderScan()

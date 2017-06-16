@@ -117,6 +117,10 @@ export class CPU {
                     this.bus.interruptFlag.vblank = false
                     this.interrupt(Bus.VBLANK_VECTOR)
                 }
+                if (this.bus.interruptEnable.lcdstat && this.bus.interruptFlag.lcdstat) {
+                    this.bus.interruptFlag.lcdstat = false
+                    this.interrupt(Bus.LCDSTAT_VECTOR)
+                }
                 if (this.bus.interruptEnable.timer && this.bus.interruptFlag.timer) {
                     this.bus.interruptFlag.timer = false
                     this.interrupt(Bus.TIMER_VECTOR)

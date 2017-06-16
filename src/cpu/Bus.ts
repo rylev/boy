@@ -7,6 +7,7 @@ import InterruptFlag from './InterruptFlag'
 class Bus {
     static VBLANK_VECTOR = 0x40
     static TIMER_VECTOR = 0x50
+    static LCDSTAT_VECTOR = 0x48
 
     static BIOS_END = 0xff
     static ROM_BEGIN = 0x100
@@ -43,7 +44,13 @@ class Bus {
             this._biosMapped = true
         }
         this._rom = rom
-        this._gpu = new GPU(() => this.interruptFlag.vblank = true)
+        const interrupts = { 
+            vblank: () => { this.interruptFlag.vblank = true; this.interruptFlag.lcdstat = true },
+            hblank: () => this.interruptFlag.lcdstat = true,
+            oamAccess: () => this.interruptFlag.lcdstat = true,
+            lycLyCoincidence: () => this.interruptFlag.lcdstat = true
+        }
+        this._gpu = new GPU(interrupts)
         this._joypad = joypad
         this._timer = new Timer(4096, () => {
             this.interruptFlag.timer = true
@@ -157,10 +164,11 @@ class Bus {
                        ((this._gpu.objectDisplayEnable ? 1 : 0) << 1) |
                        (this._gpu.backgroundDisplayEnabled ? 1 : 0)
             case 0xff41:
-                // TODO: implement interrupt status
-                console.warn("Reading 0xff41 LCDC Status register which is not fully implemented")
-
-                return  ((this._gpu.line === 0 ? 1 : 0) << 2) | // TODO: line should be compared with LYC 0xff45
+                return  ((this._gpu.lycLyCoincidenceInterruptEnabled ? 1 : 0) << 6) | 
+                        ((this._gpu.oamInterruptEnabled ? 1 : 0) << 5) | 
+                        ((this._gpu.vblankInterruptEnabled ? 1 : 0) << 4) | 
+                        ((this._gpu.hblankInterruptEnabled ? 1 : 0) << 3) | 
+                        ((this._gpu.line === this._gpu.lyc ? 1 : 0) << 2) | 
                         (this._gpu.mode)
             case 0xff42:
                 return this._gpu.scrollY
@@ -227,6 +235,8 @@ class Bus {
             case 0xff0c:
             case 0xff0d:
             case 0xff0e:
+                console.warn(`Writing 0x${toHex(value)} to register ${toHex(addr)} which is unknown. Ignoring...`)
+                return 
             case 0xff0f:
                 this.interruptFlag.fromByte(value)
                 return
@@ -308,7 +318,10 @@ class Bus {
                 this._gpu.backgroundDisplayEnabled = (value & 0b1) === 1 
                 return
             case 0xff41:
-                console.warn(`Writing 0x${value} to 0xff41. TODO: implement LCD stat reg`)
+                this._gpu.hblankInterruptEnabled = (value & 0b1000) === 0b1000
+                this._gpu.vblankInterruptEnabled = (value & 0b10000) === 0b10000
+                this._gpu.oamInterruptEnabled = (value & 0b100000) === 0b100000
+                this._gpu.lycLyCoincidenceInterruptEnabled = (value & 0b1000000) === 0b1000000
                 return
             case 0xff42:
                 this._gpu.scrollY = value
@@ -317,7 +330,8 @@ class Bus {
                 this._gpu.scrollX = value
                 return
             case 0xff45: 
-                throw new Error("LYC not yet implemented")
+                this._gpu.lyc = value
+                return 
             case 0xff46:
                 // TODO: account for the fact this takes 160 microseconds
                 const dmaSource = value << 8 
