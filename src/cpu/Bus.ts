@@ -36,6 +36,23 @@ class Timer {
 }
 
 class Bus {
+    static BIOS_END = 0xff
+    static ROM_BEGIN = 0x100
+    static ROM_END = 0x7fff
+    static VRAM_BEGIN = GPU.VRAM_BEGIN
+    static VRAM_END = GPU.VRAM_END
+    static EXTERNAL_RAM_BEGIN = 0xa000
+    static EXTERNAL_RAM_END = 0xbfff
+    static WORKING_RAM_BEGIN = 0xc000
+    static WORKING_RAM_END = 0xdfff
+    static OAM_BEGIN = GPU.OAM_BEGIN
+    static OAM_END = GPU.OAM_END
+    static MEMORY_MAPPED_IO_BEGIN = 0xff00
+    static MEMORY_MAPPED_IO_END = 0xff7f
+    static ZERO_PAGE_BEGIN = 0xff80
+    static ZERO_PAGE_END = 0xfffe
+    static INTERRUPT_ENABLE_REGISTER = 0xffff
+
     private _biosMapped: boolean
     private _bios: Uint8Array
     private _rom: Uint8Array
@@ -98,60 +115,51 @@ class Bus {
 
     read(addr: number): number {
         let value: number | undefined
-        if (addr < 0x100 && this._biosMapped) {
+        if (addr <= Bus.BIOS_END && this._biosMapped) {
             value = this._bios[addr]
-        } else if (addr < 0x8000) {
+        } else if (addr <= Bus.ROM_END) {
             value = this._rom[addr]
-        } else if (addr >= GPU.VRAM_BEGIN && addr <= GPU.VRAM_END) {
-            value = this._gpu.vram[addr - GPU.VRAM_BEGIN]
-        } else if (addr >= 0xa000 && addr <= 0xbfff) {
-            value = 0 // TODO: define
-        } else if (addr >= 0xc000 && addr <= 0xdfff) {
-            value = this._workingRam[addr - 0xc000]
-        } else if (addr >= 0xfe00 && addr <= 0xfe9f) {
-            value = this._gpu.oam[addr - 0xfe00]
-        } else if (addr >= 0xff00 && addr <= 0xff7f) {
+        } else if (addr >= Bus.VRAM_BEGIN && addr <= Bus.VRAM_END) {
+            value = this._gpu.vram[addr - Bus.VRAM_BEGIN] // TODO move array indexing into GPU
+        } else if (addr >= Bus.EXTERNAL_RAM_BEGIN && addr <= Bus.EXTERNAL_RAM_END) {
+            value = undefined // TODO
+        } else if (addr >= Bus.WORKING_RAM_BEGIN && addr <= Bus.WORKING_RAM_END) {
+            value = this._workingRam[addr - Bus.WORKING_RAM_BEGIN]
+        } else if (addr >= Bus.OAM_BEGIN && addr <= Bus.OAM_END) {
+            value = this._gpu.oam[addr - Bus.OAM_BEGIN]
+        } else if (addr >= Bus.MEMORY_MAPPED_IO_BEGIN && addr <= Bus.MEMORY_MAPPED_IO_END) {
             value = this.readIO(addr)
-        } else if (addr >= 0xff80 && addr <= 0xffff) {
-            if (addr === 0xffff) {
-                return this.interruptEnable
-            } else if(addr >= 0xff80) {
-                value = this._zeroPagedRam[addr - 0xff80]
-            } else if (addr === 0xff0f) {
-                return this.interruptFlags
-            } else {
-                value = undefined // TODO
-            }
-        }
+        } else if (addr >= Bus.ZERO_PAGE_BEGIN && addr <= Bus.ZERO_PAGE_END) {
+            value = this._zeroPagedRam[addr - Bus.ZERO_PAGE_BEGIN]
+        } else if (addr === Bus.INTERRUPT_ENABLE_REGISTER) {
+            value = this.interruptEnable
+        } 
 
         if (value === undefined) { throw new Error(`No value at address 0x${toHex(addr)}`)}
         return value
     }
 
     write(addr: number, value: number) {
-        if (value > 0xFF) { throw Error(`Value ${value.toString(16)} to address ${addr.toString(16)} is to too big`)}
-        if (addr < 0x100 && this._biosMapped) {
+        if (addr <= Bus.BIOS_END && this._biosMapped) {
             throw new Error("Cannot write to bios")
-        } else if (addr < 0x8000) {
+        } else if (addr <= Bus.ROM_END) {
             this._rom[addr] = value
-        } else if (addr >= GPU.VRAM_BEGIN && addr <= GPU.VRAM_END) {
-            this._gpu.writeVram(addr - GPU.VRAM_BEGIN, value)
-        } else if (addr >= 0xa000 && addr <= 0xbfff) {
-            console.warn("Writing to external ram")
-        } else if (addr >= 0xc000 && addr <= 0xdfff) {
-            this._workingRam[addr - 0xc000] = value
-        } else if (addr >= 0xfe00 && addr <= 0xfe9f) {
-            this._gpu.writeOam(addr - GPU.OAM_BEGIN, value)
+        } else if (addr >= Bus.VRAM_BEGIN && addr <= Bus.VRAM_END) {
+            this._gpu.writeVram(addr - Bus.VRAM_BEGIN, value)
+        } else if (addr >= Bus.EXTERNAL_RAM_BEGIN && addr <= Bus.EXTERNAL_RAM_END) {
+            throw new Error("External RAM not yet implemented")
+        } else if (addr >= Bus.WORKING_RAM_BEGIN && addr <= Bus.WORKING_RAM_END) {
+            this._workingRam[addr - Bus.WORKING_RAM_BEGIN] = value
+        } else if (addr >= Bus.OAM_BEGIN && addr <= Bus.OAM_END) {
+            this._gpu.writeOam(addr - Bus.OAM_BEGIN, value)
         } else if (addr >= 0xfea0 && addr <= 0xfeff) {
-            // Unused
-        } else if (addr >= 0xff00 && addr <= 0xff7f) {
+            // This region of memory is unused and writing to it has no effect
+        } else if (addr >= Bus.MEMORY_MAPPED_IO_BEGIN && addr <= Bus.MEMORY_MAPPED_IO_END) {
             this.writeIO(addr, value)
-        } else if (addr >= 0xff80 && addr <= 0xffff) {
-            if (addr === 0xffff) {
-                this.interruptEnable = value
-            } else {
-                this._zeroPagedRam[addr - 0xff80] = value
-            }
+        } else if (addr >= Bus.ZERO_PAGE_BEGIN && addr <= Bus.ZERO_PAGE_END) {
+            this._zeroPagedRam[addr - Bus.ZERO_PAGE_BEGIN] = value
+        } else if (addr === Bus.INTERRUPT_ENABLE_REGISTER) {
+            this.interruptEnable = value
         } else {
             throw new Error(`Unrecognized address 0x${toHex(addr)}`)
         }
@@ -163,6 +171,8 @@ class Bus {
                 return this._joypad.toByte()
             case 0xff04:
                 return this._dividerTimer.value
+            case 0xff0f:
+                return this.interruptFlags
             case 0xff1c:
                 // TODO: Channel 3 Select output level
                 return 0
@@ -244,7 +254,7 @@ class Bus {
             case 0xff0d:
             case 0xff0e:
             case 0xff0f:
-                console.warn(`Writing 0x${toHex(value)} which is unknown. Ignoring...`)
+                this._interruptFlags = value
                 return
             case 0xff0f:
                 console.warn(`Writing 0x${toHex(value)} to interrupt register. Ignoring...`)
