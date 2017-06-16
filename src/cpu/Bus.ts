@@ -58,10 +58,11 @@ class InterruptFlag {
     joypad = false
 
     toByte(): number {
-        return (this.joypad ? 1 : 0 << 4) |
-               (this.serial ? 1 : 0 << 3) |
-               (this.timer ? 1 : 0 << 2) |
-               (this.lcdstat ? 1 : 0 << 1) |
+        return (0b11100000) | // unused bits always read as 1s
+               ((this.joypad ? 1 : 0) << 4) |
+               ((this.serial ? 1 : 0) << 3) |
+               ((this.timer ? 1 : 0) << 2) |
+               ((this.lcdstat ? 1 : 0) << 1) |
                (this.vblank ? 1 : 0)
     }
 
