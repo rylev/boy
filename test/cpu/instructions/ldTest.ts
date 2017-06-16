@@ -8,7 +8,7 @@ describe('Instruction.LD', () => {
     describe('when target is b and source is d', () => {
         it('sets it', () => {
             const rom = createRom([
-                Instruction.toByte(Instruction.LD('B', 'D')),
+                Instruction.toByte(Instruction.LDByte('B', 'D')),
                 Instruction.toByte(Instruction.Halt)
             ])
             const cpu = new CPU(undefined, rom)
@@ -25,7 +25,7 @@ describe('Instruction.LD', () => {
     describe('when target is b and source is d8', () => {
         it('sets it', () => {
             const rom = createRom([
-                Instruction.toByte(Instruction.LD('B', 'd8')),
+                Instruction.toByte(Instruction.LDByte('B', 'd8')),
                 0x20,
                 Instruction.toByte(Instruction.Halt)
             ])
