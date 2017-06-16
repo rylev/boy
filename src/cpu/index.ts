@@ -24,12 +24,12 @@ export class CPU {
     pc: number
     sp: number
     bus: Bus
-    gpu: GPU
     clockTicksInFrame = 0
     clockTicksInSecond = 0
     private _prefix: boolean = false
     private _isRunning: boolean = false
     private _isPaused: boolean = false
+    private _isHalted: boolean = false
     private _hasErrored: boolean = false
     private _onPause: (() => void) | undefined
     private _onError: ((error: Error) => void) | undefined
@@ -37,8 +37,7 @@ export class CPU {
     private _interruptsEnabled: boolean = true
 
     constructor(bios: Uint8Array | undefined, rom: Uint8Array, joypad: Joypad = new Joypad(), callbacks: CPUCallbacks = {}) {
-        this.gpu = new GPU()
-        this.bus = new Bus(bios, rom, this.gpu, joypad)
+        this.bus = new Bus(bios, rom, joypad)
         this.registers = new Registers()
         this.pc = bios ? 0 : CPU.START_ADDR
         this.sp = bios ? 0 : 0xfffe
@@ -104,17 +103,23 @@ export class CPU {
             const instruction = Instruction.fromByte(instructionByte, this._prefix)
             const [nextPC, cycles] = this.execute(instruction)
 
-            this.gpu.step(cycles)
+            this.bus.step(cycles)
 
             this.clockTicksInFrame += cycles
             this.clockTicksInSecond += cycles
 
-            this.pc = nextPC
-            if (this._interruptsEnabled && this.bus.interruptEnable > 0 && this.bus.interruptFlags > 0) {
-                const shouldFire = this.bus.interruptEnable & this.bus.interruptFlags
-                if ((shouldFire & 0x1) > 0) {
-                    this.bus.interruptFlags = this.bus.interruptFlags & 0x254
-                    this.verticalBlank()
+            if (this._isHalted && this.bus.interruptFlag.any) {
+                this._isHalted = false
+            } 
+            if (!this._isHalted) { this.pc = nextPC }
+            if (this._interruptsEnabled) {
+                if (this.bus.interruptEnable.vblank && this.bus.interruptFlag.vblank) {
+                    this.bus.interruptFlag.vblank = false
+                    this.interrupt(Bus.VBLANK_VECTOR)
+                }
+                if (this.bus.interruptEnable.timer && this.bus.interruptFlag.timer) {
+                    this.bus.interruptFlag.timer = false
+                    this.interrupt(Bus.TIMER_VECTOR)
                 }
             }
         } catch (e) {
@@ -127,10 +132,10 @@ export class CPU {
 
     }
 
-    verticalBlank() {
+    interrupt(location: number) {
         this._interruptsEnabled = false
         this.push(this.pc)
-        this.pc = 0x40
+        this.pc = location
         this.clockTicksInFrame += 12
     }
 
@@ -142,7 +147,7 @@ export class CPU {
             case 'HALT':
                 // 1  4
                 // - - - -
-                this._isRunning = false
+                this._isHalted = true
                 return [this.pc + 1, 4]
             case 'NOP':
                 // 1  4
