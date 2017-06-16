@@ -159,7 +159,9 @@ class Bus {
             case 0xff41:
                 // TODO: implement interrupt status
                 console.warn("Reading 0xff41 LCDC Status register which is not fully implemented")
-                return this._gpu.mode
+
+                return  ((this._gpu.line === 0 ? 1 : 0) << 2) | // TODO: line should be compared with LYC 0xff45
+                        (this._gpu.mode)
             case 0xff42:
                 return this._gpu.scrollY
             case 0xff43:
@@ -314,6 +316,8 @@ class Bus {
             case 0xff43:
                 this._gpu.scrollX = value
                 return
+            case 0xff45: 
+                throw new Error("LYC not yet implemented")
             case 0xff46:
                 // TODO: account for the fact this takes 160 microseconds
                 const dmaSource = value << 8 

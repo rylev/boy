@@ -24,6 +24,9 @@ class InterruptFlag {
         this.timer   = (byte & 0b100) === 0b100
         this.serial  = (byte & 0b1000) === 0b1000
         this.joypad  = (byte & 0b10000) === 0b10000
+        if (this.lcdstat) { console.warn("LCDStat interrupt requested but not supported") }
+        if (this.serial) { console.warn("Serial interrupt requested but not supported") }
+        if (this.joypad) { console.warn("Joypad interrupt requested but not supported") }
     }
 }
 
