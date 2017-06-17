@@ -45,10 +45,15 @@ class Bus {
         }
         this._rom = rom
         const interrupts = { 
-            vblank: () => { this.interruptFlag.vblank = true; this.interruptFlag.lcdstat = true },
-            hblank: () => this.interruptFlag.lcdstat = true,
-            oamAccess: () => this.interruptFlag.lcdstat = true,
-            lycLyCoincidence: () => this.interruptFlag.lcdstat = true
+        // TODO: Figure out why lcdstat interrupt was breaking everything
+        //     vblank: () => { this.interruptFlag.vblank = true; this.interruptFlag.lcdstat = true },
+        //     hblank: () => this.interruptFlag.lcdstat = true,
+        //     oamAccess: () => this.interruptFlag.lcdstat = true,
+        //     lycLyCoincidence: () => this.interruptFlag.lcdstat = true
+            vblank: () => this.interruptFlag.vblank = true,
+            hblank: () => {},
+            oamAccess: () => {},
+            lycLyCoincidence: () => {}
         }
         this._gpu = new GPU(interrupts)
         this._joypad = joypad
