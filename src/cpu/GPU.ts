@@ -321,7 +321,7 @@ class GPU {
                 if (object.y <= this.line && object.y + objectHeight > this.line) {
                     let canvasoffs = (this.line * 160 + object.x) * 4
                     const yOffset = this.line - object.y 
-                    const tileIndex = yOffset > 7 ? object.tile + 1 : object.tile
+                    const tileIndex = objectHeight === 16 && yOffset > 7 ? object.tile + 1 : object.tile
                     const tile = this.tileSet[tileIndex] 
                     let tileRow: TileValue[] = [] 
                     if (object.yflip) {
@@ -332,7 +332,7 @@ class GPU {
 
                     for (var x = 0; x < 8; x++) {
                         if ((object.x + x) >= 0 && (object.x + x) < 160 &&
-                            tileRow[x] !== TileValue.Zero &&
+                            tileRow[object.xflip ? (7 - x) : x] !== TileValue.Zero &&
                             (object.priority || scanRow[object.x + x] === TileValue.Zero)) {
                             const pixel = tileRow[object.xflip ? (7 - x) : x]
                             const color = this.valueToObjectColor(pixel)
