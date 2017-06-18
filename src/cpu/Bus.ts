@@ -50,7 +50,7 @@ class Bus {
             oamAccess: () => this.interruptFlag.lcdstat = true,
             lineEqualsLineCheck: () => this.interruptFlag.lcdstat = true
         }
-        this._gpu = new GPU(interrupts)
+        this._gpu = new GPU(interrupts, this._bios === undefined)
         this._joypad = joypad
         this._timer = new Timer(4096, () => {
             this.interruptFlag.timer = true

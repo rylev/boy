@@ -141,9 +141,14 @@ class GPU {
 
     get mode(): GPUMode { return this._mode }
 
-    constructor(interrupts: Interrupts) {
+    constructor(interrupts: Interrupts, initialize: boolean) {
         this._interrupts = interrupts
         this._canvas = this._canvas.map(_ => Color.White)
+        if (initialize) {
+            this.lcdDisplayEnabled = true
+            this.backgroundAndWindowDataSelect = BackgroundAndWindowDataSelect.x8000
+            this.backgroundDisplayEnabled = true
+        }
     }
 
     step(cycles: number) {
