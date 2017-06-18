@@ -321,7 +321,9 @@ class GPU {
                 if (object.y <= this.line && object.y + objectHeight > this.line) {
                     let canvasoffs = (this.line * 160 + object.x) * 4
                     const yOffset = this.line - object.y 
-                    const tileIndex = objectHeight === 16 && yOffset > 7 ? object.tile + 1 : object.tile
+                    const tileIndex = objectHeight === 16 && (!object.yflip && yOffset > 7) || (object.yflip && yOffset <= 7) 
+                        ? object.tile + 1 
+                        : object.tile
                     const tile = this.tileSet[tileIndex] 
                     let tileRow: TileValue[] = [] 
                     if (object.yflip) {
