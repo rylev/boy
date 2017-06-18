@@ -117,9 +117,7 @@ export class CPU {
             this.clockTicksInFrame += cycles
             this.clockTicksInSecond += cycles
 
-            if (this.bus.hasInterrupt) {
-                this._isHalted = false
-            } 
+            if (this.bus.hasInterrupt) { this._isHalted = false } 
             if (!this._isHalted) { this.pc = nextPC }
             if (this._interruptsEnabled) {
                 if (this.bus.interruptEnable.vblank && this.bus.interruptFlag.vblank) {

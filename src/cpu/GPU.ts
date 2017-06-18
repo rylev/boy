@@ -107,14 +107,14 @@ class GPU {
     readonly objectData: ObjectData[] = new Array(GPU.NUMBER_OF_OBJECTS).fill(0).map(_ => emptyObjectData())
 
     // Registers
-    lcdDisplayEnabled: boolean = true
-    windowDisplayEnabled: boolean = true
-    backgroundDisplayEnabled: boolean = true
+    lcdDisplayEnabled: boolean = false
+    windowDisplayEnabled: boolean = false
+    backgroundDisplayEnabled: boolean = false
     windowTileMap: WindowTileMap = WindowTileMap.x9800
     backgroundTileMap: BackgroundTileMap = BackgroundTileMap.x9800
-    backgroundAndWindowDataSelect: BackgroundAndWindowDataSelect = BackgroundAndWindowDataSelect.x8000
+    backgroundAndWindowDataSelect: BackgroundAndWindowDataSelect = BackgroundAndWindowDataSelect.x8800
     objectSize: ObjectSize = ObjectSize.os8x8
-    objectDisplayEnable: boolean = true
+    objectDisplayEnable: boolean = false
     objectPalette: ObjectPalette = ObjectPalette.Zero
     bgcolor0 = Color.White
     bgcolor1 = Color.LightGray
@@ -137,7 +137,7 @@ class GPU {
 
     line = 0
     lineCheck = 0
-    lineEqualsLineCheck = false
+    lineEqualsLineCheck = true
 
     get mode(): GPUMode { return this._mode }
 
@@ -147,19 +147,21 @@ class GPU {
     }
 
     step(cycles: number) {
+        if (!this.lcdDisplayEnabled) { return }
+
         this._cycles += cycles
 
         switch (this._mode) {
             case GPUMode.HorizontalBlank:
                 if (this._cycles >= 204) {
-                    this._cycles = 0
+                    this._cycles = this._cycles % 204
                     this.line++
 
                     if (this.line === 143) {
                         this.draw()
-                        // TODO: Vblank actually has two different interrupts. We migt have to differntiate
-                        this._interrupts.vblank()
+                        // TODO: Vblank actually has two different interrupts. We might have to differntiate
                         this._mode = GPUMode.VerticalBlank
+                        this._interrupts.vblank()
                     } else {
                         this._mode = GPUMode.OAMAccess
                         if (this.oamInterruptEnabled ) { this._interrupts.oamAccess() }
