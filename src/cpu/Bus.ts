@@ -217,7 +217,8 @@ class Bus {
                        (colorToBits(this._gpu.bgcolor1) << 2) | 
                        colorToBits(this._gpu.bgcolor0)
             default:
-                throw new Error(`Reading unrecognized IO address 0x${toHex(addr)}`)
+                console.warn(`Reading unrecognized IO address 0x${toHex(addr)}`)
+                return 0
 
         }
     }
