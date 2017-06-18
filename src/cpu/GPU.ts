@@ -158,7 +158,7 @@ class GPU {
 
         switch (this._mode) {
             case GPUMode.HorizontalBlank:
-                if (this._cycles >= 204) {
+                if (this._cycles >= 200) {
                     this._cycles = this._cycles % 204
                     this.line++
 
@@ -188,7 +188,7 @@ class GPU {
                 this.setLycLyCoincidence()
                 return
             case GPUMode.OAMAccess:
-                if (this._cycles >= 80) {
+                if (this._cycles >= 84) {
                     this._cycles = 0
                     this._mode = GPUMode.VRAMAccess
                 }
