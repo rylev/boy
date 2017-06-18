@@ -168,7 +168,7 @@ class Bus {
                        ((this._gpu.windowDisplayEnabled ? 1 : 0) << 5) |
                        ((this._gpu.backgroundAndWindowDataSelect === BackgroundAndWindowDataSelect.x8000 ? 1 : 0) << 4) |
                        ((this._gpu.backgroundTileMap === BackgroundTileMap.x9c00 ? 1 : 0) << 3) |
-                       ((this._gpu.objectSize === ObjectSize.os16x16 ? 1 : 0) << 2) |
+                       ((this._gpu.objectSize === ObjectSize.os8x16 ? 1 : 0) << 2) |
                        ((this._gpu.objectDisplayEnable ? 1 : 0) << 1) |
                        (this._gpu.backgroundDisplayEnabled ? 1 : 0)
             case 0xff41:
@@ -322,7 +322,7 @@ class Bus {
                     ? BackgroundAndWindowDataSelect.x8800 
                     : BackgroundAndWindowDataSelect.x8000
                 this._gpu.backgroundTileMap = ((value >> 3) & 0b1) === 0 ? BackgroundTileMap.x9800 : BackgroundTileMap.x9c00
-                this._gpu.objectSize = ((value >> 2) & 0b1) === 0 ? ObjectSize.os8x8 : ObjectSize.os16x16
+                this._gpu.objectSize = ((value >> 2) & 0b1) === 0 ? ObjectSize.os8x8 : ObjectSize.os8x16
                 this._gpu.objectDisplayEnable = ((value >> 1) & 0b1) === 1 
                 this._gpu.backgroundDisplayEnabled = (value & 0b1) === 1 
                 return

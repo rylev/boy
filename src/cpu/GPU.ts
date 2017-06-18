@@ -31,7 +31,7 @@ export enum BackgroundAndWindowDataSelect {
 
 export enum ObjectSize {
     os8x8,
-    os16x16
+    os8x16
 }
 
 enum ObjectPalette {
@@ -312,14 +312,17 @@ class GPU {
 
         if (this.objectDisplayEnable) {
             this.objectData.forEach(object => {
-                if (object.y <= this.line && object.y + 8 > this.line) {
+                const objectHeight = this.objectSize === ObjectSize.os8x16 ? 16 : 8
+                if (object.y <= this.line && object.y + objectHeight > this.line) {
                     let canvasoffs = (this.line * 160 + object.x) * 4
-                    const tile = this.tileSet[object.tile]
+                    const yOffset = this.line - object.y 
+                    const tileIndex = yOffset > 7 ? object.tile + 1 : object.tile
+                    const tile = this.tileSet[tileIndex] 
                     let tileRow: TileValue[] = [] 
                     if (object.yflip) {
-                        tileRow = tile[7 - (this.line - object.y)]
+                        tileRow = tile[7 - (yOffset % 8)]
                     } else {
-                        tileRow = tile[this.line - object.y]
+                        tileRow = tile[yOffset % 8]
                     }
 
                     for (var x = 0; x < 8; x++) {
