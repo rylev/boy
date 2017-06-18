@@ -12,6 +12,8 @@ class Bus {
     static BIOS_END = 0xff
     static ROM_BEGIN = 0x100
     static ROM_END = 0x7fff
+    static ROM_BANK_0_END = 0x3fff
+    static ROM_BANK_N_BEGIN = 0x4000
     static VRAM_BEGIN = GPU.VRAM_BEGIN
     static VRAM_END = GPU.VRAM_END
     static EXTERNAL_RAM_BEGIN = 0xa000
@@ -26,6 +28,9 @@ class Bus {
     static ZERO_PAGE_END = 0xfffe
     static INTERRUPT_ENABLE_REGISTER = 0xffff
 
+    get cartType(): number { return this.rom[0x147] }
+    romOffset: number = Bus.ROM_BANK_N_BEGIN
+    romBank: number = 0
     private _biosMapped: boolean
     private _bios: Uint8Array
     private _rom: Uint8Array
@@ -103,8 +108,10 @@ class Bus {
         let value: number | undefined
         if (addr <= Bus.BIOS_END && this._biosMapped) {
             value = this._bios[addr]
-        } else if (addr <= Bus.ROM_END) {
+        } else if (addr <= Bus.ROM_BANK_0_END) {
             value = this._rom[addr]
+        } else if (addr <= Bus.ROM_END) {
+            value = this._rom[this.romOffset + addr - Bus.ROM_BANK_N_BEGIN]
         } else if (addr >= Bus.VRAM_BEGIN && addr <= Bus.VRAM_END) {
             value = this._gpu.vram[addr - Bus.VRAM_BEGIN] // TODO: move array indexing into GPU
         } else if (addr >= Bus.EXTERNAL_RAM_BEGIN && addr <= Bus.EXTERNAL_RAM_END) {
@@ -128,8 +135,11 @@ class Bus {
     write(addr: number, value: number) {
         if (addr <= Bus.BIOS_END && this._biosMapped) {
             throw new Error("Cannot write to bios")
-        } else if (addr <= Bus.ROM_END) {
-            this._rom[addr] = value
+        } else if (addr >= 0x2000 && addr < 0x4000) {
+            if (this.cartType === 1 || this.cartType === 2 || this.cartType === 3) {
+                this.romBank = (value & 0b11111) || 1
+                this.romOffset = this.romBank * 0x4000
+            }
         } else if (addr >= Bus.VRAM_BEGIN && addr <= Bus.VRAM_END) {
             this._gpu.writeVram(addr - Bus.VRAM_BEGIN, value)
         } else if (addr >= Bus.EXTERNAL_RAM_BEGIN && addr <= Bus.EXTERNAL_RAM_END) {
@@ -159,8 +169,16 @@ class Bus {
                 return this._divider.value
             case 0xff0f:
                 return this.interruptFlag.toByte()
+            case 0xff14:
+                // TODO: Channel 1 Frequency hi
+            case 0xff19:
+                // TODO: Channel 2 Frequency hi data
             case 0xff1c:
                 // TODO: Channel 3 Select output level
+            case 0xff1e:
+                // TODO: Channel 3 Frequency's higher data
+            case 0xff23:
+                // TODO: Channel 4 Counter/consecutive; Inital
                 return 0
             case 0xff40:
                 return ((this._gpu.lcdDisplayEnabled ? 1 : 0) << 7) |
@@ -248,9 +266,6 @@ class Bus {
                 return 
             case 0xff0f:
                 this.interruptFlag.fromByte(value)
-                return
-            case 0xff0f:
-                console.warn(`Writing 0x${toHex(value)} to interrupt register. Ignoring...`)
                 return
             case 0xff10:
                 // http://bgb.bircd.org/pandocs.htm#soundoverview

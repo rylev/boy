@@ -26,7 +26,6 @@ export class CPU {
     bus: Bus
     clockTicksInFrame = 0
     clockTicksInSecond = 0
-    private _prefix: boolean = false
     private _isRunning: boolean = false
     private _isPaused: boolean = false
     private _isHalted: boolean = false
@@ -109,7 +108,7 @@ export class CPU {
     step(pc: number = this.pc) {
         try {
             const instructionByte = this.bus.read(pc)
-            const instruction = Instruction.fromByte(instructionByte, this._prefix)
+            const instruction = Instruction.fromByte(instructionByte, this.bus.read(pc - 1) === 0xcb)
             const [nextPC, cycles] = this.execute(instruction)
 
             this.bus.step(cycles)
@@ -153,7 +152,6 @@ export class CPU {
     execute(instruction: Instruction): [Address, Cycles] {
         // OPCodes Map: http://pastraiser.com/cpu/gameboy/gameboy_opcodes.html
         // OPCodes Explanation: http://www.chrisantonellis.com/files/gameboy/gb-instructions.txt
-        this._prefix = false
         switch (instruction.type) {
             case 'HALT':
                 // 1  4
@@ -183,7 +181,6 @@ export class CPU {
             case 'PREFIX CB':
                 // 1  4
                 // - - - -
-                this._prefix = true
                 return [this.pc + 1, 4]
 
             case 'ADD HL':
