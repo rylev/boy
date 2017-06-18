@@ -60,7 +60,7 @@ type Interrupts = {
     vblank: () => void,
     hblank: () => void,
     oamAccess: () => void,
-    lycLyCoincidence: () => void
+    lineEqualsLineCheck: () => void
 }
 
 function blankTile(): TileValue[][] {
@@ -93,14 +93,14 @@ class GPU {
     readonly oam = new Uint8Array(GPU.OAM_END - GPU.OAM_BEGIN + 1).fill(0)
 
     private _interrupts: Interrupts
-    lycLyCoincidenceInterruptEnabled = false
+    lineEqualsLineCheckInterruptEnabled = false
     oamInterruptEnabled = false
     vblankInterruptEnabled = false
     hblankInterruptEnabled = false
 
     private _mode = GPUMode.HorizontalBlank
     private _canvas = new Uint8Array(GPU.width * GPU.height * 4)
-    private _timer = 0
+    private _cycles = 0
     onDraw: ((data: ImageData) => void) | undefined
 
     readonly tileSet: TileValue[][][] = new Array(GPU.NUMBER_OF_TILES).fill(0).map(_ => blankTile())
@@ -136,7 +136,8 @@ class GPU {
     windowY: number = 0
 
     line = 0
-    lyc = 0
+    lineCheck = 0
+    lineEqualsLineCheck = false
 
     get mode(): GPUMode { return this._mode }
 
@@ -145,54 +146,66 @@ class GPU {
         this._canvas = this._canvas.map(_ => Color.White)
     }
 
-    step(time: number) {
-        this._timer += time
+    step(cycles: number) {
+        this._cycles += cycles
 
         switch (this._mode) {
             case GPUMode.HorizontalBlank:
-                if (this._timer >= 204) {
-                    this._timer = 0
+                if (this._cycles >= 204) {
+                    this._cycles = 0
                     this.line++
 
                     if (this.line === 143) {
-
                         this.draw()
+                        // TODO: Vblank actually has two different interrupts. We migt have to differntiate
                         this._interrupts.vblank()
                         this._mode = GPUMode.VerticalBlank
                     } else {
-                        this._interrupts.oamAccess()
                         this._mode = GPUMode.OAMAccess
+                        if (this.oamInterruptEnabled ) { this._interrupts.oamAccess() }
                     }
                 }
+                this.setLycLyCoincidence()
                 return
             case GPUMode.VerticalBlank:
-                if (this._timer >= 456) {
-                    this._timer = 0
+                if (this._cycles >= 456) {
+                    this._cycles = 0
                     this.line++
-                    if (this.line === this.lyc) { this._interrupts.lycLyCoincidence() }
 
                     if (this.line > 153) {
-                        this._interrupts.oamAccess()
                         this._mode = GPUMode.OAMAccess
+                        if (this.oamInterruptEnabled ) { this._interrupts.oamAccess() }
                         this.line = 0
                     }
                 }
+                this.setLycLyCoincidence()
                 return
             case GPUMode.OAMAccess:
-                if (this._timer >= 80) {
-                    this._timer = 0
+                if (this._cycles >= 80) {
+                    this._cycles = 0
                     this._mode = GPUMode.VRAMAccess
                 }
                 return
             case GPUMode.VRAMAccess:
-                if (this._timer >= 172) {
-                    this._timer = 0
-                    this._interrupts.hblank()
+                if (this._cycles >= 172) {
+                    this._cycles = 0
+                    if (this.hblankInterruptEnabled) { this._interrupts.hblank() }
                     this._mode = GPUMode.HorizontalBlank
 
                     this.renderScan()
                 }
                 return
+        }
+    }
+
+    setLycLyCoincidence() {
+        if (this.line === this.lineCheck) {
+            this.lineEqualsLineCheck = true
+            if (this.lineEqualsLineCheckInterruptEnabled) {
+                this._interrupts.lineEqualsLineCheck()
+            }
+        } else {
+            this.lineEqualsLineCheck = false
         }
     }
 

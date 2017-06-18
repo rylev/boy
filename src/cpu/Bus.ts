@@ -48,7 +48,7 @@ class Bus {
             vblank: () => { this.interruptFlag.vblank = true; this.interruptFlag.lcdstat = true },
             hblank: () => this.interruptFlag.lcdstat = true,
             oamAccess: () => this.interruptFlag.lcdstat = true,
-            lycLyCoincidence: () => this.interruptFlag.lcdstat = true
+            lineEqualsLineCheck: () => this.interruptFlag.lcdstat = true
         }
         this._gpu = new GPU(interrupts)
         this._joypad = joypad
@@ -172,11 +172,12 @@ class Bus {
                        ((this._gpu.objectDisplayEnable ? 1 : 0) << 1) |
                        (this._gpu.backgroundDisplayEnabled ? 1 : 0)
             case 0xff41:
-                return  ((this._gpu.lycLyCoincidenceInterruptEnabled ? 1 : 0) << 6) | 
+                return  0b10000000 |
+                        ((this._gpu.lineEqualsLineCheckInterruptEnabled ? 1 : 0) << 6) | 
                         ((this._gpu.oamInterruptEnabled ? 1 : 0) << 5) | 
                         ((this._gpu.vblankInterruptEnabled ? 1 : 0) << 4) | 
                         ((this._gpu.hblankInterruptEnabled ? 1 : 0) << 3) | 
-                        ((this._gpu.line === this._gpu.lyc ? 1 : 0) << 2) | 
+                        ((this._gpu.lineEqualsLineCheck ? 1 : 0) << 2) | 
                         (this._gpu.mode)
             case 0xff42:
                 return this._gpu.scrollY
@@ -326,10 +327,10 @@ class Bus {
                 this._gpu.backgroundDisplayEnabled = (value & 0b1) === 1 
                 return
             case 0xff41:
-                this._gpu.hblankInterruptEnabled = (value & 0b1000) === 0b1000
-                this._gpu.vblankInterruptEnabled = (value & 0b10000) === 0b10000
+                this._gpu.lineEqualsLineCheckInterruptEnabled = (value & 0b1000000) === 0b1000000
                 this._gpu.oamInterruptEnabled = (value & 0b100000) === 0b100000
-                this._gpu.lycLyCoincidenceInterruptEnabled = (value & 0b1000000) === 0b1000000
+                this._gpu.vblankInterruptEnabled = (value & 0b10000) === 0b10000
+                this._gpu.hblankInterruptEnabled = (value & 0b1000) === 0b1000
                 return
             case 0xff42:
                 this._gpu.scrollY = value
@@ -338,7 +339,7 @@ class Bus {
                 this._gpu.scrollX = value
                 return
             case 0xff45: 
-                this._gpu.lyc = value
+                this._gpu.lineCheck = value
                 return 
             case 0xff46:
                 // TODO: account for the fact this takes 160 microseconds
