@@ -108,7 +108,7 @@ export class CPU {
             this.clockTicksInFrame += cycles
             this.clockTicksInSecond += cycles
 
-            if (this._isHalted && this.bus.interruptFlag.any) {
+            if (this.bus.hasInterrupt) {
                 this._isHalted = false
             } 
             if (!this._isHalted) { this.pc = nextPC }

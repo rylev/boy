@@ -45,15 +45,10 @@ class Bus {
         }
         this._rom = rom
         const interrupts = { 
-        // TODO: Figure out why lcdstat interrupt was breaking everything
-        //     vblank: () => { this.interruptFlag.vblank = true; this.interruptFlag.lcdstat = true },
-        //     hblank: () => this.interruptFlag.lcdstat = true,
-        //     oamAccess: () => this.interruptFlag.lcdstat = true,
-        //     lycLyCoincidence: () => this.interruptFlag.lcdstat = true
-            vblank: () => this.interruptFlag.vblank = true,
-            hblank: () => {},
-            oamAccess: () => {},
-            lycLyCoincidence: () => {}
+            vblank: () => { this.interruptFlag.vblank = true; this.interruptFlag.lcdstat = true },
+            hblank: () => this.interruptFlag.lcdstat = true,
+            oamAccess: () => this.interruptFlag.lcdstat = true,
+            lycLyCoincidence: () => this.interruptFlag.lcdstat = true
         }
         this._gpu = new GPU(interrupts)
         this._joypad = joypad
@@ -83,6 +78,14 @@ class Bus {
 
     get rom(): Uint8Array {
         return this._rom
+    }
+
+    get hasInterrupt(): boolean {
+        return (this.interruptEnable.vblank && this.interruptFlag.vblank) ||
+               (this.interruptEnable.lcdstat && this.interruptFlag.lcdstat) ||
+               (this.interruptEnable.timer && this.interruptFlag.timer) ||
+               (this.interruptEnable.serial && this.interruptFlag.serial) ||
+               (this.interruptEnable.joypad && this.interruptFlag.joypad) 
     }
 
     slice(start: number, end: number): Uint8Array {
