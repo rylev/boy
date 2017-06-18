@@ -39,8 +39,17 @@ export class CPU {
     constructor(bios: Uint8Array | undefined, rom: Uint8Array, joypad: Joypad = new Joypad(), callbacks: CPUCallbacks = {}) {
         this.bus = new Bus(bios, rom, joypad)
         this.registers = new Registers()
-        this.pc = bios ? 0 : CPU.START_ADDR
-        this.sp = bios ? 0 : 0xfffe
+        if (bios) {
+            this.pc = 0
+            this.sp = 0
+        } else {
+            this.pc = CPU.START_ADDR
+            this.sp = 0xfffe
+            this.registers.af = 0x01b0
+            this.registers.bc = 0x0013
+            this.registers.de = 0x00d8
+            this.registers.hl = 0x014d
+        }
         this._onError = callbacks.onError
         this._onMaxClockCycles = callbacks.onMaxClockCycles
         this._onPause = callbacks.onPause
@@ -108,9 +117,7 @@ export class CPU {
             this.clockTicksInFrame += cycles
             this.clockTicksInSecond += cycles
 
-            if (this.bus.hasInterrupt) {
-                this._isHalted = false
-            } 
+            if (this.bus.hasInterrupt) { this._isHalted = false } 
             if (!this._isHalted) { this.pc = nextPC }
             if (this._interruptsEnabled) {
                 if (this.bus.interruptEnable.vblank && this.bus.interruptFlag.vblank) {

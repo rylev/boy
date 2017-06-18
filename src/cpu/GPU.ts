@@ -31,7 +31,7 @@ export enum BackgroundAndWindowDataSelect {
 
 export enum ObjectSize {
     os8x8,
-    os16x16
+    os8x16
 }
 
 enum ObjectPalette {
@@ -60,7 +60,7 @@ type Interrupts = {
     vblank: () => void,
     hblank: () => void,
     oamAccess: () => void,
-    lycLyCoincidence: () => void
+    lineEqualsLineCheck: () => void
 }
 
 function blankTile(): TileValue[][] {
@@ -93,28 +93,28 @@ class GPU {
     readonly oam = new Uint8Array(GPU.OAM_END - GPU.OAM_BEGIN + 1).fill(0)
 
     private _interrupts: Interrupts
-    lycLyCoincidenceInterruptEnabled = false
+    lineEqualsLineCheckInterruptEnabled = false
     oamInterruptEnabled = false
     vblankInterruptEnabled = false
     hblankInterruptEnabled = false
 
     private _mode = GPUMode.HorizontalBlank
     private _canvas = new Uint8Array(GPU.width * GPU.height * 4)
-    private _timer = 0
+    private _cycles = 0
     onDraw: ((data: ImageData) => void) | undefined
 
     readonly tileSet: TileValue[][][] = new Array(GPU.NUMBER_OF_TILES).fill(0).map(_ => blankTile())
     readonly objectData: ObjectData[] = new Array(GPU.NUMBER_OF_OBJECTS).fill(0).map(_ => emptyObjectData())
 
     // Registers
-    lcdDisplayEnabled: boolean = true
-    windowDisplayEnabled: boolean = true
-    backgroundDisplayEnabled: boolean = true
+    lcdDisplayEnabled: boolean = false
+    windowDisplayEnabled: boolean = false
+    backgroundDisplayEnabled: boolean = false
     windowTileMap: WindowTileMap = WindowTileMap.x9800
     backgroundTileMap: BackgroundTileMap = BackgroundTileMap.x9800
-    backgroundAndWindowDataSelect: BackgroundAndWindowDataSelect = BackgroundAndWindowDataSelect.x8000
+    backgroundAndWindowDataSelect: BackgroundAndWindowDataSelect = BackgroundAndWindowDataSelect.x8800
     objectSize: ObjectSize = ObjectSize.os8x8
-    objectDisplayEnable: boolean = true
+    objectDisplayEnable: boolean = false
     objectPalette: ObjectPalette = ObjectPalette.Zero
     bgcolor0 = Color.White
     bgcolor1 = Color.LightGray
@@ -136,7 +136,8 @@ class GPU {
     windowY: number = 0
 
     line = 0
-    lyc = 0
+    lineCheck = 0
+    lineEqualsLineCheck = true
 
     get mode(): GPUMode { return this._mode }
 
@@ -145,54 +146,68 @@ class GPU {
         this._canvas = this._canvas.map(_ => Color.White)
     }
 
-    step(time: number) {
-        this._timer += time
+    step(cycles: number) {
+        if (!this.lcdDisplayEnabled) { return }
+
+        this._cycles += cycles
 
         switch (this._mode) {
             case GPUMode.HorizontalBlank:
-                if (this._timer >= 204) {
-                    this._timer = 0
+                if (this._cycles >= 204) {
+                    this._cycles = this._cycles % 204
                     this.line++
 
                     if (this.line === 143) {
-
                         this.draw()
-                        this._interrupts.vblank()
+                        // TODO: Vblank actually has two different interrupts. We might have to differntiate
                         this._mode = GPUMode.VerticalBlank
+                        this._interrupts.vblank()
                     } else {
-                        this._interrupts.oamAccess()
                         this._mode = GPUMode.OAMAccess
+                        if (this.oamInterruptEnabled ) { this._interrupts.oamAccess() }
                     }
                 }
+                this.setLycLyCoincidence()
                 return
             case GPUMode.VerticalBlank:
-                if (this._timer >= 456) {
-                    this._timer = 0
+                if (this._cycles >= 456) {
+                    this._cycles = 0
                     this.line++
-                    if (this.line === this.lyc) { this._interrupts.lycLyCoincidence() }
 
                     if (this.line > 153) {
-                        this._interrupts.oamAccess()
                         this._mode = GPUMode.OAMAccess
+                        if (this.oamInterruptEnabled ) { this._interrupts.oamAccess() }
                         this.line = 0
                     }
                 }
+                this.setLycLyCoincidence()
                 return
             case GPUMode.OAMAccess:
-                if (this._timer >= 80) {
-                    this._timer = 0
+                if (this._cycles >= 80) {
+                    this._cycles = 0
                     this._mode = GPUMode.VRAMAccess
                 }
                 return
             case GPUMode.VRAMAccess:
-                if (this._timer >= 172) {
-                    this._timer = 0
-                    this._interrupts.hblank()
+                if (this._cycles >= 172) {
+                    this._cycles = 0
+                    if (this.hblankInterruptEnabled) { this._interrupts.hblank() }
                     this._mode = GPUMode.HorizontalBlank
 
                     this.renderScan()
                 }
                 return
+        }
+    }
+
+    setLycLyCoincidence() {
+        if (this.line === this.lineCheck) {
+            this.lineEqualsLineCheck = true
+            if (this.lineEqualsLineCheckInterruptEnabled) {
+                this._interrupts.lineEqualsLineCheck()
+            }
+        } else {
+            this.lineEqualsLineCheck = false
         }
     }
 
@@ -297,14 +312,17 @@ class GPU {
 
         if (this.objectDisplayEnable) {
             this.objectData.forEach(object => {
-                if (object.y <= this.line && object.y + 8 > this.line) {
+                const objectHeight = this.objectSize === ObjectSize.os8x16 ? 16 : 8
+                if (object.y <= this.line && object.y + objectHeight > this.line) {
                     let canvasoffs = (this.line * 160 + object.x) * 4
-                    const tile = this.tileSet[object.tile]
+                    const yOffset = this.line - object.y 
+                    const tileIndex = yOffset > 7 ? object.tile + 1 : object.tile
+                    const tile = this.tileSet[tileIndex] 
                     let tileRow: TileValue[] = [] 
                     if (object.yflip) {
-                        tileRow = tile[7 - (this.line - object.y)]
+                        tileRow = tile[7 - (yOffset % 8)]
                     } else {
-                        tileRow = tile[this.line - object.y]
+                        tileRow = tile[yOffset % 8]
                     }
 
                     for (var x = 0; x < 8; x++) {
