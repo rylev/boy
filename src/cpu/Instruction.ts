@@ -20,7 +20,6 @@ type EI = { type: 'EI' }
 type DI = { type: 'DI' }
 type RETI = { type: 'RETI' }
 type NOP = { type: 'NOP' }
-type PREFIX = { type: 'PREFIX CB' }
 
 // Arithmetic Instructions
 type ArithmeticN =  ByteRegisterExceptF | '(HL)' | 'd8'
@@ -102,7 +101,6 @@ type ControlInstruction =
     | DI
     | EI
     | NOP
-    | PREFIX
     | RETI
     
 type ArithmeticInstruction = 
@@ -176,7 +174,6 @@ export namespace Instruction {
     export const EI: EI = { type: 'EI' }
     export const RETI: RETI = { type: 'RETI' }
     export const NOP: NOP = { type: 'NOP' }
-    export const PREFIX: PREFIX = { type: 'PREFIX CB' }
 
     export const INC = (n: IncDecN): INC => ({ type: 'INC', n })
     export const DEC = (n: IncDecN): DEC => ({ type: 'DEC', n })
@@ -526,7 +523,6 @@ const byteToInstructionMap: {[index: number]: Instruction | undefined} = {
     0xe1: Instruction.POP('HL'),
     0xf1: Instruction.POP('AF'),
 
-    0xcb: Instruction.PREFIX,
     0x76: Instruction.Halt,
     0xf3: Instruction.DI,
     0xfb: Instruction.EI,

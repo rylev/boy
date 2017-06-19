@@ -107,8 +107,13 @@ export class CPU {
 
     step(pc: number = this.pc) {
         try {
-            const instructionByte = this.bus.read(pc)
-            const instruction = Instruction.fromByte(instructionByte, this.bus.read(pc - 1) === 0xcb)
+            let instructionByte = this.bus.read(pc)
+            let prefixed = false
+            if (instructionByte === 0xcb) {
+                prefixed = true
+                instructionByte = this.bus.read(pc + 1)
+            }
+            const instruction = Instruction.fromByte(instructionByte, prefixed)
             const [nextPC, cycles] = this.execute(instruction)
 
             this.bus.step(cycles)
@@ -178,10 +183,6 @@ export class CPU {
                 this._interruptsEnabled = true
                 const retiPC = this.pop()
                 return [retiPC, 16]
-            case 'PREFIX CB':
-                // 1  4
-                // - - - -
-                return [this.pc + 1, 4]
 
             case 'ADD HL':
                 // 1  8
@@ -1203,9 +1204,9 @@ export class CPU {
                 assertExhaustive(n)
         }
         if (n === '(HL)') {
-            return [this.pc + 1, 8]
+            return [this.pc + 2, 8]
         } else {
-            return [this.pc + 1, 4]
+            return [this.pc + 2, 4]
         }
     }
 
