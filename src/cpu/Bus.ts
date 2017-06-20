@@ -354,6 +354,9 @@ class Bus {
             case 0xff43:
                 this._gpu.scrollX = value
                 return
+            case 0xff44: 
+                this._gpu.line = 0
+                return 
             case 0xff45: 
                 this._gpu.lineCheck = value
                 return 
