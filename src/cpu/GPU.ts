@@ -162,7 +162,7 @@ class GPU {
                     this._cycles = this._cycles % 204
                     this.line++
 
-                    if (this.line === 143) {
+                    if (this.line === 144) {
                         this.draw()
                         // TODO: Vblank actually has two different interrupts. We might have to differntiate
                         this._mode = GPUMode.VerticalBlank
