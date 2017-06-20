@@ -368,8 +368,8 @@ class GPU {
             // If they're non-zero we must index into the tile cycling through 0 - 7
             const tileYOffset = yOffset % 8 
 
-            let xOffset = Math.trunc(this.windowX / 8)
-            let tileXOffset = this.windowX % 8 
+            let xOffset = Math.trunc((this.windowX - 7) / 8)
+            let tileXOffset = (this.windowX  - 7) % 8 
 
             let canvasOffset = this.line * GPU.width * 4
             let tileIndex = this.vram[tileMapOffset + xOffset]
