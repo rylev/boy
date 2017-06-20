@@ -28,7 +28,6 @@ class Bus {
     static ZERO_PAGE_END = 0xfffe
     static INTERRUPT_ENABLE_REGISTER = 0xffff
 
-    get cartType(): number { return this.rom[0x147] }
     romOffset: number = Bus.ROM_BANK_N_BEGIN
     romBank: number = 0
     private _biosMapped: boolean
@@ -40,6 +39,7 @@ class Bus {
     private _divider = new Timer(16384)
     private _zeroPagedRam = new Uint8Array(Bus.ZERO_PAGE_END - Bus.ZERO_PAGE_BEGIN + 1)
     private _workingRam = new Uint8Array(Bus.WORKING_RAM_END - Bus.WORKING_RAM_BEGIN + 1)
+    private _externalRam: Uint8Array | undefined = undefined
     readonly interruptFlag = new InterruptFlag()
     readonly interruptEnable = new InterruptFlag()
 
@@ -85,6 +85,12 @@ class Bus {
         return this._rom
     }
 
+    get cartType(): number { 
+        const t = this.rom[0x147]
+        if (t < 1 || t > 3) throw new Error("Unsupported cart type")
+        return t
+    }
+
     get hasInterrupt(): boolean {
         return (this.interruptEnable.vblank && this.interruptFlag.vblank) ||
                (this.interruptEnable.lcdstat && this.interruptFlag.lcdstat) ||
@@ -115,7 +121,7 @@ class Bus {
         } else if (addr >= Bus.VRAM_BEGIN && addr <= Bus.VRAM_END) {
             value = this._gpu.vram[addr - Bus.VRAM_BEGIN] // TODO: move array indexing into GPU
         } else if (addr >= Bus.EXTERNAL_RAM_BEGIN && addr <= Bus.EXTERNAL_RAM_END) {
-            throw new Error("Reading external ram is not yet supported") // TODO: implement external ram
+            value = this._externalRam ? this._externalRam[addr - Bus.EXTERNAL_RAM_BEGIN] : 0
         } else if (addr >= Bus.WORKING_RAM_BEGIN && addr <= Bus.WORKING_RAM_END) {
             value = this._workingRam[addr - Bus.WORKING_RAM_BEGIN]
         } else if (addr >= Bus.OAM_BEGIN && addr <= Bus.OAM_END) {
@@ -133,17 +139,25 @@ class Bus {
     }
 
     write(addr: number, value: number) {
-        if (addr <= Bus.BIOS_END && this._biosMapped) {
-            throw new Error("Cannot write to bios")
+        if (addr >= 0x00 && addr <= 0x1fff) {
+            if ((value & 0xf) === 0xa) {
+                this._externalRam = this._externalRam || new Uint8Array(100)
+            } else {
+                this._externalRam = undefined
+            }
         } else if (addr >= 0x2000 && addr < 0x4000) {
-            if (this.cartType === 1 || this.cartType === 2 || this.cartType === 3) {
+            if (this.isMbc1) {
                 this.romBank = (value & 0b11111) || 1
                 this.romOffset = this.romBank * 0x4000
             }
+        } else if (addr >= 0x4000 && addr < 0x5fff) {
+            throw new Error("Writing to RAM Bank Number - or - Upper Bits of ROM Bank Number")
+        } else if (addr >= 0x6000 && addr < 0x7fff) {
+            throw new Error("Writing to ROM/RAM Select")
         } else if (addr >= Bus.VRAM_BEGIN && addr <= Bus.VRAM_END) {
             this._gpu.writeVram(addr - Bus.VRAM_BEGIN, value)
         } else if (addr >= Bus.EXTERNAL_RAM_BEGIN && addr <= Bus.EXTERNAL_RAM_END) {
-            throw new Error("External RAM not yet implemented") // TODO: implement external ram
+            this._externalRam && (this._externalRam[addr - Bus.EXTERNAL_RAM_BEGIN] = value)
         } else if (addr >= Bus.WORKING_RAM_BEGIN && addr <= Bus.WORKING_RAM_END) {
             this._workingRam[addr - Bus.WORKING_RAM_BEGIN] = value
         } else if (addr >= Bus.OAM_BEGIN && addr <= Bus.OAM_END) {
@@ -404,7 +418,12 @@ class Bus {
     unmapBios() {
         this._biosMapped = false
     }
+
+    get isMbc1(): boolean {
+        return this.cartType === 1 || this.cartType === 2 || this.cartType === 3 
+    }
 }
+
 function bitsToColor(bits: number): Color {
     switch (bits) {
         case 0: return Color.White
