@@ -8,7 +8,7 @@ describe('Instruction.RR', () => {
     describe('when n is B', () => {
         it('sets the right flags', () => {
             const rom = createRom([
-                Instruction.toByte(Instruction.PREFIX),
+                0xcb,
                 Instruction.toByte(Instruction.RR('B'), true),
                 Instruction.toByte(Instruction.Halt)
             ])

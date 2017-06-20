@@ -162,7 +162,7 @@ class GPU {
                     this._cycles = this._cycles % 204
                     this.line++
 
-                    if (this.line === 143) {
+                    if (this.line === 144) {
                         this.draw()
                         // TODO: Vblank actually has two different interrupts. We might have to differntiate
                         this._mode = GPUMode.VerticalBlank
@@ -321,7 +321,9 @@ class GPU {
                 if (object.y <= this.line && object.y + objectHeight > this.line) {
                     let canvasoffs = (this.line * 160 + object.x) * 4
                     const yOffset = this.line - object.y 
-                    const tileIndex = yOffset > 7 ? object.tile + 1 : object.tile
+                    const tileIndex = objectHeight === 16 && (!object.yflip && yOffset > 7) || (object.yflip && yOffset <= 7) 
+                        ? object.tile + 1 
+                        : object.tile
                     const tile = this.tileSet[tileIndex] 
                     let tileRow: TileValue[] = [] 
                     if (object.yflip) {
@@ -332,7 +334,7 @@ class GPU {
 
                     for (var x = 0; x < 8; x++) {
                         if ((object.x + x) >= 0 && (object.x + x) < 160 &&
-                            tileRow[x] !== TileValue.Zero &&
+                            tileRow[object.xflip ? (7 - x) : x] !== TileValue.Zero &&
                             (object.priority || scanRow[object.x + x] === TileValue.Zero)) {
                             const pixel = tileRow[object.xflip ? (7 - x) : x]
                             const color = this.valueToObjectColor(pixel)
@@ -347,6 +349,55 @@ class GPU {
                     }
                 }
             })
+        }
+
+        if (this.windowDisplayEnabled) {
+            const currentLineAboveWindow = this.line < this.windowY
+            const windowStartsAfterViewPort = this.windowY > GPU.height
+            if (currentLineAboveWindow || windowStartsAfterViewPort) { return }
+            // yOffset is the amount of vertical distance the current line is into the window.
+            // When this.line and this.windowY are equal, this.line is at the very top of the window.
+            const yOffset = this.line - this.windowY
+            // The current tile we're on is equal to the total y offset broken up into 8 pixel chunks 
+            // and multipled by the width of the entire window (i.e. 32)
+            const tileOffset = Math.trunc(yOffset / 8) * 32
+
+            const tileMapBegin = this.windowTileMap - GPU.VRAM_BEGIN
+            const tileMapOffset = tileMapBegin + tileOffset
+            // When line and scrollY are zero we just start at the top of the tile
+            // If they're non-zero we must index into the tile cycling through 0 - 7
+            const tileYOffset = yOffset % 8 
+
+            let xOffset = Math.trunc(this.windowX / 8)
+            let tileXOffset = this.windowX % 8 
+
+            let canvasOffset = this.line * GPU.width * 4
+            let tileIndex = this.vram[tileMapOffset + xOffset]
+
+            if(this.backgroundAndWindowDataSelect === BackgroundAndWindowDataSelect.x8800 && tileIndex < 128) {
+                tileIndex += 256
+            } 
+
+            for (var i = 0; i < 160; i++) {
+                const value = this.tileSet[tileIndex][tileYOffset][tileXOffset]
+                const color = this.valueToBgColor(value)
+                this._canvas[canvasOffset] = color
+                this._canvas[canvasOffset + 1] = color
+                this._canvas[canvasOffset + 2] = color
+                this._canvas[canvasOffset + 3] = 255
+                canvasOffset += 4
+                scanRow[i] = value
+
+                tileXOffset = tileXOffset + 1
+                if (tileXOffset === 8) {
+                    tileXOffset = 0
+                    xOffset = (xOffset + 1) & 0x1f
+                    tileIndex = this.vram[tileMapOffset + xOffset]
+                    if (this.backgroundAndWindowDataSelect === BackgroundAndWindowDataSelect.x8800 && tileIndex < 128) {
+                        tileIndex += 256
+                    } 
+                }
+            }
         }
     }
 
