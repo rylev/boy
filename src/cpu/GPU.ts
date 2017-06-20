@@ -368,17 +368,23 @@ class GPU {
             // If they're non-zero we must index into the tile cycling through 0 - 7
             const tileYOffset = yOffset % 8 
 
-            let xOffset = Math.trunc((this.windowX - 7) / 8)
-            let tileXOffset = (this.windowX  - 7) % 8 
+            // The window is always offset by 7. This means the window is flush with the edge of the 
+            // viewport when windowX === 7.
+            const normalizedWindowX = this.windowX - 7
 
-            let canvasOffset = this.line * GPU.width * 4
-            let tileIndex = this.vram[tileMapOffset + xOffset]
+            // Our offset into the canvas is equal to the line * the width of a line in pixels * 4 
+            // (the number of) values per pixel * the windowOffset or 0 if its negative
+            let canvasOffset = this.line * GPU.width * 4 + (Math.max(normalizedWindowX, 0) * 4)
+            let tileIndex = this.vram[tileMapOffset]
 
             if(this.backgroundAndWindowDataSelect === BackgroundAndWindowDataSelect.x8800 && tileIndex < 128) {
                 tileIndex += 256
             } 
 
-            for (var i = 0; i < 160; i++) {
+            let xOffset = 0
+            let tileXOffset = 0
+            const viewableWindowWidth = 160 - Math.abs(normalizedWindowX)
+            for (var i = 0; i < viewableWindowWidth; i++) {
                 const value = this.tileSet[tileIndex][tileYOffset][tileXOffset]
                 const color = this.valueToBgColor(value)
                 this._canvas[canvasOffset] = color
