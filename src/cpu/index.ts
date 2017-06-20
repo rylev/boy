@@ -152,6 +152,7 @@ export class CPU {
         this.push(this.pc)
         this.pc = location
         this.clockTicksInFrame += 12
+        this.bus.step(12)
     }
 
     execute(instruction: Instruction): [Address, Cycles] {

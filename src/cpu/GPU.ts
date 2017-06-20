@@ -57,10 +57,8 @@ export type ObjectData  = {
 }
 
 type Interrupts = {
-    vblank: () => void,
-    hblank: () => void,
-    oamAccess: () => void,
-    lineEqualsLineCheck: () => void
+    requestVblank: () => void,
+    requestLcdStat: () => void,
 }
 
 function blankTile(): TileValue[][] {
@@ -159,44 +157,45 @@ class GPU {
         switch (this._mode) {
             case GPUMode.HorizontalBlank:
                 if (this._cycles >= 200) {
-                    this._cycles = this._cycles % 204
+                    this._cycles = this._cycles % 200
                     this.line++
 
-                    if (this.line === 144) {
+                    if (this.line > 143) {
                         this.draw()
                         // TODO: Vblank actually has two different interrupts. We might have to differntiate
                         this._mode = GPUMode.VerticalBlank
-                        this._interrupts.vblank()
+                        this._interrupts.requestVblank()
+                        if (this.vblankInterruptEnabled) { this._interrupts.requestLcdStat() }
                     } else {
                         this._mode = GPUMode.OAMAccess
-                        if (this.oamInterruptEnabled ) { this._interrupts.oamAccess() }
+                        if (this.oamInterruptEnabled ) { this._interrupts.requestLcdStat() }
                     }
+                    this.setLineEqualsLineCheck()
                 }
-                this.setLycLyCoincidence()
                 return
             case GPUMode.VerticalBlank:
                 if (this._cycles >= 456) {
-                    this._cycles = 0
+                    this._cycles = this._cycles % 456
                     this.line++
 
-                    if (this.line > 153) {
+                    if (this.line === 154) {
                         this._mode = GPUMode.OAMAccess
-                        if (this.oamInterruptEnabled ) { this._interrupts.oamAccess() }
+                        if (this.oamInterruptEnabled ) { this._interrupts.requestLcdStat() }
                         this.line = 0
                     }
+                    this.setLineEqualsLineCheck()
                 }
-                this.setLycLyCoincidence()
                 return
             case GPUMode.OAMAccess:
                 if (this._cycles >= 84) {
-                    this._cycles = 0
+                    this._cycles = this._cycles % 84
                     this._mode = GPUMode.VRAMAccess
                 }
                 return
             case GPUMode.VRAMAccess:
                 if (this._cycles >= 172) {
-                    this._cycles = 0
-                    if (this.hblankInterruptEnabled) { this._interrupts.hblank() }
+                    this._cycles = this._cycles % 172
+                    if (this.hblankInterruptEnabled) { this._interrupts.requestLcdStat() }
                     this._mode = GPUMode.HorizontalBlank
 
                     this.renderScan()
@@ -205,11 +204,11 @@ class GPU {
         }
     }
 
-    setLycLyCoincidence() {
+    setLineEqualsLineCheck() {
         if (this.line === this.lineCheck) {
             this.lineEqualsLineCheck = true
             if (this.lineEqualsLineCheckInterruptEnabled) {
-                this._interrupts.lineEqualsLineCheck()
+                this._interrupts.requestLcdStat()
             }
         } else {
             this.lineEqualsLineCheck = false

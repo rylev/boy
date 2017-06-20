@@ -50,10 +50,8 @@ class Bus {
         }
         this._rom = rom
         const interrupts = { 
-            vblank: () => { this.interruptFlag.vblank = true; this.interruptFlag.lcdstat = true },
-            hblank: () => this.interruptFlag.lcdstat = true,
-            oamAccess: () => this.interruptFlag.lcdstat = true,
-            lineEqualsLineCheck: () => this.interruptFlag.lcdstat = true
+            requestVblank: () => this.interruptFlag.vblank = true ,
+            requestLcdStat: () => this.interruptFlag.lcdstat = true,
         }
         this._gpu = new GPU(interrupts, this._bios === undefined)
         this._joypad = joypad
