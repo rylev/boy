@@ -350,6 +350,55 @@ class GPU {
                 }
             })
         }
+
+        if (this.windowDisplayEnabled) {
+            const currentLineAboveWindow = this.line < this.windowY
+            const windowStartsAfterViewPort = this.windowY > GPU.height
+            if (currentLineAboveWindow || windowStartsAfterViewPort) { return }
+            // yOffset is the amount of vertical distance the current line is into the window.
+            // When this.line and this.windowY are equal, this.line is at the very top of the window.
+            const yOffset = this.line - this.windowY
+            // The current tile we're on is equal to the total y offset broken up into 8 pixel chunks 
+            // and multipled by the width of the entire window (i.e. 32)
+            const tileOffset = Math.trunc(yOffset / 8) * 32
+
+            const tileMapBegin = this.windowTileMap - GPU.VRAM_BEGIN
+            const tileMapOffset = tileMapBegin + tileOffset
+            // When line and scrollY are zero we just start at the top of the tile
+            // If they're non-zero we must index into the tile cycling through 0 - 7
+            const tileYOffset = yOffset % 8 
+
+            let xOffset = Math.trunc(this.windowX / 8)
+            let tileXOffset = this.windowX % 8 
+
+            let canvasOffset = this.line * GPU.width * 4
+            let tileIndex = this.vram[tileMapOffset + xOffset]
+
+            if(this.backgroundAndWindowDataSelect === BackgroundAndWindowDataSelect.x8800 && tileIndex < 128) {
+                tileIndex += 256
+            } 
+
+            for (var i = 0; i < 160; i++) {
+                const value = this.tileSet[tileIndex][tileYOffset][tileXOffset]
+                const color = this.valueToBgColor(value)
+                this._canvas[canvasOffset] = color
+                this._canvas[canvasOffset + 1] = color
+                this._canvas[canvasOffset + 2] = color
+                this._canvas[canvasOffset + 3] = 255
+                canvasOffset += 4
+                scanRow[i] = value
+
+                tileXOffset = tileXOffset + 1
+                if (tileXOffset === 8) {
+                    tileXOffset = 0
+                    xOffset = (xOffset + 1) & 0x1f
+                    tileIndex = this.vram[tileMapOffset + xOffset]
+                    if (this.backgroundAndWindowDataSelect === BackgroundAndWindowDataSelect.x8800 && tileIndex < 128) {
+                        tileIndex += 256
+                    } 
+                }
+            }
+        }
     }
 
     valueToBgColor(value: TileValue) {
