@@ -85,7 +85,7 @@ class Bus {
 
     get cartType(): number { 
         const t = this.rom[0x147]
-        if (t < 1 || t > 3) throw new Error("Unsupported cart type")
+        if (t > 3) throw new Error("Unsupported cart type")
         return t
     }
 
