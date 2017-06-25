@@ -21,30 +21,20 @@ function volume(x: number): number {
 }
 
 class Channel1 {
+    enabled = false
     wavePatternDuty = WavePatternDuty.wpd12_5
-
     length = 0
-
     frequency = 0
-    private _sweepFrenquency = 0
-
     sweepPeriod = 0
-    private _sweepCounter = 0
-
-    tone: any
-
-    //  Set to volume envelope period
-    //  On the 7th step of the frame sequencer decrement
-    //  When 0, increase or decrease volume according to 
-    // volume envelope direction unless reached min/max
-    volumeEnvelopeTimer = 0
     volumeEnvelopePeriod = 0
     envelopeDirection = EnvelopeDiretion.Decrease
-
     initialVolume = 0
-    volume = 0 
-
     timer = 0
+    private _tone: any
+    private _sweepFrenquency = 0
+    private _sweepCounter = 0
+    private _volume = 0 
+    private _volumeEnvelopeTimer = 0
 
     step() {
         if (this.timer > 0) { this.timer = this.timer - 1 }
@@ -55,21 +45,22 @@ class Channel1 {
 
     stepVolumeEnvelope() {
         if (this.volumeEnvelopePeriod > 0) {
-            if (this.volumeEnvelopeTimer > 0) { this.volumeEnvelopeTimer = this.volumeEnvelopeTimer - 1 }
-            if (this.volumeEnvelopeTimer === 0) {
+            if (this._volumeEnvelopeTimer > 0) { this._volumeEnvelopeTimer = this._volumeEnvelopeTimer - 1 }
+            if (this._volumeEnvelopeTimer === 0) {
                 if (this.envelopeDirection === EnvelopeDiretion.Increase) {
-                    if (this.volume < 0xf) { this.volume = this.volume + 1 }
+                    if (this._volume < 0xf) { this._volume = this._volume + 1 }
                 } else {
-                    if (this.volume > 0x0) { this.volume = this.volume - 1 }
+                    if (this._volume > 0x0) { this._volume = this._volume - 1 }
                 }
             }
         }
     }
 
     trigger() {
+        this.enabled = true
         this.timer = (2048 - this.frequency) * 4
-        this.volumeEnvelopeTimer = this.volumeEnvelopePeriod
-        this.volume = this.initialVolume
+        this._volumeEnvelopeTimer = this.volumeEnvelopePeriod
+        this._volume = this.initialVolume
 
         this._sweepFrenquency = this.frequency
         // TODO: Set sweep
@@ -77,14 +68,19 @@ class Channel1 {
     }
 
     sample() {
-        const freq = frequency(this._sweepFrenquency)
-        if (this.tone === undefined) {
-            this.tone = new Tone.PulseOscillator(freq, this.wavePatternDuty).toMaster().start()
-        } else {
-            this.tone.frequency.value = freq
-            this.tone.width.value = this.wavePatternDuty
+        if (!this.enabled) { 
+            if (this._tone) { this._tone.stop(); this._tone = undefined }
+            return 
         }
-        this.tone.volume.value = volume(this.volume)
+
+        const freq = frequency(this._sweepFrenquency)
+        if (this._tone === undefined) {
+            this._tone = new Tone.PulseOscillator(freq, this.wavePatternDuty).toMaster().start()
+        } else {
+            this._tone.frequency.value = freq
+            this._tone.width.value = this.wavePatternDuty
+        }
+        this._tone.volume.value = volume(this._volume)
     }
 }
 
