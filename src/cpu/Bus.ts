@@ -296,25 +296,24 @@ class Bus {
                     case 0b10: this._soundController.channel1.wavePatternDuty = WavePatternDuty.wpd50; break
                     case 0b11: this._soundController.channel1.wavePatternDuty = WavePatternDuty.wpd75; break
                 }
-                this._soundController.channel1.counter = 64 - (value & 0x3f)
+                this._soundController.channel1.length = 64 - (value & 0x3f)
                 return 
             case 0xff12:
-                this._soundController.channel1.volume = value >> 4
+                this._soundController.channel1.initialVolume = value >> 4
                 this._soundController.channel1.envelopeDirection = 
                     ((value >> 3) & 0b1) === 1 
                     ? EnvelopeDiretion.Increase 
                     : EnvelopeDiretion.Decrease
-                this._soundController.channel1.envelopeSweepNumber = value & 0b111
+                this._soundController.channel1.volumeEnvelopePeriod = value & 0b111
                 return 
             case 0xff13:
                 this._soundController.channel1.frequency = (this._soundController.channel1.frequency & 0xff00) | value
-                this._soundController.channel1.initialFrequencyCount = (0x800 - this._soundController.channel1.frequency) << 2
+                this._soundController.channel1.sweepPeriod = (0x800 - this._soundController.channel1.frequency) << 2
                 return
             case 0xff14:
                 this._soundController.channel1.frequency = (this._soundController.channel1.frequency & 0xff) | ((value & 0b111) << 8)
-                this._soundController.channel1.initialFrequencyCount = (0x800 - this._soundController.channel1.frequency) << 2
+                this._soundController.channel1.sweepPeriod = (0x800 - this._soundController.channel1.frequency) << 2
                 if ((value >> 7) === 1) { 
-                    // TODO: fullreset
                     this._soundController.channel1.trigger() 
                 }
                 if ((value & 0b1000000) !== 0) { throw new Error("TODO: Counter/consecutive selection is not supported") }
