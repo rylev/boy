@@ -1,4 +1,5 @@
 import * as Tone from 'tone'
+(window as any).Tone = Tone
 
 export enum WavePatternDuty {
     wpd12_5 = 0.125,
@@ -17,7 +18,24 @@ function frequency(x: number): number {
 }
 
 function volume(x: number): number {
-    return -100 + (x * 8)
+    switch (x) {
+        case 0xf: return -10
+        case 0xe: return -12
+        case 0xd: return -14
+        case 0xc: return -16
+        case 0xb: return -18
+        case 0xa: return -20
+        case 0x9: return -22
+        case 0x8: return -24
+        case 0x7: return -26
+        case 0x6: return -28
+        case 0x5: return -30
+        case 0x4: return -32
+        case 0x3: return -34
+        case 0x2: return -36
+        case 0x1: return -38
+        default: return -70
+    }
 }
 
 class Channel1 {
@@ -30,6 +48,7 @@ class Channel1 {
     envelopeDirection = EnvelopeDiretion.Decrease
     initialVolume = 0
     timer = 0
+
     private _tone: any
     private _sweepFrenquency = 0
     private _sweepCounter = 0
@@ -52,6 +71,7 @@ class Channel1 {
                 } else {
                     if (this._volume > 0x0) { this._volume = this._volume - 1 }
                 }
+                this._volumeEnvelopeTimer = this.volumeEnvelopePeriod
             }
         }
     }
@@ -67,6 +87,8 @@ class Channel1 {
 
     }
 
+    gain: any 
+
     sample() {
         if (!this.enabled) { 
             if (this._tone) { this._tone.stop(); this._tone = undefined }
@@ -75,12 +97,22 @@ class Channel1 {
 
         const freq = frequency(this._sweepFrenquency)
         if (this._tone === undefined) {
-            this._tone = new Tone.PulseOscillator(freq, this.wavePatternDuty).toMaster().start()
+            // TODO: this is not always a square wave
+            const ac = new AudioContext()
+            const oscillator = ac.createOscillator()
+            const gainNode = ac.createGain()
+            gainNode.connect(ac.destination)
+            oscillator.connect(gainNode)
+            oscillator.type = 'square'
+            oscillator.frequency.value = freq
+            oscillator.start()
+            this._tone = oscillator
+            this.gain = gainNode
         } else {
-            this._tone.frequency.value = freq
-            this._tone.width.value = this.wavePatternDuty
+            this._tone.frequency.setValueAtTime(freq, 0)
+            // this._tone.width.value = this.wavePatternDuty
         }
-        this._tone.volume.value = volume(this._volume)
+        this.gain.gain.value = (this._volume / 0xf) / 16
     }
 }
 
@@ -105,33 +137,36 @@ class SoundController {
     private _sampleTimer = SAMPLE_TIMER
 
     step(cycles: number) {
-        this.channel1.step()
-        if (this._sequenceTimer > 0) {
-            this._sequenceTimer = this._sequenceTimer - cycles
-        }
-        if (this._sequenceTimer <= 0) {
-            if (this._sequencerStep % 2 === 0) {
-                // TODO: step length
+        for (let i = 0; i < cycles; i++) {
+            this.channel1.step()
+            if (this._sequenceTimer > 0) {
+                this._sequenceTimer = this._sequenceTimer - 1
             }
-            if (this._sequencerStep === 2 || this._sequencerStep === 6) {
-                //TODO: step sweep
+            if (this._sequenceTimer <= 0) {
+                if (this._sequencerStep % 2 === 0) {
+                    // TODO: step length
+                }
+                if (this._sequencerStep === 2 || this._sequencerStep === 6) {
+                    //TODO: step sweep
+                }
+
+                if (this._sequencerStep === 7) {
+                    // TODO: step other channels 
+                    this.channel1.stepVolumeEnvelope()
+                }
+
+                this._sequencerStep = (this._sequencerStep + 1) % 8
+                this._sequenceTimer = SEQUENCE_TIMER
             }
 
-            if (this._sequencerStep === 7) {
-                // TODO: step other channels 
-                this.channel1.stepVolumeEnvelope()
+            if (this._sampleTimer > 0) { this._sampleTimer = this._sampleTimer - 1 }
+            if (this._sampleTimer <= 0) {
+                if (this.on) {
+                    this.channel1.sample()
+                }
+                this._sampleTimer = SAMPLE_TIMER
             }
 
-            this._sequencerStep = (this._sequencerStep + 1) % 8
-            this._sequenceTimer = SEQUENCE_TIMER
-        }
-
-        if (this._sampleTimer > 0) { this._sampleTimer = this._sampleTimer - cycles }
-        if (this._sampleTimer < 0) {
-            if (this.on) {
-                this.channel1.sample()
-            }
-            this._sampleTimer = SAMPLE_TIMER
         }
     }
 }
