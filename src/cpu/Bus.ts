@@ -3,6 +3,7 @@ import GPU, { Color, WindowTileMap, BackgroundTileMap, BackgroundAndWindowDataSe
 import Joypad, { Column } from './Joypad'
 import Timer from './Timer'
 import InterruptFlag from './InterruptFlag'
+import SoundController, { WavePatternDuty, EnvelopeDiretion } from './SoundController'
 
 class Bus {
     static VBLANK_VECTOR = 0x40
@@ -36,6 +37,7 @@ class Bus {
     private _gpu: GPU
     private _joypad: Joypad
     private _timer: Timer
+    private _soundController: SoundController
     private _divider = new Timer(16384)
     private _zeroPagedRam = new Uint8Array(Bus.ZERO_PAGE_END - Bus.ZERO_PAGE_BEGIN + 1)
     private _workingRam = new Uint8Array(Bus.WORKING_RAM_END - Bus.WORKING_RAM_BEGIN + 1)
@@ -59,12 +61,14 @@ class Bus {
             this.interruptFlag.timer = true
         })
         this._divider.on = true
+        this._soundController = new SoundController()
     }
 
     step(cycles: number) {
         this._timer.step(cycles)
         this._divider.step(cycles)
         this._gpu.step(cycles)
+        this._soundController.step(cycles)
     }
 
     get biosMapped(): boolean {
@@ -283,22 +287,66 @@ class Bus {
             case 0xff10:
                 // http://bgb.bircd.org/pandocs.htm#soundoverview
                 // Channel 1 Sweep registe
+                console.warn(`Writing ${toHex(value)} to sound register is ignored: 0x${toHex(addr)}`)
+                return
             case 0xff11:
-                // TODO: Channel 1 Sound length/Wave pattern
+                switch (value >> 6) {
+                    case 0b00: this._soundController.channel1.wavePatternDuty = WavePatternDuty.wpd12_5; break
+                    case 0b01: this._soundController.channel1.wavePatternDuty = WavePatternDuty.wpd25; break
+                    case 0b10: this._soundController.channel1.wavePatternDuty = WavePatternDuty.wpd50; break
+                    case 0b11: this._soundController.channel1.wavePatternDuty = WavePatternDuty.wpd75; break
+                }
+                this._soundController.channel1.length = 64 - (value & 0x3f)
+                return 
             case 0xff12:
-                // TODO: Channel 1 Volume Envelope
+                this._soundController.channel1.initialVolume = value >> 4
+                this._soundController.channel1.envelopeDirection = 
+                    ((value >> 3) & 0b1) === 1 
+                    ? EnvelopeDiretion.Increase 
+                    : EnvelopeDiretion.Decrease
+                this._soundController.channel1.volumeEnvelopePeriod = value & 0b111
+                return 
             case 0xff13:
-                // Channel 1 Frequency lo
+                this._soundController.channel1.frequency = (this._soundController.channel1.frequency & 0xff00) | value
+                this._soundController.channel1.sweepPeriod = (0x800 - this._soundController.channel1.frequency) << 2
+                return
             case 0xff14:
-                // Channel 1 Frequency hi
+                this._soundController.channel1.frequency = (this._soundController.channel1.frequency & 0xff) | ((value & 0b111) << 8)
+                this._soundController.channel1.sweepPeriod = (0x800 - this._soundController.channel1.frequency) << 2
+                if ((value >> 7) === 1) { 
+                    this._soundController.channel1.trigger() 
+                }
+                if ((value & 0b1000000) !== 0) { throw new Error("TODO: Counter/consecutive selection is not supported") }
+                return
             case 0xff16: 
-                // Channel 2 Sound Length/Wave Pattern Duty 
+                switch (value >> 6) {
+                    case 0b00: this._soundController.channel2.wavePatternDuty = WavePatternDuty.wpd12_5; break
+                    case 0b01: this._soundController.channel2.wavePatternDuty = WavePatternDuty.wpd25; break
+                    case 0b10: this._soundController.channel2.wavePatternDuty = WavePatternDuty.wpd50; break
+                    case 0b11: this._soundController.channel2.wavePatternDuty = WavePatternDuty.wpd75; break
+                }
+                this._soundController.channel2.length = 64 - (value & 0x3f)
+                return 
             case 0xff17:
-                // Channel 2 Volume Envelope
+                this._soundController.channel2.initialVolume = value >> 4
+                this._soundController.channel2.envelopeDirection = 
+                    ((value >> 3) & 0b1) === 1 
+                    ? EnvelopeDiretion.Increase 
+                    : EnvelopeDiretion.Decrease
+                this._soundController.channel2.volumeEnvelopePeriod = value & 0b111
+                return 
             case 0xff18: 
-                // Channel 2 Frequency lo data
+                this._soundController.channel2.frequency = (this._soundController.channel2.frequency & 0xff00) | value
+                this._soundController.channel2.sweepPeriod = (0x800 - this._soundController.channel2.frequency) << 2
+                return
             case 0xff19:
-                // Channel 2 Frequency hi data
+                this._soundController.channel2.frequency = (this._soundController.channel2.frequency & 0xff) | ((value & 0b111) << 8)
+                this._soundController.channel2.sweepPeriod = (0x800 - this._soundController.channel2.frequency) << 2
+                if ((value >> 7) === 1) { 
+                    this._soundController.channel2.trigger() 
+                }
+                if ((value & 0b1000000) !== 0) { throw new Error("TODO: Counter/consecutive selection is not supported") }
+                return
             case 0xff1a:
                 // Channel 3 Sound on/off
             case 0xff1b:
@@ -317,12 +365,29 @@ class Bus {
                 // Channel 4 Polynomial Counter
             case 0xff23:
                 // Channel 4 Counter/consecutive
+                console.warn(`Writing ${toHex(value)} to sound register is ignored: 0x${toHex(addr)}`)
+                return
             case 0xff24:
-                // TODO: Channel control / ON-OFF / Volume
+                if ((value >> 7) === 1) { throw new Error("TODO: Output of vin is not yet supported")}
+                if ((value & 0b1000) === 0b1000) { throw new Error("TODO: Output of vin is not yet supported")}
+                this._soundController.soundOutput1.volume = value & 0b111
+                this._soundController.soundOutput2.volume = (value >> 4) & 0b111
+                return
             case 0xff25:
-                // TODO: Selection of Sound output terminal
+                this._soundController.soundOutput2.channel4 = ((value >> 7) & 0b1) !== 0
+                this._soundController.soundOutput2.channel3 = ((value >> 6) & 0b1) !== 0
+                this._soundController.soundOutput2.channel2 = ((value >> 5) & 0b1) !== 0
+                this._soundController.soundOutput2.channel1 = ((value >> 4) & 0b1) !== 0
+                
+                this._soundController.soundOutput1.channel4 = ((value >> 3) & 0b1) !== 0
+                this._soundController.soundOutput1.channel3 = ((value >> 2) & 0b1) !== 0
+                this._soundController.soundOutput1.channel2 = ((value >> 1) & 0b1) !== 0
+                this._soundController.soundOutput1.channel1 = (value & 0b1) !== 0
+
+                return
             case 0xff26:
-                // TODO: Sound on/off
+                this._soundController.on = (value >> 7) === 1
+                return 
             case 0xff30:
             case 0xff31:
             case 0xff32:
@@ -340,7 +405,7 @@ class Bus {
             case 0xff3e:
             case 0xff3f:
                 //Wave Pattern RAM
-                console.warn(`Writing to sound register is ignored: 0x${toHex(addr)}`)
+                console.warn(`Writing ${toHex(value)} to sound register is ignored: 0x${toHex(addr)}`)
                 return
             case 0xff40: 
                 this._gpu.lcdDisplayEnabled = (value >> 7) === 1
