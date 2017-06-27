@@ -12,8 +12,7 @@
     "@types/react": "^15.0.24",
     "@types/react-dom": "^15.5.0",
     "react": "^15.5.4",
-    "react-dom": "^15.5.4",
-    "tone": "^0.10.0"
+    "react-dom": "^15.5.4"
   },
   "devDependencies": {
     "@types/chai": "^3.5.2",
