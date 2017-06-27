@@ -319,13 +319,34 @@ class Bus {
                 if ((value & 0b1000000) !== 0) { throw new Error("TODO: Counter/consecutive selection is not supported") }
                 return
             case 0xff16: 
-                // Channel 2 Sound Length/Wave Pattern Duty 
+                switch (value >> 6) {
+                    case 0b00: this._soundController.channel2.wavePatternDuty = WavePatternDuty.wpd12_5; break
+                    case 0b01: this._soundController.channel2.wavePatternDuty = WavePatternDuty.wpd25; break
+                    case 0b10: this._soundController.channel2.wavePatternDuty = WavePatternDuty.wpd50; break
+                    case 0b11: this._soundController.channel2.wavePatternDuty = WavePatternDuty.wpd75; break
+                }
+                this._soundController.channel2.length = 64 - (value & 0x3f)
+                return 
             case 0xff17:
-                // Channel 2 Volume Envelope
+                this._soundController.channel2.initialVolume = value >> 4
+                this._soundController.channel2.envelopeDirection = 
+                    ((value >> 3) & 0b1) === 1 
+                    ? EnvelopeDiretion.Increase 
+                    : EnvelopeDiretion.Decrease
+                this._soundController.channel2.volumeEnvelopePeriod = value & 0b111
+                return 
             case 0xff18: 
-                // Channel 2 Frequency lo data
+                this._soundController.channel2.frequency = (this._soundController.channel2.frequency & 0xff00) | value
+                this._soundController.channel2.sweepPeriod = (0x800 - this._soundController.channel2.frequency) << 2
+                return
             case 0xff19:
-                // Channel 2 Frequency hi data
+                this._soundController.channel2.frequency = (this._soundController.channel2.frequency & 0xff) | ((value & 0b111) << 8)
+                this._soundController.channel2.sweepPeriod = (0x800 - this._soundController.channel2.frequency) << 2
+                if ((value >> 7) === 1) { 
+                    this._soundController.channel2.trigger() 
+                }
+                if ((value & 0b1000000) !== 0) { throw new Error("TODO: Counter/consecutive selection is not supported") }
+                return
             case 0xff1a:
                 // Channel 3 Sound on/off
             case 0xff1b:

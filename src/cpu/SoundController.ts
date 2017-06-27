@@ -1,6 +1,3 @@
-import * as Tone from 'tone'
-(window as any).Tone = Tone
-
 export enum WavePatternDuty {
     wpd12_5 = 0.125,
     wpd25 = 0.25,
@@ -17,28 +14,7 @@ function frequency(x: number): number {
     return Math.trunc(4194304 / ((2048 - x) << 5))
 }
 
-function volume(x: number): number {
-    switch (x) {
-        case 0xf: return -10
-        case 0xe: return -12
-        case 0xd: return -14
-        case 0xc: return -16
-        case 0xb: return -18
-        case 0xa: return -20
-        case 0x9: return -22
-        case 0x8: return -24
-        case 0x7: return -26
-        case 0x6: return -28
-        case 0x5: return -30
-        case 0x4: return -32
-        case 0x3: return -34
-        case 0x2: return -36
-        case 0x1: return -38
-        default: return -70
-    }
-}
-
-class Channel1 {
+class QuandrgularWaveChannel {
     enabled = false
     wavePatternDuty = WavePatternDuty.wpd12_5
     length = 0
@@ -49,11 +25,17 @@ class Channel1 {
     initialVolume = 0
     timer = 0
 
-    private _tone: any
+    private _tone: OscillatorNode | undefined
+    private _gain: GainNode | undefined
     private _sweepFrenquency = 0
     private _sweepCounter = 0
     private _volume = 0 
     private _volumeEnvelopeTimer = 0
+    private _hasSweep: boolean
+
+    constructor(hasSweep: boolean) {
+        this._hasSweep = hasSweep
+    }
 
     step() {
         if (this.timer > 0) { this.timer = this.timer - 1 }
@@ -84,10 +66,8 @@ class Channel1 {
 
         this._sweepFrenquency = this.frequency
         // TODO: Set sweep
-
     }
 
-    gain: any 
 
     sample() {
         if (!this.enabled) { 
@@ -107,12 +87,12 @@ class Channel1 {
             oscillator.frequency.value = freq
             oscillator.start()
             this._tone = oscillator
-            this.gain = gainNode
+            this._gain = gainNode
         } else {
             this._tone.frequency.setValueAtTime(freq, 0)
             // this._tone.width.value = this.wavePatternDuty
         }
-        this.gain.gain.value = (this._volume / 0xf) / 16
+        this._gain && (this._gain.gain.value = this._volume / 0xf)
     }
 }
 
@@ -132,13 +112,16 @@ class SoundController {
     on = false
     readonly soundOutput1 = new SoundOutput()
     readonly soundOutput2 = new SoundOutput()
-    readonly channel1 = new Channel1()
+    readonly channel1 = new QuandrgularWaveChannel(true)
+    readonly channel2 = new QuandrgularWaveChannel(false)
 
     private _sampleTimer = SAMPLE_TIMER
 
     step(cycles: number) {
         for (let i = 0; i < cycles; i++) {
             this.channel1.step()
+            this.channel2.step()
+
             if (this._sequenceTimer > 0) {
                 this._sequenceTimer = this._sequenceTimer - 1
             }
@@ -153,6 +136,7 @@ class SoundController {
                 if (this._sequencerStep === 7) {
                     // TODO: step other channels 
                     this.channel1.stepVolumeEnvelope()
+                    this.channel2.stepVolumeEnvelope()
                 }
 
                 this._sequencerStep = (this._sequencerStep + 1) % 8
@@ -163,6 +147,7 @@ class SoundController {
             if (this._sampleTimer <= 0) {
                 if (this.on) {
                     this.channel1.sample()
+                    this.channel2.sample()
                 }
                 this._sampleTimer = SAMPLE_TIMER
             }
