@@ -5,7 +5,8 @@ export type BackgroundOptions = {
     showTileOutlines: boolean, 
     showViewportOutline: boolean,
     checkered: boolean,
-    showOutsideViewport: boolean
+    showOutsideViewport: boolean,
+    highlightIndex: number
 }
 
 export namespace Background {
@@ -29,6 +30,8 @@ export namespace Background {
         tiles.forEach((tile, tileIndex) => {
             const tileRow = Math.trunc(tileIndex / heightInTiles)
             const tileColumn = tileIndex % widthInTiles
+
+            const highlight = tileIndex === options.highlightIndex
             tile.forEach((innerRow, innerRowIndex) => {
                 const pixelRowIndex = (tileRow * tileHeightInPixels) + innerRowIndex
                 const beginningOfCanvasRow = pixelRowIndex * rowWidthInCanvasValues
@@ -77,8 +80,8 @@ export namespace Background {
                         canvasData[index + 2] = 255
                     } else if (drawBackground) {
                         const color = gpu.valueToBgColor(pixel)
-                        canvasData[index] = color
-                        canvasData[index + 1] = color
+                        canvasData[index] = highlight && (pixelRowIndex % 2 === 0) ? 255 : color
+                        canvasData[index + 1] = highlight && pixelRowIndex % 2 === 0 ? 0 : color
                         canvasData[index + 2] = color
                     } 
                     canvasData[index + 3] = 255

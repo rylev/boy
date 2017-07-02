@@ -9,7 +9,7 @@ import './background.css'
 
 type Props = { 
     gpu: GPU,
-    onClick: () => void
+    onClick: () => void // TODO: remove
 }
 type State = { 
     showTileOutlines: boolean 
@@ -17,6 +17,7 @@ type State = {
     checkered: boolean
     hideOutsideViewport: boolean
     backgroundIndex: number
+    foo: number
 }
 class Background extends React.Component<Props, State> {
     constructor(props: Props) {
@@ -26,7 +27,8 @@ class Background extends React.Component<Props, State> {
             showViewportOutline: true, 
             checkered: false, 
             hideOutsideViewport: false,
-            backgroundIndex: 0
+            backgroundIndex: 0,
+            foo: 0
         }
     }
 
@@ -35,7 +37,8 @@ class Background extends React.Component<Props, State> {
             showTileOutlines: this.state.showTileOutlines, 
             showViewportOutline: this.state.showViewportOutline,
             checkered: this.state.checkered,
-            showOutsideViewport: !this.state.hideOutsideViewport
+            showOutsideViewport: !this.state.hideOutsideViewport,
+            highlightIndex: this.state.backgroundIndex
         }
         return BackgroundModel.getImageData(gpu, options)
     }
@@ -57,11 +60,20 @@ class Background extends React.Component<Props, State> {
     }
 
     tileDetail() {
-        const tileIndex = this.props.gpu.background()[this.state.backgroundIndex]
-        const tile = this.props.gpu.tileForIndex(tileIndex)
+        const backgroundIndex = this.state.backgroundIndex
+        const gpu = this.props.gpu
+        const tileIndex = gpu.background()[backgroundIndex]
+        const tile = gpu.tileForIndex(tileIndex)
+        const x = backgroundIndex % 32
+        const y = Math.trunc(backgroundIndex / 32)
+        const memoryLocation = gpu.backgroundTileMap + (8 * backgroundIndex)
+        const tileMemoryLocation = gpu.backgroundAndWindowDataSelect + (tileIndex * 16)
+        // TODO: reflect the fact that certain tiles are negative indexed
         return (
             <div>
-                <div>Tile {this.state.backgroundIndex} {tileIndex}</div>
+                <div>Tile ({x}, {y})</div>
+                <div>Background Memory Location: 0x{memoryLocation.toString(16)}</div> 
+                <div>Tile Used: 0x{tileIndex.toString(16)} at 0x{tileMemoryLocation.toString(16)}</div>
                 {tile.map((row,i) => {
                     const pixels = row.map((pixel,j) => {
                         const value = this.props.gpu.valueToBgColor(pixel)
@@ -119,6 +131,12 @@ class Background extends React.Component<Props, State> {
     onMouseMove = (offset: {x: number, y: number}) => {
         const backgroundIndex = backgroundIndexFromOffset(offset)
         if (this.state.backgroundIndex !== backgroundIndex) { this.setState({ backgroundIndex })}
+    }
+
+    onClick = () => {
+
+        this.setState({foo: this.state.backgroundIndex})
+
     }
 }
 
