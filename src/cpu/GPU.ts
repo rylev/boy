@@ -424,8 +424,12 @@ class GPU {
         }
     }
 
-    background1(): Uint8Array {
-        return this.vram.slice(0x1800, 0x1c00)
+    background(): Uint8Array {
+        if (this.backgroundTileMap === BackgroundTileMap.x9800) {
+            return this.vram.slice(0x1800, 0x1c00)
+        } else {
+            return this.vram.slice(0x1c00, 0x1fff)
+        }
     }
 
     draw() {

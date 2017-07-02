@@ -14,23 +14,39 @@ type Props = {
 type State = { 
     showTileOutlines: boolean 
     showViewportOutline: boolean
+    checkered: boolean
+    hideOutsideViewport: boolean
 }
 class Background extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props)
-        this.state = { showTileOutlines: false, showViewportOutline: false }
+        this.state = { showTileOutlines: true, showViewportOutline: true, checkered: false, hideOutsideViewport: false }
     }
 
     getData = (gpu: GPU) => {
-        return BackgroundModel.getImageData(gpu, this.state.showTileOutlines, this.state.showViewportOutline)
+        const options = { 
+            showTileOutlines: this.state.showTileOutlines, 
+            showViewportOutline: this.state.showViewportOutline,
+            checkered: this.state.checkered,
+            showOutsideViewport: !this.state.hideOutsideViewport
+        }
+        return BackgroundModel.getImageData(gpu, options)
     }
 
     onShowTileOutlinesChange = () => {
-        this.setState({showTileOutlines: !this.state.showTileOutlines })
+        this.setState({ showTileOutlines: !this.state.showTileOutlines })
     }
 
     onShowViewportOutline = () => {
-        this.setState({showViewportOutline: !this.state.showViewportOutline })
+        this.setState({ showViewportOutline: !this.state.showViewportOutline })
+    }
+
+    onCheckered = () => {
+        this.setState({ checkered: !this.state.checkered })
+    }
+
+    onHideOutsideViewport = () => {
+        this.setState({ hideOutsideViewport: !this.state.hideOutsideViewport })
     }
 
     render() {
@@ -52,6 +68,14 @@ class Background extends React.Component<Props, State> {
                         <div className="toggleItem">
                             <input type="checkbox" id="showViewportOutline" onChange={this.onShowViewportOutline} checked={this.state.showViewportOutline} />
                             <label htmlFor="showViewportOutline">Viewport Outline</label>
+                        </div>
+                        <div className="toggleItem">
+                            <input type="checkbox" id="checkered" onChange={this.onCheckered} checked={this.state.checkered} />
+                            <label htmlFor="checkered">Checkered Outlines</label>
+                        </div>
+                        <div className="toggleItem">
+                            <input type="checkbox" id="hideOutsideViewport" onChange={this.onHideOutsideViewport} checked={this.state.hideOutsideViewport} />
+                            <label htmlFor="hideOutsideViewport">Hide Outside Viewport</label>
                         </div>
                     </div>
                 </VisualMemoryViewer>
