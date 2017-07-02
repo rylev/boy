@@ -432,6 +432,14 @@ class GPU {
         }
     }
 
+    tileForIndex(index: number): TileValue[][] {
+        if (this.backgroundAndWindowDataSelect === BackgroundAndWindowDataSelect.x8800 && index < 128) {
+            return this.tileSet[index + 256]
+        } else {
+            return this.tileSet[index]
+        }
+    }
+
     draw() {
         this.onDraw && this.onDraw(new ImageData(
             Uint8ClampedArray.from(this._canvas),

@@ -12,3 +12,27 @@
 .toggleItem {
     display: flex;
 }
+
+.pixel {
+    display: inline-block;
+    width: 10px;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+
+    &.zero {
+        background: #000;
+    }
+
+    &.one {
+        background: #c0c0c0;
+    }
+
+    &.two {
+        background: #606060;
+    }
+
+    &.three {
+        background: #1c1c1c;
+    }
+}

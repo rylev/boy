@@ -11,7 +11,6 @@ export type BackgroundOptions = {
 export namespace Background {
     export function getImageData(gpu: GPU, options: BackgroundOptions): ImageData {
         const background = gpu.background()
-        const tileSet = gpu.tileSet
 
         const widthInTiles = 32
         const heightInTiles = 32
@@ -25,13 +24,7 @@ export namespace Background {
 
         const canvasDataLength = widthInTiles * heightInTiles * tileHeightInPixels * tileWidthInPixels * valuesPerPixel
         const canvasData: Uint8Array = new Uint8Array(canvasDataLength).fill(0)
-        const tiles: TileValue[][][] = Array.from(background).map((byte: number) => {
-            if (gpu.backgroundAndWindowDataSelect === BackgroundAndWindowDataSelect.x8800 && byte < 128) {
-                return tileSet[byte + 256]
-            } else {
-                return tileSet[byte]
-            }
-        })
+        const tiles: TileValue[][][] = Array.from(background).map(byte => gpu.tileForIndex(byte))
 
         tiles.forEach((tile, tileIndex) => {
             const tileRow = Math.trunc(tileIndex / heightInTiles)
