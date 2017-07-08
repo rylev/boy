@@ -4,6 +4,7 @@
   "description": "Gameboy Emulator",
   "main": "index.js",
   "scripts": {
+    "start": "node node_modules/webpack-dev-server/bin/webpack-dev-server.js",
     "test": "env NODE_PATH=$NODE_PATH:./src mocha"
   },
   "author": "Ryan Levick",
@@ -27,6 +28,8 @@
     "source-map-loader": "^0.2.1",
     "style-loader": "^0.17.0",
     "ts-node": "^3.0.4",
-    "typescript": "^2.3.2"
+    "typescript": "^2.3.2",
+    "webpack": "^3.1.0",
+    "webpack-dev-server": "^2.5.1"
   }
 }
