@@ -22,7 +22,8 @@ class TileSet extends React.Component<Props, State> {
                 getData={TileSetModel.getImageData}
                 header={"TileSet"}
                 label={"tileSet"}
-                onClick={() => { }} />
+                onClick={() => { }}
+                onMouseMove={() => {}} />
         )
     }
 }

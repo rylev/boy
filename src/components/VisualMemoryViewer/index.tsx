@@ -4,6 +4,8 @@ import * as ReactDOM from 'react-dom'
 import GPU from 'cpu/GPU'
 import './visualMemoryViewer.css'
 
+type Offset = { x: number, y: number }
+
 type Props = { 
     gpu: GPU, 
     height: number,
@@ -11,6 +13,7 @@ type Props = {
     label: string, 
     header: string, 
     getData: (gpu: GPU) => ImageData, 
+    onMouseMove: (offset: Offset) => void,
     onClick: () => void
 }
 type State = { ctx?: CanvasRenderingContext2D, isShowing: boolean }
@@ -38,12 +41,16 @@ class VisualMemoryViewer extends React.Component<Props, State> {
     }
 
     getCtx() {
-        const canvas = ReactDOM.findDOMNode(this.refs[this.props.label]) as HTMLCanvasElement | null
+        const canvas = this.getCanvasElement()
         if (canvas === null) { return }
         const ctx = canvas.getContext('2d') || undefined
         this.setState({ctx})
 
         return ctx
+    }
+
+    getCanvasElement(): HTMLCanvasElement | null {
+        return ReactDOM.findDOMNode(this.refs[this.props.label]) as HTMLCanvasElement | null
     }
 
     canvas () {
@@ -52,7 +59,9 @@ class VisualMemoryViewer extends React.Component<Props, State> {
             width={this.props.width}
             id={this.props.label}
             ref={this.props.label}
-            onClick={this.props.onClick} />
+            onClick={this.props.onClick} 
+            onMouseMove={this.onMouseMove}
+            />
     }
 
     content () {
@@ -84,6 +93,13 @@ class VisualMemoryViewer extends React.Component<Props, State> {
                 this.drawCanvas(data)
             }
         })
+    }
+
+    onMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+        const canvas = this.getCanvasElement() 
+        if (canvas === null) { return }
+        const boundingRect = canvas.getBoundingClientRect()
+        this.props.onMouseMove({x: e.clientX - boundingRect.left, y: e.clientY - boundingRect.top})
     }
 }
 
