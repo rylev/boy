@@ -69,25 +69,25 @@ class Background extends React.Component<Props, State> {
         const memoryLocation = gpu.backgroundTileMap + (8 * backgroundIndex)
         const tileMemoryLocation = gpu.backgroundAndWindowDataSelect + (tileIndex * 16)
         // TODO: reflect the fact that certain tiles are negative indexed
+
+        const rows = tile.map((row, i) => {
+            const pixels = row.map((pixel, j) => {
+                const value = this.props.gpu.valueToBgColor(pixel)
+                const style = {
+                    background: `rgb(${value},${value},${value})`,
+                    color: value < 100 ? 'white' : 'black'
+                }
+
+                return <div key={j} className={'pixel'} style={style}>{pixel}</div>
+            })
+            return <div key={i}>{pixels}</div>
+        })
         return (
             <div>
                 <div>Tile ({x}, {y})</div>
                 <div>Background Memory Location: 0x{memoryLocation.toString(16)}</div> 
                 <div>Tile Used: 0x{tileIndex.toString(16)} at 0x{tileMemoryLocation.toString(16)}</div>
-                {tile.map((row,i) => {
-                    const pixels = row.map((pixel,j) => {
-                        const value = this.props.gpu.valueToBgColor(pixel)
-                        const style = {
-                            background: `rgb(${value},${value},${value})`,
-                            color: value < 100 ? 'white' : 'black'
-                        }
-
-                        return <div key={j} className={'pixel'} style={style}>{pixel}</div>
-                    })
-                    return (
-                        <div key={i}>{pixels}</div>
-                    )
-                })}
+                <div className="pixels">{rows}</div>
             </div>
         )
     }

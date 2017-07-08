@@ -36,3 +36,8 @@
         background: #1c1c1c;
     }
 }
+
+.pixels {
+    border: solid 1px;
+    width: 160px;
+}
